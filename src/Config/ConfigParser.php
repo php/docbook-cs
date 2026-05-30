@@ -6,7 +6,7 @@ namespace DocbookCS\Config;
 
 final class ConfigParser
 {
-    private const string NAMESPACE_URI = 'https://jordikroon.github.io/docbook-cs/config';
+    private const string NAMESPACE_URI = 'https://php.github.io/docbook-cs/config';
 
     /**
      * @throws ConfigParserException if the file cannot be read or contains invalid XML.

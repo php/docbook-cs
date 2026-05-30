@@ -1,5 +1,5 @@
 {
-  "name": "jordikroon/docbook-cs",
+  "name": "php/docbook-cs",
   "description": "A static-analysis linter for DocBook XML files",
   "type": "library",
   "license": "Apache-2.0",
@@ -31,7 +31,11 @@
   "authors": [
     {
       "name": "Jordi Kroon",
-      "email": "jordikroon@me.com"
+      "email": "jordikroon@php.net"
+    },
+    {
+      "name": "DocbookCS contributors",
+      "homepage": "https://github.com/php/docbook-cs/graphs/contributors"
     }
   ]
 }

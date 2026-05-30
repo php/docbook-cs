@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<docbookcs xmlns="https://jordikroon.github.io/docbook-cs/config"
+<docbookcs xmlns="https://php.github.io/docbook-cs/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="https://jordikroon.github.io/docbook-cs/config
-                               https://jordikroon.github.io/docbook-cs/config.xsd">
+           xsi:schemaLocation="https://php.github.io/docbook-cs/config
+                               https://php.github.io/docbook-cs/config.xsd">
     <sniffs>
         <sniff class="DocbookCS\Sniff\SimparaSniff">
             <!-- Optionally add extra block elements that your project uses -->
