@@ -19,20 +19,23 @@ sidebar_position: 2
   <TabItem value="new" label="New project" default>
 
 ```bash
-# Copy the dist config and run
-cp vendor/jordikroon/docbook-cs/docbookcs.xml.dist docbookcs.xml
-vendor/bin/docbook-cs
+# Copy the dist config and run from the cloned repo
+cp docbookcs.xml.dist docbookcs.xml
+bin/docbook-cs
 ```
 
   </TabItem>
   <TabItem value="ci" label="GitHub Actions">
 
 ```yaml
+- uses: actions/checkout@v6
+  with:
+    repository: php/docbook-cs
+    path: docbook-cs
 - uses: shivammathur/setup-php@v2
   with:
     php-version: '8.5'
-- run: composer install --no-progress
-- run: vendor/bin/docbook-cs --report=checkstyle --no-colors
+- run: docbook-cs/bin/docbook-cs --report=checkstyle --no-colors
 ```
 
   </TabItem>
@@ -41,7 +44,7 @@ vendor/bin/docbook-cs
 Scan only the files touched by a pull request:
 
 ```bash
-git diff origin/master...HEAD | vendor/bin/docbook-cs --diff --report=checkstyle
+git diff origin/master...HEAD | bin/docbook-cs --diff --report=checkstyle
 ```
 
   </TabItem>

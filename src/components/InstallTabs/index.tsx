@@ -4,17 +4,18 @@ import CodeBlock from '@theme/CodeBlock';
 import {JSX} from 'react';
 
 type Props = {
-  /** Composer package name */
-  pkg?: string;
+  /** Source repository URL */
+  repo?: string;
 };
 
 export default function InstallTabs({
-  pkg = 'jordikroon/docbook-cs',
+  repo = 'https://github.com/php/docbook-cs.git',
 }: Props): JSX.Element {
   return (
     <Tabs groupId="install-method" queryString>
-      <TabItem value="composer" label="Composer" default>
-        <CodeBlock language="bash">{`composer require --dev ${pkg}`}</CodeBlock>
+      <TabItem value="git" label="Git" default>
+        <CodeBlock language="bash">{`git clone ${repo}
+cd docbook-cs`}</CodeBlock>
       </TabItem>
     </Tabs>
   );

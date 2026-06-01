@@ -7,10 +7,10 @@ const config: Config = {
   tagline: 'A static-analysis linter for DocBook XML',
   favicon: 'img/favicon.ico',
 
-  url: 'https://jordikroon.github.io',
+  url: 'https://php.github.io',
   baseUrl: '/docbook-cs/',
 
-  organizationName: 'jordikroon',
+  organizationName: 'php',
   projectName: 'docbook-cs',
   trailingSlash: false,
 
@@ -33,7 +33,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/jordikroon/docbook-cs/tree/gh-pages/',
+          editUrl: 'https://github.com/php/docbook-cs/tree/gh-pages/',
           routeBasePath: '/',
         },
         blog: false,
@@ -53,12 +53,12 @@ const config: Config = {
       title: 'DocbookCS',
       items: [
         {
-          href: 'https://github.com/jordikroon/docbook-cs',
+          href: 'https://github.com/php/docbook-cs',
           label: 'GitHub',
           position: 'right',
         },
         {
-          href: 'https://packagist.org/packages/jordikroon/docbook-cs',
+          href: 'https://packagist.org/packages/php/docbook-cs',
           label: 'Packagist',
           position: 'right',
         },
@@ -79,8 +79,7 @@ const config: Config = {
         {
           title: 'Links',
           items: [
-            {label: 'GitHub', href: 'https://github.com/jordikroon/docbook-cs'},
-            {label: 'Packagist', href: 'https://packagist.org/packages/jordikroon/docbook-cs'},
+            {label: 'GitHub', href: 'https://github.com/php/docbook-cs'},
           ],
         },
       ],

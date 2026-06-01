@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="https://jordikroon.github.io/docbook-cs/config"
-           xmlns="https://jordikroon.github.io/docbook-cs/config"
+           targetNamespace="https://php.github.io/docbook-cs/config"
+           xmlns="https://php.github.io/docbook-cs/config"
            elementFormDefault="qualified">
 
   <xs:element name="docbookcs">

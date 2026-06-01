@@ -1,8 +1,8 @@
 # DocbookCS docs
 
-Documentation site for [DocbookCS](https://github.com/jordikroon/docbook-cs), built with [Docusaurus](https://docusaurus.io/).
+Documentation site for [DocbookCS](https://github.com/php/docbook-cs), built with [Docusaurus](https://docusaurus.io/).
 
-Published at: https://jordikroon.github.io/docbook-cs/
+Published at: https://php.github.io/docbook-cs/
 
 ## Local development
 
