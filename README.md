@@ -2,7 +2,7 @@
 
 A static-analysis linter for DocBook XML files. It scans XML documentation sources and reports style and convention violations.
 
-**Full documentation:** [jordikroon.github.io/docbook-cs](https://jordikroon.github.io/docbook-cs)
+**Full documentation:** [php.github.io/docbook-cs](https://php.github.io/docbook-cs)
 
 ---
 
