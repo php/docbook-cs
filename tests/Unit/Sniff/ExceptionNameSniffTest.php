@@ -135,6 +135,16 @@ final class ExceptionNameSniffTest extends TestCase
     }
 
     #[Test]
+    public function itDoesNotFlagClassnameInsideOoclass(): void
+    {
+        $content = '<root><ooclass><classname>RuntimeException</classname></ooclass></root>';
+        $doc = $this->createDocument($content);
+        $violations = new ExceptionNameSniff()->process($doc, $content, 'file.xml');
+
+        self::assertSame([], $violations);
+    }
+
+    #[Test]
     public function itIncludesFilePathInViolation(): void
     {
         $content = '<root><classname>RuntimeException</classname></root>';

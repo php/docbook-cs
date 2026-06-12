@@ -44,6 +44,10 @@ final class ExceptionNameSniff extends AbstractSniff
                 continue;
             }
 
+            if ($node->parentNode instanceof \DOMElement && $node->parentNode->localName === 'ooclass') {
+                continue;
+            }
+
             if ($this->looksLikeException($text, $suffixes)) {
                 $violations[] = $this->createViolation(
                     $filePath,
