@@ -1,73 +1,87 @@
-name: CI
+# https://docs.github.com/en/actions
+
+name: "CI"
 
 on:
   push:
-    branches: [main]
+    branches:
+      - "main"
   pull_request:
-    branches: [main]
+    branches:
+      - "main"
 
 permissions:
-  pull-requests: write
+  contents: "read"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
 
 jobs:
   cs:
-    name: Code Style
-    runs-on: ubuntu-latest
+    name: "Code Style"
+    runs-on: "ubuntu-latest"
+
     steps:
-      - uses: actions/checkout@v6
+      - uses: "actions/checkout@v6"
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: "Setup PHP"
+        uses: "shivammathur/setup-php@v2"
         with:
-          php-version: '8.5'
-          tools: composer
+          php-version: "8.5"
+          tools: "composer, cs2pr"
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --prefer-dist"
 
-      - name: Run PHP_CodeSniffer
-        run: vendor/bin/phpcs
+      - name: "Run PHP_CodeSniffer"
+        run: |
+          set -o pipefail
+          vendor/bin/phpcs -q --report=checkstyle | cs2pr
 
   stan:
-    name: Static Analysis
-    runs-on: ubuntu-latest
+    name: "Static Analysis"
+    runs-on: "ubuntu-latest"
+
     steps:
-      - uses: actions/checkout@v6
+      - uses: "actions/checkout@v6"
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: "Setup PHP"
+        uses: "shivammathur/setup-php@v2"
         with:
-          php-version: '8.5'
-          tools: composer
+          php-version: "8.5"
+          tools: "composer"
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --prefer-dist"
 
-      - name: Run PHPStan
-        run: vendor/bin/phpstan analyse --no-progress --error-format=github
+      - name: "Run PHPStan"
+        run: "vendor/bin/phpstan analyse --no-progress --error-format=github"
 
   tests:
-    name: Tests
-    runs-on: ubuntu-latest
+    name: "Tests"
+    runs-on: "ubuntu-latest"
+
     steps:
-      - uses: actions/checkout@v6
+      - uses: "actions/checkout@v6"
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: "Setup PHP"
+        uses: "shivammathur/setup-php@v2"
         with:
-          php-version: '8.5'
-          tools: composer
-          coverage: xdebug
+          php-version: "8.5"
+          tools: "composer"
+          coverage: "xdebug"
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
+      - name: "Install dependencies"
+        run: "composer install --no-interaction --prefer-dist"
 
-      - run: mkdir -p .phpunit.cache
+      - run: "mkdir -p .phpunit.cache"
 
-      - name: Run PHPUnit (console)
-        run: vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always
+      - name: "Run PHPUnit (console)"
+        run: "vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always"
 
-      - name: Generate coverage summary
+      - name: "Generate coverage summary"
+        if: ${{ ! cancelled() }}
         run: |
           echo '```' > .phpunit.cache/coverage.txt
           vendor/bin/phpunit \
@@ -76,25 +90,22 @@ jobs:
             --coverage-text >> .phpunit.cache/coverage.txt
           echo '```' >> .phpunit.cache/coverage.txt
 
-      - name: Report test results
-        uses: mikepenz/action-junit-report@v6
-        if: always()
+      - name: "Report test results"
+        uses: "mikepenz/action-junit-report@v6"
+        if: ${{ ! cancelled() }}
         with:
-          report_paths: '.phpunit.cache/junit.xml'
-          check_name: 'PHPUnit Test Results'
+          report_paths: ".phpunit.cache/junit.xml"
+          annotate_only: true
 
-      - name: Post coverage summary
-        uses: marocchino/sticky-pull-request-comment@v3
-        if: github.event_name == 'pull_request'
-        with:
-          header: coverage
-          path: .phpunit.cache/coverage.txt
+      - name: "Post coverage summary"
+        if: ${{ ! cancelled() }}
+        run: 'cat .phpunit.cache/coverage.txt >> "$GITHUB_STEP_SUMMARY"'
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v7
-        if: always()
+      - name: "Upload coverage report"
+        uses: "actions/upload-artifact@v7"
+        if: ${{ ! cancelled() }}
         with:
-          name: coverage-report
+          name: "coverage-report"
           path: |
             .phpunit.cache/coverage-html
             .phpunit.cache/coverage.xml
