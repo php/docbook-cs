@@ -62,10 +62,6 @@ jobs:
     name: "Tests"
     runs-on: "ubuntu-latest"
 
-    permissions:
-      contents: "read"
-      checks: "write"
-
     steps:
       - uses: "actions/checkout@v6"
 
@@ -99,7 +95,7 @@ jobs:
         if: ${{ ! cancelled() }}
         with:
           report_paths: ".phpunit.cache/junit.xml"
-          check_name: "PHPUnit Test Results"
+          annotate_only: true
 
       - name: "Post coverage summary"
         if: ${{ ! cancelled() }}
