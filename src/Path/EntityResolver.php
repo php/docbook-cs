@@ -165,6 +165,10 @@ final class EntityResolver
 
     private function resolvePath(string $path, string $reference): string
     {
+        if (str_starts_with($reference, '/') && is_file($reference)) {
+            return $reference;
+        }
+
         foreach ($this->projectRoots as $root => $directory) {
             if (!str_contains($reference, '/' . $directory . '/')) {
                 continue;
