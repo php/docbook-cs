@@ -56,11 +56,14 @@ final class SvnKeywordSniff extends AbstractSniff
                 // Anchored to the root element (not the comment line) so the
                 // violation stays relevant in diff mode: any change inside the
                 // document surfaces the dead marker, matching the "remove it
-                // when you touch the file" convention.
+                // when you touch the file" convention. The real marker line is
+                // carried in the message so the report stays actionable in
+                // full-scan mode too.
                 $anchorLine,
                 sprintf(
-                    'Remove the dead SVN keyword marker "%s" (legacy svn:keywords expansion, never updated under git).',
+                    'Dead SVN keyword marker "%s" on line %d; remove it (no longer expanded under git).',
                     trim($match[0]),
+                    $comment->getLineNo(),
                 ),
             );
         }
