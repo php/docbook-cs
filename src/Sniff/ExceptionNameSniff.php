@@ -33,6 +33,7 @@ final class ExceptionNameSniff extends AbstractSniff
     {
         $violations = [];
         $suffixes = $this->getSuffixes();
+        $exactNames = $this->getExactNames();
 
         $classnames = $document->getElementsByTagName('classname');
 
@@ -48,7 +49,7 @@ final class ExceptionNameSniff extends AbstractSniff
                 continue;
             }
 
-            if ($this->looksLikeException($text, $suffixes)) {
+            if ($this->looksLikeException($text, $suffixes, $exactNames)) {
                 $violations[] = $this->createViolation(
                     $filePath,
                     $node->getLineNo(),
@@ -65,11 +66,16 @@ final class ExceptionNameSniff extends AbstractSniff
 
     /**
      * @param list<string> $suffixes
+     * @param list<string> $exactNames
      */
-    private function looksLikeException(string $text, array $suffixes): bool
+    private function looksLikeException(string $text, array $suffixes, array $exactNames): bool
     {
         $parts = explode('\\', $text);
         $baseName = end($parts);
+
+        if (in_array($baseName, $exactNames, true)) {
+            return true;
+        }
 
         return array_any(
             $suffixes,
@@ -80,6 +86,34 @@ final class ExceptionNameSniff extends AbstractSniff
     /** @return list<string> */
     private function getSuffixes(): array
     {
-        return self::DEFAULT_SUFFIXES;
+        return array_values(array_unique(array_merge(
+            self::DEFAULT_SUFFIXES,
+            $this->parseListProperty('additionalSuffixes'),
+        )));
+    }
+
+    /** @return list<string> */
+    private function getExactNames(): array
+    {
+        return $this->parseListProperty('additionalExactNames');
+    }
+
+    /**
+     * Parses a comma-separated configuration property into a list of
+     * trimmed, non-empty values.
+     *
+     * @return list<string>
+     */
+    private function parseListProperty(string $name): array
+    {
+        $value = $this->getProperty($name);
+
+        if ($value === '') {
+            return [];
+        }
+
+        $items = array_map('trim', explode(',', $value));
+
+        return array_values(array_filter($items, static fn(string $s): bool => $s !== ''));
     }
 }
