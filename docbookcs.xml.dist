@@ -16,6 +16,11 @@
         </sniff>
 
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
+
+        <sniff class="DocbookCS\Sniff\ListInParaSniff">
+            <!-- Optionally add extra list elements that your project uses -->
+            <!-- <property name="additionalListElements" value="segmentedlist" /> -->
+        </sniff>
     </sniffs>
 
     <paths>
