@@ -170,6 +170,22 @@ final class ExceptionNameSniffTest extends TestCase
     }
 
     #[Test]
+    public function itStillFlagsDefaultSuffixesWhenAdditionalConfigured(): void
+    {
+        $content = '<root>
+                <classname>RuntimeException</classname>
+                <classname>SoapFault</classname>
+            </root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalSuffixes', 'Fault');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(2, $violations);
+    }
+
+    #[Test]
     public function itDoesNotFlagAdditionalSuffixWhenNotConfigured(): void
     {
         $content = '<root><classname>SoapFault</classname></root>';
