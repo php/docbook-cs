@@ -33,20 +33,22 @@ final class ListInParaSniff extends AbstractSniff
     public function process(\DOMDocument $document, string $content, string $filePath): array
     {
         $violations = [];
+        $disallowed = $this->getDisallowedElements();
 
-        foreach ($this->getDisallowedElements() as $tag) {
-            foreach ($document->getElementsByTagName($tag) as $list) {
-                $parent = $list->parentNode;
+        // Single pass over <para> in document order; inspect direct children
+        // only, so a list nested deeper (e.g. inside a <note>) is not flagged.
+        foreach ($document->getElementsByTagName('para') as $para) {
+            foreach ($para->childNodes as $child) {
+                if (!$child instanceof \DOMElement) {
+                    continue;
+                }
 
-                if (
-                    $parent instanceof \DOMElement
-                    && strtolower($parent->localName ?? '') === 'para'
-                ) {
-                    $name = strtolower($list->localName ?: $tag);
+                $name = strtolower($child->localName ?? '');
 
+                if (in_array($name, $disallowed, true)) {
                     $violations[] = $this->createViolation(
                         $filePath,
-                        $list->getLineNo(),
+                        $child->getLineNo(),
                         sprintf(
                             '<%s> must not be wrapped in <para>; place it directly in the containing element.',
                             $name,
@@ -68,7 +70,7 @@ final class ListInParaSniff extends AbstractSniff
             return self::DISALLOWED_IN_PARA;
         }
 
-        $additional = array_map('trim', explode(',', $extra));
+        $additional = array_map(static fn(string $s): string => strtolower(trim($s)), explode(',', $extra));
         $additional = array_filter($additional, static fn(string $s): bool => $s !== '');
 
         return array_values(array_unique(array_merge(self::DISALLOWED_IN_PARA, $additional)));

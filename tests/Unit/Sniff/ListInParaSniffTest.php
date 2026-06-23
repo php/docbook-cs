@@ -106,4 +106,22 @@ final class ListInParaSniffTest extends TestCase
 
         self::assertSame([], $violations);
     }
+
+    #[Test]
+    public function itReportsViolationsInDocumentOrder(): void
+    {
+        // itemizedlist is on line 2, simplelist on line 3; violations must
+        // follow line order regardless of the configured element ordering.
+        $content = "<root>\n"
+            . "<para><itemizedlist><listitem><para>x</para></listitem></itemizedlist></para>\n"
+            . "<para><simplelist><member>a</member></simplelist></para>\n"
+            . "</root>";
+        $doc = $this->createDocument($content);
+        $violations = new ListInParaSniff()->process($doc, $content, 'file.xml');
+
+        self::assertCount(2, $violations);
+        self::assertStringContainsString('itemizedlist', $violations[0]->message);
+        self::assertStringContainsString('simplelist', $violations[1]->message);
+        self::assertLessThan($violations[1]->line, $violations[0]->line);
+    }
 }
