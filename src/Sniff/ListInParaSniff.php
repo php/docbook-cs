@@ -110,7 +110,12 @@ final class ListInParaSniff extends AbstractSniff
         }
 
         $additional = array_map(static fn(string $s): string => strtolower(trim($s)), explode(',', $extra));
-        $additional = array_filter($additional, static fn(string $s): bool => $s !== '');
+        // Keep only valid element names: anything else would be injected verbatim
+        // into the XPath predicate and silently break the whole query.
+        $additional = array_filter(
+            $additional,
+            static fn(string $s): bool => preg_match('/^[a-z_][\w.-]*$/', $s) === 1,
+        );
 
         return array_values(array_unique(array_merge(self::DISALLOWED_IN_PARA, $additional)));
     }

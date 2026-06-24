@@ -144,6 +144,22 @@ final class ListInParaSniffTest extends TestCase
     }
 
     #[Test]
+    public function itIgnoresInvalidAdditionalListElementAndKeepsWorking(): void
+    {
+        // A malformed config value must not be injected into the XPath and
+        // disable the sniff: it is dropped while the defaults keep firing.
+        $content = '<root><para><simplelist><member>a</member></simplelist></para></root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ListInParaSniff();
+        $sniff->setProperty('additionalListElements', "foo'bar");
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('simplelist', $violations[0]->message);
+    }
+
+    #[Test]
     public function itDoesNotFlagAdditionalListElementWhenNotConfigured(): void
     {
         $content = '<root><para><segmentedlist><seglistitem><seg>a</seg></seglistitem></segmentedlist></para></root>';
