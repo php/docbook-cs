@@ -84,6 +84,52 @@ final class ListInParaSniffTest extends TestCase
     }
 
     #[Test]
+    public function itFlagsTableAsSoleChildOfPara(): void
+    {
+        $content = '<root><para><table><title>t</title></table></para></root>';
+        $doc = $this->createDocument($content);
+        $violations = new ListInParaSniff()->process($doc, $content, 'file.xml');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('table', $violations[0]->message);
+    }
+
+    #[Test]
+    public function itFlagsInformaltableAsSoleChildOfPara(): void
+    {
+        $content = '<root><para><informaltable><tgroup cols="1"/></informaltable></para></root>';
+        $doc = $this->createDocument($content);
+        $violations = new ListInParaSniff()->process($doc, $content, 'file.xml');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('informaltable', $violations[0]->message);
+    }
+
+    #[Test]
+    public function itDoesNotFlagBlockPrecededByIntroText(): void
+    {
+        // A leading sentence followed by a <table> is a valid construct.
+        $content = '<root><para>The following constants are defined:'
+            . '<table><title>t</title></table></para></root>';
+        $doc = $this->createDocument($content);
+        $violations = new ListInParaSniff()->process($doc, $content, 'file.xml');
+
+        self::assertSame([], $violations);
+    }
+
+    #[Test]
+    public function itDoesNotFlagListAlongsideAnotherElement(): void
+    {
+        // The list is not the sole element child, so it is not flagged.
+        $content = '<root><para><simplelist><member>a</member></simplelist>'
+            . '<note><para>x</para></note></para></root>';
+        $doc = $this->createDocument($content);
+        $violations = new ListInParaSniff()->process($doc, $content, 'file.xml');
+
+        self::assertSame([], $violations);
+    }
+
+    #[Test]
     public function itFlagsAdditionalListElement(): void
     {
         $content = '<root><para><segmentedlist><seglistitem><seg>a</seg></seglistitem></segmentedlist></para></root>';

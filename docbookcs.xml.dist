@@ -18,7 +18,7 @@
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
 
         <sniff class="DocbookCS\Sniff\ListInParaSniff">
-            <!-- Optionally add extra list elements that your project uses -->
+            <!-- Optionally add extra list/table elements that your project uses -->
             <!-- <property name="additionalListElements" value="segmentedlist" /> -->
         </sniff>
     </sniffs>
