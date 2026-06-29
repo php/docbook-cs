@@ -174,6 +174,81 @@ final class XmlFileProcessorTest extends TestCase
     }
 
     #[Test]
+    public function itDropsViolationsWhoseLineHasNoElement(): void
+    {
+        $sniff = $this->sniff([999]);
+
+        $xml = $this->xml(
+            '<chapter>
+          <para>hello</para>
+        </chapter>'
+        );
+
+        $report = $this->processor([$sniff])->processString($xml, 'x.xml', [3]);
+
+        self::assertSame(0, $report->getViolationCount());
+    }
+
+    #[Test]
+    public function itMatchesChangesInElementOwnTextContent(): void
+    {
+        $sniff = $this->sniff([3]);
+
+        $xml = $this->xml(
+            '<chapter>
+      <simpara>
+        hello
+      </simpara>
+    </chapter>'
+        );
+
+        $report = $this->processor([$sniff])->processString($xml, 'x.xml', [4]);
+
+        self::assertSame(1, $report->getViolationCount());
+    }
+
+    #[Test]
+    public function itBoundsChildSpanByNextSibling(): void
+    {
+        $sniff = $this->sniff([3]);
+
+        $xml = $this->xml(
+            '<chapter>
+      <para>
+        <emphasis>X</emphasis>
+        <link>Y</link>
+      </para>
+    </chapter>'
+        );
+
+        $report = $this->processor([$sniff])->processString($xml, 'x.xml', [4]);
+
+        self::assertSame(1, $report->getViolationCount());
+    }
+
+    #[Test]
+    public function itIgnoresChangesInNonDirectDescendants(): void
+    {
+        $sniff = $this->sniff([3]);
+
+        $xml = $this->xml(
+            '<chapter>
+          <refentry>
+            <refsect1>
+              <methodsynopsis>
+                <type>array</type>
+              </methodsynopsis>
+            </refsect1>
+          </refentry>
+        </chapter>'
+        );
+
+        $report = $this->processor([$sniff])->processString($xml, 'x.xml', [6]);
+
+        self::assertSame(0, $report->getViolationCount());
+    }
+
+    #[Test]
     public function itIgnoresChangesOutsideElementSpan(): void
     {
         $sniff = $this->sniff([3]);

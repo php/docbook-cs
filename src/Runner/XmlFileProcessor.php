@@ -160,28 +160,72 @@ final class XmlFileProcessor
             return true;
         }
 
-        // Find the element whose opening tag is on the violation line and check
-        // whether any changed line falls inside its content span.
-        foreach ($document->getElementsByTagName('*') as $element) {
-            if ($element->getLineNo() !== $violation->line) {
-                continue;
-            }
+        $violationElement = $this->firstElementOnLine($document, $violation->line);
+        if ($violationElement === null) {
+            return false;
+        }
 
-            $endLine = $this->computeElementEndLine($element);
+        $endLine = $this->computeElementEndLine($violationElement);
 
-            if (
-                array_any(
-                    $changedLines,
-                    static fn($changed) => $changed >= $violation->line && $changed <= $endLine
-                )
-            ) {
+        foreach ($changedLines as $changed) {
+            $owner = $this->innermostContaining($violationElement, $changed, $endLine);
+            if ($owner === $violationElement) {
                 return true;
             }
 
-            break;
+            if ($owner !== null && $owner->parentNode === $violationElement) {
+                return true;
+            }
         }
 
         return false;
+    }
+
+    private function firstElementOnLine(\DOMDocument $document, int $line): ?\DOMElement
+    {
+        foreach ($document->getElementsByTagName('*') as $element) {
+            if ($element->getLineNo() === $line) {
+                return $element;
+            }
+        }
+
+        return null;
+    }
+
+    private function innermostContaining(\DOMElement $element, int $line, int $endLine): ?\DOMElement
+    {
+        if ($line > $endLine || $line < $element->getLineNo()) {
+            return null;
+        }
+
+        $children = [];
+        foreach ($element->childNodes as $child) {
+            if ($child instanceof \DOMElement) {
+                $children[] = $child;
+            }
+        }
+
+        $count = count($children);
+        foreach ($children as $i => $iValue) {
+            $child = $iValue;
+
+            $childEnd = $endLine;
+            for ($j = $i + 1; $j < $count; $j++) {
+                $nextLine = $children[$j]->getLineNo();
+                if ($nextLine > $child->getLineNo()) {
+                    $childEnd = $nextLine - 1;
+                    break;
+                }
+            }
+            $childEnd = min($childEnd, $this->computeElementEndLine($child));
+
+            $deeper = $this->innermostContaining($child, $line, $childEnd);
+            if ($deeper !== null) {
+                return $deeper;
+            }
+        }
+
+        return $element;
     }
 
     private function computeElementEndLine(\DOMElement $element): int
