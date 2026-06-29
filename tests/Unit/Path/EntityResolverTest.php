@@ -241,4 +241,23 @@ final class EntityResolverTest extends TestCase
 
         self::assertSame('line one line two line three', $entities['block']);
     }
+
+    #[Test]
+    public function itParsesXmlWrappedEntityFormat(): void
+    {
+        $entities = new EntityResolver([], [$this->fixtureRoot . '/xml_format.ent'])->resolve();
+
+        self::assertSame('<title>Alphabetical</title>', $entities['extcat.alphabetical']);
+        self::assertSame('', $entities['frontpage.authors']);
+        self::assertStringContainsString('<title>Extension List/Categorization</title>', $entities['extcat.intro']);
+        self::assertStringContainsString('150 extensions', $entities['extcat.intro']);
+    }
+
+    #[Test]
+    public function itReturnsEmptyWhenXmlEntityKeywordPresentButNoMatches(): void
+    {
+        $resolver = new EntityResolver([], [$this->fixtureRoot . '/xml_broken.ent']);
+
+        self::assertSame([], $resolver->resolve());
+    }
 }
