@@ -10,12 +10,18 @@ use DocbookCS\Report\Severity;
  * Flags second-person pronouns ("you", "your", ...) in documentation prose.
  *
  * The PHP manual style guide asks for an impersonal tone and discourages
- * addressing the reader directly. Text inside verbatim/code elements (such
- * as <programlisting> or <screen>) is ignored, since it may legitimately
- * contain those words as part of sample code or output.
+ * addressing the reader directly.
  *
- * Extra words can be flagged via the "additionalPronouns" property, e.g.
- * to also catch first-person plural ("we", "us", "our").
+ * Text that is not prose is ignored: verbatim/code blocks (such as
+ * <programlisting> or <screen>), inline code and value elements (such as
+ * <literal>, <varname> or <parameter>, which often carry example input
+ * containing those words), and quoted/cited external material (such as
+ * <quote> or <citation>, where the manual is not the one using the second
+ * person). CDATA sections are skipped as verbatim by nature.
+ *
+ * Extra words can be flagged via the "additionalPronouns" property. Keep in
+ * mind that very short tokens are prone to false positives (e.g. "us" matches
+ * "us-east-1"), so this is best combined with running the linter in diff mode.
  */
 final class SecondPersonSniff extends AbstractSniff
 {
@@ -32,16 +38,16 @@ final class SecondPersonSniff extends AbstractSniff
     ];
 
     /**
-     * Elements whose textual content is verbatim (code, output, synopsis)
-     * and must not be inspected for prose.
+     * Elements whose textual content is not prose and must not be inspected:
+     * verbatim/code blocks, inline code/value elements, and quoted material.
      */
     private const array SKIP_ANCESTORS = [
+        // verbatim / code blocks
         'programlisting',
         'screen',
         'literallayout',
         'computeroutput',
         'userinput',
-        'code',
         'synopsis',
         'funcsynopsis',
         'classsynopsis',
@@ -50,6 +56,34 @@ final class SecondPersonSniff extends AbstractSniff
         'fieldsynopsis',
         'constructorsynopsis',
         'destructorsynopsis',
+        // inline code / literal values
+        'code',
+        'literal',
+        'constant',
+        'varname',
+        'parameter',
+        'option',
+        'envar',
+        'uri',
+        'filename',
+        'function',
+        'methodname',
+        'classname',
+        'exceptionname',
+        'interfacename',
+        'type',
+        'replaceable',
+        'command',
+        'property',
+        'package',
+        'prompt',
+        // quoted / cited external text
+        'quote',
+        'blockquote',
+        'citation',
+        'epigraph',
+        'attribution',
+        'foreignphrase',
     ];
 
     public function getCode(): string
@@ -63,24 +97,40 @@ final class SecondPersonSniff extends AbstractSniff
         $violations = [];
         $pronouns = $this->getPronouns();
 
-        $pattern = '/\b(' . implode('|', array_map('preg_quote', $pronouns)) . ')\b/i';
+        $pattern = '/\b(' . implode('|', array_map('preg_quote', $pronouns)) . ')\b/iu';
 
         $xpath = new \DOMXPath($document);
+        $nodes = $xpath->query('//text()');
 
-        /** @var \DOMText $node */
-        foreach ($xpath->query('//text()') as $node) {
-            if ($this->insideSkippedAncestor($node)) {
+        if ($nodes === false) {
+            return $violations;
+        }
+
+        foreach ($nodes as $node) {
+            if (!$node instanceof \DOMText || $node instanceof \DOMCdataSection) {
                 continue;
             }
 
-            if (preg_match_all($pattern, $node->nodeValue ?? '', $matches) === 0) {
+            $value = $node->nodeValue ?? '';
+
+            if (trim($value) === '' || $this->insideSkippedAncestor($node)) {
                 continue;
             }
 
-            foreach ($matches[1] as $word) {
+            if (preg_match_all($pattern, $value, $matches, PREG_OFFSET_CAPTURE) === 0) {
+                continue;
+            }
+
+            // getLineNo() reports the node's end line; derive its start line so
+            // each match can be placed on its real line (matters in diff mode).
+            $startLine = $node->getLineNo() - substr_count($value, "\n");
+
+            foreach ($matches[1] as [$word, $offset]) {
+                $line = $startLine + substr_count($value, "\n", 0, $offset);
+
                 $violations[] = $this->createViolation(
                     $filePath,
-                    $node->getLineNo(),
+                    $line,
                     sprintf(
                         'Second-person "%s" addresses the reader directly; use an impersonal tone.',
                         $word,

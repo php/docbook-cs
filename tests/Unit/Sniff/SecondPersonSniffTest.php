@@ -78,6 +78,54 @@ final class SecondPersonSniffTest extends TestCase
     }
 
     #[Test]
+    public function itIgnoresInlineLiteralValue(): void
+    {
+        $doc = $this->createDocument(
+            '<root><para>The string <literal>you</literal> becomes uppercase.</para></root>'
+        );
+
+        self::assertSame([], new SecondPersonSniff()->process($doc, '', 'file.xml'));
+    }
+
+    #[Test]
+    public function itIgnoresInlineCodeElements(): void
+    {
+        $doc = $this->createDocument(
+            '<root><para>Set <varname>your_token</varname> and <parameter>yourId</parameter>.</para></root>'
+        );
+
+        self::assertSame([], new SecondPersonSniff()->process($doc, '', 'file.xml'));
+    }
+
+    #[Test]
+    public function itIgnoresQuotedMaterial(): void
+    {
+        $doc = $this->createDocument(
+            '<root><para><quote>you must not pass</quote> is from the spec.</para></root>'
+        );
+
+        self::assertSame([], new SecondPersonSniff()->process($doc, '', 'file.xml'));
+    }
+
+    #[Test]
+    public function itIgnoresPronounNestedDeepInSkippedAncestor(): void
+    {
+        $doc = $this->createDocument(
+            '<root><programlisting><emphasis>you</emphasis></programlisting></root>'
+        );
+
+        self::assertSame([], new SecondPersonSniff()->process($doc, '', 'file.xml'));
+    }
+
+    #[Test]
+    public function itIgnoresCdataSections(): void
+    {
+        $doc = $this->createDocument('<root><para><![CDATA[you raw text]]></para></root>');
+
+        self::assertSame([], new SecondPersonSniff()->process($doc, '', 'file.xml'));
+    }
+
+    #[Test]
     public function itCountsEachOccurrence(): void
     {
         $doc = $this->createDocument(
@@ -102,6 +150,23 @@ final class SecondPersonSniffTest extends TestCase
     }
 
     #[Test]
+    public function itReportsRealLineForPronounInMultiLineNode(): void
+    {
+        // <para> opens on line 2; "you" sits on line 3 of the source.
+        $doc = $this->createDocument(
+            '<root>' . PHP_EOL .
+            '  <para>first line' . PHP_EOL .
+            '   you here</para>' . PHP_EOL .
+            '</root>'
+        );
+
+        $violations = new SecondPersonSniff()->process($doc, '', 'file.xml');
+
+        self::assertCount(1, $violations);
+        self::assertSame(3, $violations[0]->line);
+    }
+
+    #[Test]
     public function itUsesWarningSeverity(): void
     {
         $doc = $this->createDocument('<root><para>you</para></root>');
@@ -112,12 +177,22 @@ final class SecondPersonSniffTest extends TestCase
     }
 
     #[Test]
+    public function itMentionsThePronounInTheMessage(): void
+    {
+        $doc = $this->createDocument('<root><para>your value</para></root>');
+
+        $violations = new SecondPersonSniff()->process($doc, '', 'file.xml');
+
+        self::assertStringContainsString('your', $violations[0]->message);
+    }
+
+    #[Test]
     public function itSupportsAdditionalPronouns(): void
     {
         $sniff = new SecondPersonSniff();
-        $sniff->setProperty('additionalPronouns', 'we, us');
+        $sniff->setProperty('additionalPronouns', 'we, our');
 
-        $doc = $this->createDocument('<root><para>we return it to us.</para></root>');
+        $doc = $this->createDocument('<root><para>we return our result.</para></root>');
 
         self::assertCount(2, $sniff->process($doc, '', 'file.xml'));
     }

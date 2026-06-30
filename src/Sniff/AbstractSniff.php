@@ -35,7 +35,9 @@ abstract class AbstractSniff implements SniffInterface
             line: $line,
             message: $message,
             severity: Severity::tryFrom($this->getProperty('severity', $severity->value))
-                ?: throw new \LogicException('Invalid severity level configured for ExceptionNameSniff.'),
+                ?: throw new \LogicException(
+                    sprintf('Invalid severity level configured for %s.', $this->getCode()),
+                ),
         );
     }
 }
