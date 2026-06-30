@@ -16,6 +16,11 @@
         </sniff>
 
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
+
+        <sniff class="DocbookCS\Sniff\SecondPersonSniff">
+            <!-- Optionally also flag other pronouns, e.g. first-person plural -->
+            <!-- <property name="additionalPronouns" value="we, us, our" /> -->
+        </sniff>
     </sniffs>
 
     <paths>
