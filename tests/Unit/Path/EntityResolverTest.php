@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Path;
 
 use DocbookCS\Path\EntityResolver;
+use DocbookCS\Runner\EntityPreprocessor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(EntityResolver::class)]
+#[UsesClass(EntityPreprocessor::class)]
 final class EntityResolverTest extends TestCase
 {
     private string $fixtureRoot;
@@ -251,6 +254,19 @@ final class EntityResolverTest extends TestCase
         self::assertSame('', $entities['frontpage.authors']);
         self::assertStringContainsString('<title>Extension List/Categorization</title>', $entities['extcat.intro']);
         self::assertStringContainsString('150 extensions', $entities['extcat.intro']);
+    }
+
+    #[Test]
+    public function itExpandsAliasedXmlEntityThroughPreprocessor(): void
+    {
+        $entities = new EntityResolver([], [$this->fixtureRoot . '/xml_format.ent'])->resolve();
+
+        $preprocessor = new EntityPreprocessor($entities);
+
+        self::assertSame(
+            '<root>renamed value</root>',
+            $preprocessor->process('<root>&old.name;</root>')
+        );
     }
 
     #[Test]

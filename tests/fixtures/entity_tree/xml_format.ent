@@ -13,4 +13,8 @@
 
 <entity name="frontpage.authors"/>
 
+<entity name="new.name">renamed value</entity>
+
+<entity name="old.name">&new.name;</entity>
+
 </entities>
