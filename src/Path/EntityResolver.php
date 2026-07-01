@@ -123,6 +123,20 @@ final class EntityResolver
         string $filePath,
         array &$visited
     ): array {
+        return
+            $this->extractDtdEntities($content, $filePath, $visited)
+            + $this->extractXmlEntities($content);
+    }
+
+    /**
+     * @param array<string, bool> $visited
+     * @return array<string, string>
+     */
+    private function extractDtdEntities(
+        string $content,
+        string $filePath,
+        array &$visited
+    ): array {
         $result = [];
 
         if (!str_contains($content, '<!ENTITY')) {
@@ -151,6 +165,36 @@ final class EntityResolver
 
                 continue;
             }
+
+            $result[$name] = $this->normalize($value);
+        }
+
+        return $result;
+    }
+
+    /** @return array<string, string> */
+    private function extractXmlEntities(string $content): array
+    {
+        $result = [];
+
+        if (!str_contains($content, '<entity')) {
+            return $result;
+        }
+
+        if (
+            !preg_match_all(
+                '/<entity\s+name\s*=\s*(["\'])([A-Za-z0-9_\-:.]+)\1\s*(?:\/>|>([\s\S]*?)<\/entity\s*>)/',
+                $content,
+                $matches,
+                PREG_SET_ORDER
+            )
+        ) {
+            return $result;
+        }
+
+        foreach ($matches as $match) {
+            $name = $match[2];
+            $value = $match[3] ?? '';
 
             $result[$name] = $this->normalize($value);
         }
