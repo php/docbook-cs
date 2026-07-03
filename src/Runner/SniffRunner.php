@@ -62,7 +62,7 @@ final class SniffRunner
 
             $changedLines = $diffLines !== null
                 ? $this->getChangedLinesForFile($file, $diffLines)
-                : [];
+                : null;
 
             $fileReport = $processor->processFile(
                 $file,

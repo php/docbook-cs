@@ -30,8 +30,8 @@ final class XmlFileProcessor
         $this->report = $report ?? new Report();
     }
 
-    /** @param list<int> $changedLines */
-    public function processFile(string $filePath, array $changedLines = [], string $reportPath = ''): FileReport
+    /** @param list<int>|null $changedLines */
+    public function processFile(string $filePath, ?array $changedLines = null, string $reportPath = ''): FileReport
     {
         $effectivePath = $reportPath !== '' ? $reportPath : $filePath;
         $fileReport = new FileReport($effectivePath);
@@ -51,23 +51,23 @@ final class XmlFileProcessor
         return $this->processContent($content, $effectivePath, $fileReport, $changedLines);
     }
 
-    /** @param list<int> $changedLines */
+    /** @param list<int>|null $changedLines */
     public function processString(
         string $xmlContent,
         string $pseudoPath = 'input.xml',
-        array $changedLines = [],
+        ?array $changedLines = null,
     ): FileReport {
         $fileReport = new FileReport($pseudoPath);
 
         return $this->processContent($xmlContent, $pseudoPath, $fileReport, $changedLines);
     }
 
-    /** @param list<int> $changedLines */
+    /** @param list<int>|null $changedLines */
     private function processContent(
         string $content,
         string $filePath,
         FileReport $fileReport,
-        array $changedLines = [],
+        ?array $changedLines = null,
     ): FileReport {
         $content = $this->preprocessor->process($content);
 
@@ -87,7 +87,7 @@ final class XmlFileProcessor
             $this->report->addSniffTime($sniff->getCode(), microtime(true) - $start);
         }
 
-        if ($changedLines !== []) {
+        if ($changedLines !== null) {
             $violations = $this->filterRelevantViolations($violations, $document, $changedLines);
         }
 
