@@ -274,6 +274,24 @@ final class XmlFileProcessorTest extends TestCase
         self::assertSame('DocbookCS.Internal', $report->getViolations()[0]->sniffCode);
     }
 
+    #[Test]
+    public function itReportsNoViolationsInDiffModeWhenNoLinesWereAdded(): void
+    {
+        $sniff = $this->sniff([3, 5]);
+
+        $xml = $this->xml(
+            '<chapter>
+          <simpara>3</simpara>
+          <simpara>4</simpara>
+          <simpara>5</simpara>
+        </chapter>'
+        );
+
+        $report = $this->processor([$sniff])->processString($xml, 'f.xml', []);
+
+        self::assertSame(0, $report->getViolationCount());
+    }
+
     /** @param list<int> $lines */
     private function sniff(array $lines): SniffInterface
     {

@@ -278,4 +278,41 @@ final class SniffRunnerTest extends TestCase
 
         self::assertSame(2, $report->getFilesScanned());
     }
+
+    #[Test]
+    public function itReportsNoViolationsForFilesInDiffWithoutAddedLines(): void
+    {
+        $sniff = new class implements SniffInterface {
+            public function getCode(): string
+            {
+                return 'Test.ViolatingSniff';
+            }
+
+            public function process(\DOMDocument $document, string $content, string $filePath): array
+            {
+                return [
+                    new Violation(
+                        sniffCode: 'Test.ViolatingSniff',
+                        filePath: $filePath,
+                        line: 1,
+                        message: 'Test violation',
+                        severity: Severity::WARNING,
+                    ),
+                ];
+            }
+
+            public function setProperty(string $name, string $value): void
+            {
+            }
+        };
+
+        $config = $this->createConfig(sniffs: [new SniffEntry($sniff::class)]);
+        $runner = new SniffRunner();
+
+        $diffLines = ['sniff_runner/default/file_a.xml' => []];
+        $report = $runner->run($config, null, $diffLines);
+
+        self::assertSame(1, $report->getFilesScanned());
+        self::assertFalse($report->hasViolations());
+    }
 }
