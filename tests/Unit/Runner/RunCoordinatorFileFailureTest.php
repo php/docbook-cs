@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Runner;
 
 use DocbookCS\Config\ConfigData;
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Progress\ProgressInterface;
 use DocbookCS\Runner\RunCoordinator;
@@ -87,7 +87,7 @@ final class RunCoordinatorFileFailureTest extends TestCase
             entityPaths: [],
             basePath: dirname($xmlFilePath),
         );
-        $diff = new Diff([new FileChange($xmlFilePath, [42])]);
+        $diff = new DiffChangeset([new FileChange($xmlFilePath, [42])]);
 
         $report = new RunCoordinator($progress)->run($this->planDiff($config, $diff));
 
@@ -100,7 +100,7 @@ final class RunCoordinatorFileFailureTest extends TestCase
         return new RunPlanner($config)->planPaths($config->getIncludePaths());
     }
 
-    private function planDiff(ConfigData $config, Diff $diff): RunPlan
+    private function planDiff(ConfigData $config, DiffChangeset $diff): RunPlan
     {
         return new RunPlanner($config)->planDiff($diff);
     }

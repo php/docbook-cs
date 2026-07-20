@@ -8,8 +8,8 @@ use DocbookCS\Application;
 use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\SniffEntry;
-use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\DiffBaseResolver;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\GitDiffProvider;
 use DocbookCS\Diff\UpstreamResolver;
@@ -41,8 +41,8 @@ use PHPUnit\Framework\TestCase;
     UsesClass(ConfigData::class),
     UsesClass(ConfigParser::class),
     UsesClass(ConsoleReporter::class),
-    UsesClass(Diff::class),
     UsesClass(DiffBaseResolver::class),
+    UsesClass(DiffChangeset::class),
     UsesClass(DiffParser::class),
     UsesClass(DiffPathLoader::class),
     UsesClass(EntityPreprocessor::class),

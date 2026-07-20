@@ -6,8 +6,8 @@ namespace DocbookCS\Tests\Unit\Runner;
 
 use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\SniffEntry;
-use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\DiffBaseResolver;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Diff\GitDiffProvider;
 use DocbookCS\Diff\UpstreamResolver;
@@ -57,8 +57,8 @@ use PHPUnit\Framework\TestCase;
     //
     UsesClass(AbstractSniff::class),
     UsesClass(ConfigData::class),
-    UsesClass(Diff::class),
     UsesClass(DiffBaseResolver::class),
+    UsesClass(DiffChangeset::class),
     UsesClass(EntityExpansionMarker::class),
     UsesClass(EntityPreprocessor::class),
     UsesClass(File::class),
@@ -165,7 +165,7 @@ final class RunScopeTest extends TestCase
 
         $report = $this->executeDiff(
             $config,
-            new Diff([
+            new DiffChangeset([
                 new FileChange($this->sourceFile, [1]),
             ]),
         );
@@ -187,7 +187,7 @@ final class RunScopeTest extends TestCase
 
         $report = $this->executeDiff(
             $config,
-            new Diff([
+            new DiffChangeset([
                 new FileChange('docs/source.xml', [1]),
             ]),
         );
@@ -222,7 +222,7 @@ final class RunScopeTest extends TestCase
 
     private function executeDiff(
         ConfigData $config,
-        Diff $diff,
+        DiffChangeset $diff,
         RunMode $mode = RunMode::Sniff,
         bool $wide = false,
     ): Report {

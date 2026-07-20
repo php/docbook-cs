@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Runner;
 
 use DocbookCS\Config\ConfigData;
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\PathLoader;
@@ -46,7 +46,7 @@ final readonly class RunScopeResolver
     }
 
     /** @return array<string, FileChange|null> */
-    public function resolveDiff(Diff $diff): array
+    public function resolveDiff(DiffChangeset $diff): array
     {
         $resolvedDiff = new DiffPathLoader(
             $diff,

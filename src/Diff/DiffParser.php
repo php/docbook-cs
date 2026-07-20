@@ -8,7 +8,7 @@ final class DiffParser
 {
     private const string NO_FINAL_LINE_MARKER = '\ No newline at end of file';
 
-    public function parse(string $diff): Diff
+    public function parse(string $diff): DiffChangeset
     {
         /** @var array<string, list<int>> $changedLinesByFile */
         $changedLinesByFile = [];
@@ -108,6 +108,6 @@ final class DiffParser
             );
         }
 
-        return new Diff($fileChanges);
+        return new DiffChangeset($fileChanges);
     }
 }

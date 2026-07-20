@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Runner;
 
 use DocbookCS\Config\ConfigData;
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\PathLoader;
@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(RunScopeResolver::class),
     //
     UsesClass(ConfigData::class),
-    UsesClass(Diff::class),
+    UsesClass(DiffChangeset::class),
     UsesClass(DiffPathLoader::class),
     UsesClass(FileChange::class),
     UsesClass(PathLoader::class),
@@ -61,7 +61,7 @@ final class RunScopeResolverTest extends TestCase
         $resolver = $this->resolver();
 
         $targets = $resolver->resolveDiff(
-            new Diff([new FileChange('source.xml', [2, 3])]),
+            new DiffChangeset([new FileChange('source.xml', [2, 3])]),
         );
 
         self::assertSame([2, 3], $targets[$this->sourceFile]?->addedLineNumbers);
@@ -74,7 +74,7 @@ final class RunScopeResolverTest extends TestCase
         $resolver = $this->resolver(wide: true);
 
         $targets = $resolver->resolveDiff(
-            new Diff([new FileChange('source.xml', [2, 3])]),
+            new DiffChangeset([new FileChange('source.xml', [2, 3])]),
         );
 
         self::assertNull($targets[$this->sourceFile]);
