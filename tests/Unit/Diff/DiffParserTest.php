@@ -167,7 +167,7 @@ DIFF;
 
         $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
-        // No lines added, so the changed set is empty
+        // No lines added, so the changed set is empty (not absent — the file is tracked).
         self::assertArrayHasKey('file.xml', $result);
         self::assertSame([], $result['file.xml']);
     }
