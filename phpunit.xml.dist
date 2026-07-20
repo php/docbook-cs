@@ -3,7 +3,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
 		bootstrap="vendor/autoload.php"
-		cacheDirectory=".phpunit.cache"
+		cacheDirectory="var/.phpunit.cache"
 		executionOrder="depends,defects"
 		requireCoverageMetadata="true"
 		beStrictAboutCoverageMetadata="true"
@@ -28,13 +28,13 @@
 
 	<coverage>
 		<report>
-			<html outputDirectory=".phpunit.cache/coverage-html" />
-			<clover outputFile=".phpunit.cache/coverage.xml" />
+			<html outputDirectory="var/.phpunit.cache/coverage-html" />
+			<clover outputFile="var/.phpunit.cache/coverage.xml" />
 			<text outputFile="php://stdout" showOnlySummary="true" />
 		</report>
 	</coverage>
 
 	<logging>
-		<junit outputFile=".phpunit.cache/junit.xml" />
+		<junit outputFile="var/.phpunit.cache/junit.xml" />
 	</logging>
 </phpunit>

@@ -75,7 +75,7 @@ jobs:
       - name: "Install dependencies"
         run: "composer install --no-interaction --prefer-dist"
 
-      - run: "mkdir -p .phpunit.cache"
+      - run: "mkdir -p var/.phpunit.cache"
 
       - name: "Run PHPUnit (console)"
         run: "vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always"
@@ -83,23 +83,23 @@ jobs:
       - name: "Generate coverage summary"
         if: ${{ ! cancelled() }}
         run: |
-          echo '```' > .phpunit.cache/coverage.txt
+          echo '```' > var/.phpunit.cache/coverage.txt
           vendor/bin/phpunit \
             --configuration phpunit.xml.dist \
             --colors=never \
-            --coverage-text >> .phpunit.cache/coverage.txt
-          echo '```' >> .phpunit.cache/coverage.txt
+            --coverage-text >> var/.phpunit.cache/coverage.txt
+          echo '```' >> var/.phpunit.cache/coverage.txt
 
       - name: "Report test results"
         uses: "mikepenz/action-junit-report@v6"
         if: ${{ ! cancelled() }}
         with:
-          report_paths: ".phpunit.cache/junit.xml"
+          report_paths: "var/.phpunit.cache/junit.xml"
           annotate_only: true
 
       - name: "Post coverage summary"
         if: ${{ ! cancelled() }}
-        run: 'cat .phpunit.cache/coverage.txt >> "$GITHUB_STEP_SUMMARY"'
+        run: 'cat var/.phpunit.cache/coverage.txt >> "$GITHUB_STEP_SUMMARY"'
 
       - name: "Upload coverage report"
         uses: "actions/upload-artifact@v7"
@@ -107,7 +107,7 @@ jobs:
         with:
           name: "coverage-report"
           path: |
-            .phpunit.cache/coverage-html
-            .phpunit.cache/coverage.xml
-            .phpunit.cache/junit.xml
+            var/.phpunit.cache/coverage-html
+            var/.phpunit.cache/coverage.xml
+            var/.phpunit.cache/junit.xml
           retention-days: 7
