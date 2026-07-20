@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Sniff;
 
 use DocbookCS\Report\Violation;
+use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Sniff\ExceptionNameSniff;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(ExceptionNameSniff::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(EntityExpansionMarker::class),
 ]
 final class ExceptionNameSniffTest extends TestCase
 {

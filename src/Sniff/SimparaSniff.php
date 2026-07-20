@@ -111,6 +111,10 @@ final class SimparaSniff extends AbstractSniff
 
         /** @var \DOMElement $para */
         foreach ($paras as $para) {
+            if (!$this->isSourceBacked($para)) {
+                continue;
+            }
+
             $parent = $para->parentNode;
             if (
                 $parent instanceof \DOMElement

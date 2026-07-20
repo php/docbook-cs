@@ -38,6 +38,10 @@ final class ExceptionNameSniff extends AbstractSniff
 
         /** @var \DOMElement $node */
         foreach ($classnames as $node) {
+            if (!$this->isSourceBacked($node)) {
+                continue;
+            }
+
             $text = trim($node->textContent);
 
             if ($text === '') {
