@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Severity;
 
@@ -27,9 +28,11 @@ final class ConsoleReporter implements ReporterInterface
                 continue;
             }
 
+            $filePath = RelativePath::fromWorkingDirectory($fileReport->filePath);
+
             $output .= PHP_EOL;
-            $output .= $this->bold('FILE: ' . $fileReport->filePath) . PHP_EOL;
-            $output .= str_repeat('-', min(80, 6 + strlen($fileReport->filePath))) . PHP_EOL;
+            $output .= $this->bold('FILE: ' . $filePath) . PHP_EOL;
+            $output .= str_repeat('-', min(80, 6 + strlen($filePath))) . PHP_EOL;
 
             foreach ($fileReport->getViolations() as $violation) {
                 $output .= sprintf(
@@ -41,7 +44,7 @@ final class ConsoleReporter implements ReporterInterface
                 ) . PHP_EOL;
             }
 
-            $output .= str_repeat('-', min(80, 6 + strlen($fileReport->filePath))) . PHP_EOL;
+            $output .= str_repeat('-', min(80, 6 + strlen($filePath))) . PHP_EOL;
         }
 
         $output .= PHP_EOL;

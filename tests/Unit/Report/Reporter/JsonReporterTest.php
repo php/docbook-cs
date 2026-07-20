@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\JsonReporter;
@@ -11,6 +12,7 @@ use DocbookCS\Report\Severity;
 use DocbookCS\Report\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -18,6 +20,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(JsonReporter::class),
     CoversClass(Report::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(RelativePath::class),
 ]
 final class JsonReporterTest extends TestCase
 {
@@ -310,6 +314,20 @@ final class JsonReporterTest extends TestCase
 
         self::assertStringContainsString('path/to/file.xml', $output);
         self::assertStringNotContainsString('path\/to\/file.xml', $output);
+    }
+
+    #[Test]
+    public function itRendersAbsoluteFilePathRelativeToWorkingDirectory(): void
+    {
+        $fileReport = new FileReport((getcwd() ?: '') . '/path/to/file.xml');
+        $fileReport->addViolation($this->createViolation());
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        $data = $this->parseOutput($this->reporter->generate($report));
+
+        self::assertArrayHasKey('path/to/file.xml', $data['files']);
     }
 
     #[Test]
