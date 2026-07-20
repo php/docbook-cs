@@ -138,7 +138,7 @@ XML;
     public function itThrowsOnMissingFile(): void
     {
         $this->expectException(ConfigParserException::class);
-        $this->expectExceptionMessage('not found');
+        $this->expectExceptionMessageIsOrContains('not found');
 
         $this->parser->parseFile('/nonexistent/docbookcs.xml');
     }
@@ -147,7 +147,7 @@ XML;
     public function itThrowsOnInvalidXml(): void
     {
         $this->expectException(ConfigParserException::class);
-        $this->expectExceptionMessage('Invalid XML');
+        $this->expectExceptionMessageIsOrContains('Invalid XML');
 
         $this->parser->parseString('<broken><xml', '/base');
     }
@@ -166,7 +166,7 @@ XML;
 XML;
 
         $this->expectException(ConfigParserException::class);
-        $this->expectExceptionMessage('<sniffs>');
+        $this->expectExceptionMessageIsOrContains('<sniffs>');
 
         $this->parser->parseString($xml, '/base');
     }
@@ -187,7 +187,7 @@ XML;
 XML;
 
         $this->expectException(ConfigParserException::class);
-        $this->expectExceptionMessage('class');
+        $this->expectExceptionMessageIsOrContains('class');
 
         $this->parser->parseString($xml, '/base');
     }
@@ -210,7 +210,7 @@ XML;
 XML;
 
         $this->expectException(ConfigParserException::class);
-        $this->expectExceptionMessage('name');
+        $this->expectExceptionMessageIsOrContains('name');
 
         $this->parser->parseString($xml, '/base');
     }
@@ -314,7 +314,7 @@ XML;
         $fixturePath = __DIR__ . '/../../fixtures/invalid.xml';
 
         $this->expectException(ConfigParserException::class);
-        $this->expectExceptionMessage('Invalid XML');
+        $this->expectExceptionMessageIsOrContains('Invalid XML');
 
         $this->parser->parseFile($fixturePath);
     }
