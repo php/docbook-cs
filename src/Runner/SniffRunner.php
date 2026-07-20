@@ -6,6 +6,7 @@ namespace DocbookCS\Runner;
 
 use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\SniffEntry;
+use DocbookCS\Diff\Diff;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
@@ -25,11 +26,10 @@ final class SniffRunner
 
     /**
      * @param list<string>|null $overridePaths
-     * @param array<string, list<int>>|null $diffLines
      * @throws \RuntimeException if a sniff class cannot be found or does not implement SniffInterface.
      * @throws \UnexpectedValueException if no files are found to scan.
      */
-    public function run(ConfigData $config, ?array $overridePaths = null, ?array $diffLines = null): Report
+    public function run(ConfigData $config, ?array $overridePaths = null, ?Diff $diff = null): Report
     {
         $startTime = microtime(true);
 
@@ -45,8 +45,11 @@ final class SniffRunner
         $pathLoader = new PathLoader($includePaths, $matcher);
         $files = $pathLoader->loadPaths();
 
-        if ($diffLines !== null) {
-            $files = $this->filterByDiff($files, array_keys($diffLines));
+        if ($diff !== null) {
+            $files = array_values(array_filter(
+                $files,
+                static fn(string $file): bool => $diff->changeFor($file) !== null,
+            ));
         }
 
         $report = new Report();
@@ -60,9 +63,7 @@ final class SniffRunner
         foreach ($files as $index => $file) {
             $report->incrementFilesScanned();
 
-            $changedLines = $diffLines !== null
-                ? $this->getChangedLinesForFile($file, $diffLines)
-                : null;
+            $changedLines = $diff?->changeFor($file)?->addedLineNumbers;
 
             $fileReport = $processor->processFile(
                 $file,
@@ -125,40 +126,6 @@ final class SniffRunner
         return $sniffs;
     }
 
-    /**
-     * @param list<string> $files
-     * @param list<string> $diffPaths
-     * @return list<string>
-     */
-    private function filterByDiff(array $files, array $diffPaths): array
-    {
-        return array_values(
-            array_filter(
-                $files,
-                fn(string $file) => $this->matchesDiffPath($file, $diffPaths),
-            )
-        );
-    }
-
-    /** @param list<string> $diffPaths */
-    private function matchesDiffPath(string $absolutePath, array $diffPaths): bool
-    {
-        $normalized = str_replace('\\', '/', $absolutePath);
-
-        foreach ($diffPaths as $diffPath) {
-            $normalizedDiff = str_replace('\\', '/', $diffPath);
-
-            if (
-                $normalized === $normalizedDiff
-                || str_ends_with($normalized, '/' . ltrim($normalizedDiff, '/'))
-            ) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private function makeRelative(string $absolutePath): string
     {
         $cwd = getcwd();
@@ -174,27 +141,5 @@ final class SniffRunner
         }
 
         return $absolutePath; // @codeCoverageIgnore
-    }
-
-    /**
-     * @param array<string, list<int>> $diffLines
-     * @return list<int>
-     */
-    private function getChangedLinesForFile(string $absolutePath, array $diffLines): array
-    {
-        $normalized = str_replace('\\', '/', $absolutePath);
-
-        foreach ($diffLines as $diffPath => $lines) {
-            $normalizedDiff = str_replace('\\', '/', $diffPath);
-
-            if (
-                $normalized === $normalizedDiff
-                || str_ends_with($normalized, '/' . ltrim($normalizedDiff, '/'))
-            ) {
-                return $lines;
-            }
-        }
-
-        return []; // @codeCoverageIgnore
     }
 }
