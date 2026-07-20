@@ -6,7 +6,9 @@ namespace DocbookCS\Tests\Unit;
 
 use DocbookCS\Application;
 use DocbookCS\Config\ConfigData;
+use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\DiffParser;
+use DocbookCS\Diff\FileChange;
 use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\ConfigParserException;
 use DocbookCS\Config\SniffEntry;
@@ -25,6 +27,7 @@ use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Sniff\ExceptionNameSniff;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -47,6 +50,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(SniffEntry::class),
     CoversClass(SniffRunner::class),
     CoversClass(XmlFileProcessor::class),
+    UsesClass(Diff::class),
+    UsesClass(FileChange::class),
 ]
 final class ApplicationTest extends TestCase
 {

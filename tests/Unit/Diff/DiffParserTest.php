@@ -6,12 +6,16 @@ namespace DocbookCS\Tests\Unit\Diff;
 
 use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\DiffParser;
+use DocbookCS\Diff\FileChange;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(DiffParser::class),
+    UsesClass(Diff::class),
+    UsesClass(FileChange::class),
 ]
 final class DiffParserTest extends TestCase
 {

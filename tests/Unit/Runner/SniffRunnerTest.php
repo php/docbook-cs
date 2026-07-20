@@ -23,6 +23,7 @@ use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Sniff\SniffInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -38,6 +39,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(SniffRunner::class),
     CoversClass(Violation::class),
     CoversClass(XmlFileProcessor::class),
+    UsesClass(Diff::class),
+    UsesClass(FileChange::class),
 ]
 final class SniffRunnerTest extends TestCase
 {
