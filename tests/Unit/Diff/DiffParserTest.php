@@ -170,6 +170,25 @@ DIFF;
     }
 
     #[Test]
+    public function itIgnoresTheMissingFinalNewlineMarker(): void
+    {
+        $diff = <<<'DIFF'
+diff --git a/file.xml b/file.xml
+--- a/file.xml
++++ b/file.xml
+@@ -1 +1,2 @@
+-old
+\ No newline at end of file
++new
++second
+DIFF;
+
+        $result = $this->parser->parse($diff);
+
+        self::assertSame([1, 2], $result['file.xml']);
+    }
+
+    #[Test]
     public function itTracksLineNumbersAcrossMultipleHunks(): void
     {
         $diff = <<<'DIFF'
