@@ -16,7 +16,7 @@ final class SniffEntryTest extends TestCase
     public function itThrowsExceptionForEmptyClassName(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageIsOrContains('Sniff class name must not be empty.');
+        $this->expectExceptionMessageIs('Sniff class name must not be empty.');
 
         new SniffEntry('');
     }
