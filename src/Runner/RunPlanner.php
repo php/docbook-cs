@@ -19,10 +19,12 @@ final readonly class RunPlanner
 
     public function __construct(
         private ConfigData $config,
+        private RunMode $mode = RunMode::Sniff,
         private bool $wide = false,
         ?DiffProviderInterface $diffProvider = null,
     ) {
         $this->diffProvider = $diffProvider ?? new GitDiffProvider();
+
         $this->entityResolver = new EntityResolver(
             $config->getProjectRoots(),
             $config->getEntityPaths(),
@@ -55,6 +57,7 @@ final readonly class RunPlanner
     public function planPaths(array $paths): RunPlan
     {
         return new RunPlan(
+            mode: $this->mode,
             sniffs: $this->config->getSniffs(),
             targets: $this->scopeResolver()->resolvePaths($paths),
             entities: $this->entityResolver->resolve(),
@@ -65,6 +68,7 @@ final readonly class RunPlanner
     public function planDiff(Diff $diff): RunPlan
     {
         return new RunPlan(
+            mode: $this->mode,
             sniffs: $this->config->getSniffs(),
             targets: $this->scopeResolver()->resolveDiff($diff),
             entities: $this->entityResolver->resolve(),
@@ -74,6 +78,10 @@ final readonly class RunPlanner
     /** @throws \UnexpectedValueException if an entity directory cannot be read. */
     private function scopeResolver(): RunScopeResolver
     {
-        return new RunScopeResolver($this->config, $this->entityResolver->paths(), $this->wide);
+        return new RunScopeResolver(
+            $this->config,
+            $this->entityResolver->paths(),
+            $this->wide,
+        );
     }
 }

@@ -5,12 +5,17 @@ declare(strict_types=1);
 namespace DocbookCS\Runner;
 
 use DocbookCS\Config\SniffEntry;
+use DocbookCS\Fix\FixerException;
 use DocbookCS\Progress\NullProgress;
 use DocbookCS\Progress\ProgressInterface;
+use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Sniff\SniffInterface;
+use DocbookCS\Source\File;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\Violation;
 
-final class SniffRunner
+final class RunCoordinator
 {
     private ProgressInterface $progress;
 
@@ -21,12 +26,13 @@ final class SniffRunner
 
     /**
      * @throws \RuntimeException if a sniff class cannot be found or does not implement SniffInterface.
+     * @throws FixerException
      */
     public function run(RunPlan $plan): Report
     {
         $startTime = microtime(true);
 
-        $sniffs = $this->instantiateSniffs($plan->sniffs);
+        $sniffs = $this->instantiateSniffs($plan->sniffs, $plan->mode);
 
         $report = new Report();
         $preprocessor = new EntityPreprocessor($plan->entities);
@@ -37,18 +43,31 @@ final class SniffRunner
         $this->progress->start($total);
 
         $index = 0;
-        foreach ($plan->targets as $file => $fileChange) {
+        foreach ($plan->targets as $filePath => $fileChange) {
             $report->incrementFilesScanned();
 
-            $changedLines = $fileChange !== null
-                ? array_values(array_unique([...$fileChange->addedLineNumbers, ...$fileChange->deletionAnchors]))
-                : null;
+            $content = @file_get_contents($filePath);
 
-            $fileReport = $processor->processFile(
-                $file,
-                $changedLines,
-                $file,
-            );
+            if ($content === false) {
+                $fileReport = new FileReport($filePath);
+                $fileReport->addViolation(new Violation(
+                    sniffCode: 'DocbookCS.Internal',
+                    filePath: $filePath,
+                    line: 0,
+                    beginOffset: 0,
+                    untilOffset: 0,
+                    message: 'Could not read file.',
+                    severity: Severity::ERROR,
+                ));
+            } else {
+                $file = new File($filePath, $content);
+                $result = $processor->process($file, $fileChange);
+                $fileReport = $result->fileReport;
+
+                if ($result->isModified() && @file_put_contents($filePath, $result->fixedContent()) === false) {
+                    throw FixerException::cannotPersist($filePath);
+                }
+            }
 
             $violationCount = $fileReport->getViolationCount();
 
@@ -56,7 +75,7 @@ final class SniffRunner
                 $report->addFileReport($fileReport);
             }
 
-            $this->progress->advance(++$index, $file, $violationCount);
+            $this->progress->advance(++$index, $filePath, $violationCount);
         }
 
         $this->progress->finish();
@@ -71,7 +90,7 @@ final class SniffRunner
      * @return list<SniffInterface>
      * @throws \RuntimeException if a sniff class cannot be found or does not implement SniffInterface.
      */
-    private function instantiateSniffs(array $entries): array
+    private function instantiateSniffs(array $entries, RunMode $mode): array
     {
         $sniffs = [];
 
@@ -79,20 +98,17 @@ final class SniffRunner
             $className = $entry->getClassName();
 
             if (!class_exists($className)) {
-                throw new \RuntimeException(sprintf(
-                    'Sniff class "%s" does not exist.',
-                    $className,
-                ));
+                throw new \RuntimeException(
+                    sprintf('Sniff class "%s" does not exist.', $className),
+                );
             }
 
-            $instance = new $className();
+            $instance = new $className($mode);
 
             if (!$instance instanceof SniffInterface) {
-                throw new \RuntimeException(sprintf(
-                    'Class "%s" does not implement %s.',
-                    $className,
-                    SniffInterface::class,
-                ));
+                throw new \RuntimeException(
+                    sprintf('Class "%s" does not implement %s.', $className, SniffInterface::class),
+                );
             }
 
             foreach ($entry->getProperties() as $name => $value) {

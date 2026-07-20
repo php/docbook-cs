@@ -8,8 +8,9 @@ use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\ConsoleReporter;
-use DocbookCS\Report\Severity;
-use DocbookCS\Report\Violation;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -22,6 +23,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Violation::class),
     //
     UsesClass(RelativePath::class),
+    UsesClass(SourceRange::class),
 ]
 final class ConsoleReporterTest extends TestCase
 {
@@ -39,7 +41,7 @@ final class ConsoleReporterTest extends TestCase
         Severity $severity = Severity::ERROR,
         string $filePath = 'filepath.xml',
     ): Violation {
-        return new Violation($sniffCode, $filePath, $line, $message, $severity);
+        return new Violation($sniffCode, $filePath, $line, 0, 0, $message, severity: $severity);
     }
 
     #[Test]

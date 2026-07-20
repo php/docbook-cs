@@ -101,7 +101,11 @@ final class DiffParser
         $fileChanges = [];
 
         foreach ($changedLinesByFile as $filePath => $lineNumbers) {
-            $fileChanges[] = new FileChange($filePath, $lineNumbers, $deletionAnchorsByFile[$filePath]);
+            $fileChanges[] = new FileChange(
+                $filePath,
+                $lineNumbers,
+                $deletionAnchorsByFile[$filePath],
+            );
         }
 
         return new Diff($fileChanges);

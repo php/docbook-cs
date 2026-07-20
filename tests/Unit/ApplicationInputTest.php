@@ -22,11 +22,13 @@ use DocbookCS\Progress\NullProgress;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\ConsoleReporter;
 use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\RunCoordinator;
+use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
 use DocbookCS\Runner\RunScopeResolver;
-use DocbookCS\Runner\SniffRunner;
 use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Sniff\AbstractSniff;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -35,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 #[
     CoversClass(Application::class),
     //
+    UsesClass(AbstractSniff::class),
     UsesClass(ConfigData::class),
     UsesClass(ConfigParser::class),
     UsesClass(ConsoleReporter::class),
@@ -50,11 +53,12 @@ use PHPUnit\Framework\TestCase;
     UsesClass(NullProgress::class),
     UsesClass(PathMatcher::class),
     UsesClass(Report::class),
+    UsesClass(RunCoordinator::class),
+    UsesClass(RunMode::class),
     UsesClass(RunPlan::class),
     UsesClass(RunPlanner::class),
     UsesClass(RunScopeResolver::class),
     UsesClass(SniffEntry::class),
-    UsesClass(SniffRunner::class),
     UsesClass(UpstreamResolver::class),
     UsesClass(XmlFileProcessor::class),
 ]
@@ -142,7 +146,7 @@ final class ApplicationInputTest extends TestCase
     }
 
     #[Test]
-    public function itIncludesTheWideOptionInHelp(): void
+    public function itIncludesFixAndWideOptionsInHelp(): void
     {
         $app = new Application(['docbook-cs', '--help'], $this->stdout, $this->stderr);
 
@@ -150,6 +154,7 @@ final class ApplicationInputTest extends TestCase
 
         $output = $this->readStream($this->stdout);
 
+        self::assertStringContainsString('--fix', $output);
         self::assertStringContainsString('--wide', $output);
         self::assertStringNotContainsString('--diff', $output);
     }

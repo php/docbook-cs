@@ -30,12 +30,17 @@ use DocbookCS\Report\Reporter\CheckstyleReporter;
 use DocbookCS\Report\Reporter\ConsoleReporter;
 use DocbookCS\Report\Reporter\JsonReporter;
 use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\RunMode;
+use DocbookCS\Runner\RunCoordinator;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
 use DocbookCS\Runner\RunScopeResolver;
-use DocbookCS\Runner\SniffRunner;
+use DocbookCS\Runner\SourceScope;
+use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlProcessingResult;
 use DocbookCS\Sniff\ExceptionNameSniff;
+use DocbookCS\Source\File;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -58,14 +63,16 @@ use PHPUnit\Framework\TestCase;
     CoversClass(PathLoader::class),
     CoversClass(PathMatcher::class),
     CoversClass(Report::class),
+    CoversClass(RunCoordinator::class),
+    CoversClass(RunMode::class),
     CoversClass(RunPlan::class),
     CoversClass(RunPlanner::class),
     CoversClass(SniffEntry::class),
-    CoversClass(SniffRunner::class),
     CoversClass(XmlFileProcessor::class),
     UsesClass(Diff::class),
     UsesClass(DiffBaseResolver::class),
     UsesClass(DiffPathLoader::class),
+    UsesClass(File::class),
     UsesClass(FileChange::class),
     UsesClass(GitClient::class),
     UsesClass(GitDiffProvider::class),
@@ -73,7 +80,10 @@ use PHPUnit\Framework\TestCase;
     UsesClass(NativeProcessRunner::class),
     UsesClass(ProcessResult::class),
     UsesClass(RunScopeResolver::class),
+    UsesClass(SourceScope::class),
     UsesClass(UpstreamResolver::class),
+    UsesClass(ViolationScopeFilter::class),
+    UsesClass(XmlProcessingResult::class),
 ]
 final class ApplicationTest extends TestCase
 {
@@ -109,7 +119,7 @@ final class ApplicationTest extends TestCase
         return stream_get_contents($stream) ?: '';
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itPrintsHelpAndExitsWithZero(): void
     {
         $app = new Application(['docbook-cs', '--help'], $this->stdout, $this->stderr);
@@ -121,7 +131,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itPrintsVersionAndExitsWithZero(): void
     {
         $app = new Application(['docbook-cs', '--version'], $this->stdout, $this->stderr);
@@ -133,7 +143,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itReturnsErrorWhenConfigCannotBeLoaded(): void
     {
         $app = new Application(
@@ -148,7 +158,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Error:', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itHandlesSeparateConfigArgument(): void
     {
         $app = new Application(
@@ -163,7 +173,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Error:', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itAcceptsPathsWithoutCrashing(): void
     {
         $app = new Application(
@@ -177,7 +187,7 @@ final class ApplicationTest extends TestCase
         self::assertContains($exitCode, [0, 1, 2]);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsQuietFlag(): void
     {
         $app = new Application(['docbook-cs', '--quiet'], $this->stdout, $this->stderr);
@@ -187,7 +197,7 @@ final class ApplicationTest extends TestCase
         self::assertContains($exitCode, [0, 1, 2]);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsReportFormats(): void
     {
         foreach (['console', 'json', 'checkstyle'] as $format) {
@@ -203,7 +213,7 @@ final class ApplicationTest extends TestCase
         }
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsColorFlags(): void
     {
         foreach (['--colors', '--no-colors'] as $flag) {
@@ -219,7 +229,7 @@ final class ApplicationTest extends TestCase
         }
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function helpShortCircuitsExecution(): void
     {
         $app = new Application(
@@ -235,7 +245,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function versionShortCircuitsExecution(): void
     {
         $app = new Application(
@@ -251,7 +261,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itResolvesRelativeOverridePathsAgainstCwd(): void
     {
         $app = new Application(
@@ -267,7 +277,7 @@ final class ApplicationTest extends TestCase
         self::assertNotSame(2, $exitCode);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itCatchesRuntimeErrorFromRunner(): void
     {
         $app = new Application(
@@ -282,7 +292,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Runtime error:', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsSeparateReportArgument(): void
     {
         $app = new Application(
@@ -296,7 +306,7 @@ final class ApplicationTest extends TestCase
         self::assertContains($exitCode, [0, 1, 2]);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itPassesThroughAbsoluteOverridePaths(): void
     {
         $app = new Application(
@@ -310,7 +320,7 @@ final class ApplicationTest extends TestCase
         self::assertNotSame(2, $exitCode);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSuppressesProgressWhenQuietFlagIsSet(): void
     {
         $app = new Application(
@@ -325,7 +335,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSuppressesProgressForStructuredReportFormats(): void
     {
         foreach (['json', 'checkstyle'] as $format) {
@@ -348,7 +358,7 @@ final class ApplicationTest extends TestCase
         }
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itShowsPerformanceWhenPerfFlagIsEnabled(): void
     {
         $app = new Application(
@@ -371,7 +381,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('PERFORMANCE', $output);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itDoesNotShowPerformanceByDefault(): void
     {
         $app = new Application(

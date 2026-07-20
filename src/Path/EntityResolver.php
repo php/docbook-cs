@@ -121,12 +121,8 @@ final class EntityResolver
      * @param array<string, string> $paths
      * @return array<string, string>
      */
-    private function resolveFile(
-        string $filePath,
-        array &$visited,
-        array &$paths,
-        ?string $originEntity = null
-    ): array {
+    private function resolveFile(string $filePath, array &$visited, array &$paths, ?string $originEntity = null): array
+    {
         if (isset($visited[$filePath]) || !is_readable($filePath)) {
             return [];
         }
@@ -153,14 +149,9 @@ final class EntityResolver
      * @param array<string, string> $paths
      * @return array<string, string>
      */
-    private function extractEntities(
-        string $content,
-        string $filePath,
-        array &$visited,
-        array &$paths,
-    ): array {
-        return
-            $this->extractDtdEntities($content, $filePath, $visited, $paths)
+    private function extractEntities(string $content, string $filePath, array &$visited, array &$paths): array
+    {
+        return $this->extractDtdEntities($content, $filePath, $visited, $paths)
             + $this->extractXmlEntities($content);
     }
 
@@ -169,12 +160,8 @@ final class EntityResolver
      * @param array<string, string> $paths
      * @return array<string, string>
      */
-    private function extractDtdEntities(
-        string $content,
-        string $filePath,
-        array &$visited,
-        array &$paths,
-    ): array {
+    private function extractDtdEntities(string $content, string $filePath, array &$visited, array &$paths): array
+    {
         $result = [];
 
         if (!str_contains($content, '<!ENTITY')) {

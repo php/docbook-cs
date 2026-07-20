@@ -58,7 +58,11 @@ final class RunScopeResolverTest extends TestCase
     #[Test]
     public function narrowScopeKeepsOnlySelectedFilesAndDiffLines(): void
     {
-        $targets = $this->resolver()->resolveDiff(new Diff([new FileChange('source.xml', [2, 3])]));
+        $resolver = $this->resolver();
+
+        $targets = $resolver->resolveDiff(
+            new Diff([new FileChange('source.xml', [2, 3])]),
+        );
 
         self::assertSame([2, 3], $targets[$this->sourceFile]?->addedLineNumbers);
         self::assertCount(1, $targets);
@@ -67,7 +71,11 @@ final class RunScopeResolverTest extends TestCase
     #[Test]
     public function wideScopeWidensSelectedFilesAndFollowsReferencedTargets(): void
     {
-        $targets = $this->resolver(wide: true)->resolveDiff(new Diff([new FileChange('source.xml', [2, 3])]));
+        $resolver = $this->resolver(wide: true);
+
+        $targets = $resolver->resolveDiff(
+            new Diff([new FileChange('source.xml', [2, 3])]),
+        );
 
         self::assertNull($targets[$this->sourceFile]);
         self::assertNull($targets[$this->targetFile]);
@@ -86,7 +94,9 @@ final class RunScopeResolverTest extends TestCase
             wide: true,
         );
 
-        self::assertSame([$this->sourceFile => null], $resolver->resolvePaths([$this->sourceFile]));
+        $targets = $resolver->resolvePaths([$this->sourceFile]);
+
+        self::assertSame([$this->sourceFile => null], $targets);
     }
 
     #[Test]
@@ -95,7 +105,9 @@ final class RunScopeResolverTest extends TestCase
         $path = 'tests/fixtures/sniff_runner/default/file_a.xml';
         $absolutePath = (getcwd() ?: '.') . '/' . $path;
 
-        self::assertSame([$absolutePath => null], $this->resolver()->resolvePaths([$path]));
+        $targets = $this->resolver()->resolvePaths([$path]);
+
+        self::assertSame([$absolutePath => null], $targets);
     }
 
     #[Test]

@@ -9,7 +9,9 @@ use DocbookCS\Diff\FileChange;
 
 final readonly class DiffPathLoader
 {
-    /** @param array<string, string> $projectRoots */
+    /**
+     * @param array<string, string> $projectRoots
+     */
     public function __construct(
         private Diff $diff,
         private string $workingDirectory,
@@ -69,8 +71,8 @@ final readonly class DiffPathLoader
         }
 
         return array_map($this->normalize(...), $candidates)
-            |> array_unique(...)
-            |> array_values(...);
+                |> array_unique(...)
+                |> array_values(...);
     }
 
     private function isAbsolute(string $path): bool

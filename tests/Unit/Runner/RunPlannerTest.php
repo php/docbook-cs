@@ -6,9 +6,9 @@ namespace DocbookCS\Tests\Unit\Runner;
 
 use DocbookCS\Config\ConfigData;
 use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\FileChange;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\DiffProviderInterface;
-use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathMatcher;

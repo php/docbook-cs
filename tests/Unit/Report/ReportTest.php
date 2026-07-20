@@ -7,10 +7,12 @@ namespace DocbookCS\Tests\Unit\Report;
 use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
-use DocbookCS\Report\Severity;
-use DocbookCS\Report\Violation;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -18,6 +20,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(RelativePath::class),
     CoversClass(Report::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(SourceRange::class),
 ]
 final class ReportTest extends TestCase
 {
@@ -28,7 +32,7 @@ final class ReportTest extends TestCase
         Severity $severity = Severity::ERROR,
         string $filePath = 'file.xml',
     ): Violation {
-        return new Violation($sniffCode, $filePath, $line, $message, $severity);
+        return new Violation($sniffCode, $filePath, $line, 0, 0, $message, severity: $severity);
     }
 
     #[Test]
@@ -71,6 +75,16 @@ final class ReportTest extends TestCase
     }
 
     #[Test]
+    public function itKeepsTheFileReportPathWhileRenderingItRelativeToWorkingDirectory(): void
+    {
+        $filePath = (getcwd() ?: '') . '/src/chapter.xml';
+        $fileReport = new FileReport($filePath);
+
+        self::assertSame($filePath, $fileReport->filePath);
+        self::assertSame('src/chapter.xml', RelativePath::fromWorkingDirectory($fileReport->filePath));
+    }
+
+    #[Test]
     public function itKeysFileReportsByFilePath(): void
     {
         $report = new Report();
@@ -94,16 +108,6 @@ final class ReportTest extends TestCase
 
         self::assertCount(1, $report->getFileReports());
         self::assertSame($second, $report->getFileReports()['file.xml']);
-    }
-
-    #[Test]
-    public function itKeepsTheFileReportPathWhileRenderingItRelativeToWorkingDirectory(): void
-    {
-        $filePath = (getcwd() ?: '') . '/src/chapter.xml';
-        $fileReport = new FileReport($filePath);
-
-        self::assertSame($filePath, $fileReport->filePath);
-        self::assertSame('src/chapter.xml', RelativePath::fromWorkingDirectory($fileReport->filePath));
     }
 
     #[Test]
