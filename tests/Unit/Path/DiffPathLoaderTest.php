@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Path;
 
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\PathMatcher;
@@ -14,7 +14,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
-    CoversClass(Diff::class),
+    CoversClass(DiffChangeset::class),
     CoversClass(DiffPathLoader::class),
     CoversClass(PathMatcher::class),
     //
@@ -44,7 +44,7 @@ final class DiffPathLoaderTest extends TestCase
         file_put_contents($file, '<chapter/>');
 
         $loader = new DiffPathLoader(
-            new Diff([new FileChange('docs/chapter.xml', [1])]),
+            new DiffChangeset([new FileChange('docs/chapter.xml', [1])]),
             workingDirectory: dirname($this->directory),
             basePath: $this->directory,
             projectRoots: [$this->directory => 'docs'],
@@ -64,7 +64,7 @@ final class DiffPathLoaderTest extends TestCase
         file_put_contents($excluded, '<chapter/>');
 
         $loader = new DiffPathLoader(
-            new Diff([
+            new DiffChangeset([
                 new FileChange('excluded.xml', [1]),
                 new FileChange('notes.txt', [1]),
                 new FileChange('missing.xml', [1]),
@@ -85,7 +85,7 @@ final class DiffPathLoaderTest extends TestCase
         file_put_contents($file, '<chapter/>');
 
         $loader = new DiffPathLoader(
-            new Diff([new FileChange($file, [1])]),
+            new DiffChangeset([new FileChange($file, [1])]),
             workingDirectory: $this->directory,
             basePath: $this->directory,
             projectRoots: [],
@@ -102,7 +102,7 @@ final class DiffPathLoaderTest extends TestCase
         file_put_contents($file, '<chapter/>');
 
         $loader = new DiffPathLoader(
-            new Diff([new FileChange('nested/../chapter.xml', [1])]),
+            new DiffChangeset([new FileChange('nested/../chapter.xml', [1])]),
             workingDirectory: $this->directory,
             basePath: $this->directory,
             projectRoots: [],
