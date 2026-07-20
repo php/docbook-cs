@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DocbookCS\Sniff;
 
+use DocbookCS\Fix\Fixer\AttributeOrderFixer;
+use DocbookCS\Source\File;
+
 /**
  * Ensures that when an element has both xml:id and xmlns (or xmlns:*)
  * attributes, xml:id appears first.
@@ -11,22 +14,32 @@ namespace DocbookCS\Sniff;
  * This is a stylistic convention in the PHP documentation project:
  * identity attributes should precede namespace declarations.
  */
-final class AttributeOrderSniff extends AbstractSniff
+final class AttributeOrderSniff extends AbstractSniff implements Fixable
 {
     private const string REPORTING_MESSAGE = 'Element <%s>: xml:id should appear before xmlns attributes.';
+    private const string OPENING_TAG_PATTERN = '/<([a-zA-Z0-9:_-]+)\b([^<>]*?)>/';
+    private const string ATTRIBUTE_NAME_PATTERN = '/([a-zA-Z0-9:_-]+)\s*=/';
 
-    public function getCode(): string
+    public static function getCode(): string
     {
         return 'DocbookCS.AttributeOrder';
     }
 
-    /** @throws \LogicException if an invalid severity level is configured */
-    public function process(\DOMDocument $document, string $content, string $filePath): array
+    public static function fixerClassName(): string
+    {
+        return AttributeOrderFixer::class;
+    }
+
+    /**
+     * @throws \LogicException if an invalid severity level is configured
+     * @throws \OutOfBoundsException if a matched tag offset lies outside the source
+     */
+    public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
 
         // Match ONLY opening tags (skip closing, comments, xml decl)
-        preg_match_all('/<([a-zA-Z0-9:_-]+)\b([^<>]*?)>/s', $content, $matches, PREG_OFFSET_CAPTURE);
+        preg_match_all(self::OPENING_TAG_PATTERN, $file->content, $matches, PREG_OFFSET_CAPTURE);
 
         foreach ($matches[0] as $i => [$fullMatch, $offset]) {
             $tagName = $matches[1][$i][0];
@@ -40,12 +53,17 @@ final class AttributeOrderSniff extends AbstractSniff
                 continue;
             }
 
+            $beginOffset = (int) $offset;
+
             $this->checkAttributes(
                 $tagName,
                 $attrString,
-                $filePath,
-                $this->lineFromOffset($content, (int)$offset),
-                $violations
+                $file->path,
+                $file->lineAtOffset($beginOffset)->number,
+                $beginOffset,
+                $beginOffset + strlen($fullMatch),
+                $violations,
+                $fullMatch,
             );
         }
 
@@ -53,7 +71,8 @@ final class AttributeOrderSniff extends AbstractSniff
     }
 
     /**
-     * @param list<\DocbookCS\Report\Violation> &$violations
+     * @param list<\DocbookCS\Violation\Violation> &$violations
+     *
      * @throws \LogicException if an invalid severity level is configured
      */
     private function checkAttributes(
@@ -61,9 +80,12 @@ final class AttributeOrderSniff extends AbstractSniff
         string $attrString,
         string $filePath,
         int $line,
-        array &$violations
+        int $beginOffset,
+        int $untilOffset,
+        array &$violations,
+        string $content,
     ): void {
-        preg_match_all('/([a-zA-Z0-9:_-]+)\s*=/', $attrString, $matches);
+        preg_match_all(self::ATTRIBUTE_NAME_PATTERN, $attrString, $matches);
         $attributes = $matches[1];
 
         $xmlIdPos = null;
@@ -82,17 +104,17 @@ final class AttributeOrderSniff extends AbstractSniff
             }
         }
 
-        if ($xmlIdPos !== null && $xmlnsPos !== PHP_INT_MAX && $xmlIdPos > $xmlnsPos) {
-            $violations[] = $this->createViolation(
-                $filePath,
-                $line,
-                sprintf(self::REPORTING_MESSAGE, $tagName),
-            );
+        if ($xmlIdPos === null || $xmlnsPos === PHP_INT_MAX || $xmlIdPos <= $xmlnsPos) {
+            return;
         }
-    }
 
-    private function lineFromOffset(string $content, int $offset): int
-    {
-        return substr_count($content, "\n", 0, $offset) + 1;
+        $violations[] = $this->createViolation(
+            $filePath,
+            $line,
+            $beginOffset,
+            $untilOffset,
+            sprintf(self::REPORTING_MESSAGE, $tagName),
+            $content,
+        );
     }
 }

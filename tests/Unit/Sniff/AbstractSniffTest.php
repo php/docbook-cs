@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Sniff;
 
 use DocbookCS\Sniff\AbstractSniff;
+use DocbookCS\Source\File;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -17,12 +18,12 @@ final class AbstractSniffTest extends TestCase
     private function createSniff(): AbstractSniff
     {
         return new class extends AbstractSniff {
-            public function getCode(): string
+            public static function getCode(): string
             {
                 return 'test.sniff';
             }
 
-            public function process(\DOMDocument $document, string $content, string $filePath): array
+            public function process(\DOMDocument $document, File $file): array
             {
                 return [];
             }

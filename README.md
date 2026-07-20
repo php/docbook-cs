@@ -40,15 +40,16 @@ Implement `DocbookCS\Sniff\SniffInterface` (or extend `AbstractSniff`):
 namespace Acme\DocbookSniffs;
 
 use DocbookCS\Sniff\AbstractSniff;
+use DocbookCS\Source\File;
 
 final class MySniff extends AbstractSniff
 {
-    public function getCode(): string
+    public static function getCode(): string
     {
         return 'Acme.MySniff';
     }
 
-    public function process(\DOMDocument $document, string $content, string $filePath): array
+    public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
         // ... inspect $document, add violations via $this->createViolation(...)
@@ -70,9 +71,10 @@ through the working tree. Alternatively, a unified diff can be piped or file and
 directory paths passed. The inspection scope is limited to the given diff or the
 full contents of the given file paths.
 
-XML references are expanded by default, but reported violations remain limited
-to the given scope. With `--wide`, every file inferred from paths or a diff is
-checked as a whole, and referenced `SYSTEM` XML files are recursively included.
+XML references are expanded by default, but violations and fixes remain limited
+to the given scope. With `--wide`, every file, inferred from paths or diff, as
+a whole will be checked and referenced `SYSTEM` XML files recursively included
+in violation reports and fixing.
 
 | Input      | `--wide` | Full File(s) | References |
 |------------|---------:|-------------:|-----------:|

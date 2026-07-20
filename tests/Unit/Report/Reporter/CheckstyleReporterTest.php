@@ -8,8 +8,9 @@ use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\CheckstyleReporter;
-use DocbookCS\Report\Severity;
-use DocbookCS\Report\Violation;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -22,6 +23,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Violation::class),
     //
     UsesClass(RelativePath::class),
+    UsesClass(SourceRange::class),
 ]
 final class CheckstyleReporterTest extends TestCase
 {
@@ -38,7 +40,7 @@ final class CheckstyleReporterTest extends TestCase
         string $sniffCode = 'DocbookCS.Test',
         Severity $severity = Severity::ERROR,
     ): Violation {
-        return new Violation($sniffCode, 'filepath.xml', $line, $message, $severity);
+        return new Violation($sniffCode, 'filepath.xml', $line, 0, 0, $message, severity: $severity);
     }
 
     private function parseOutput(string $xml): \DOMDocument

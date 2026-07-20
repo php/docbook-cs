@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace DocbookCS\Sniff;
 
-use DocbookCS\Report\Severity;
-use DocbookCS\Report\Violation;
 use DocbookCS\Runner\EntityExpansionMarker;
+use DocbookCS\Runner\RunMode;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 
 abstract class AbstractSniff implements SniffInterface
 {
     /** @var array<string, string> */
     protected array $properties = [];
+
+    public function __construct(
+        public RunMode $mode = RunMode::Sniff,
+    ) {
+    }
 
     public function setProperty(string $name, string $value): void
     {
@@ -28,20 +35,31 @@ abstract class AbstractSniff implements SniffInterface
         return !EntityExpansionMarker::contains($node);
     }
 
-    /** @throws \LogicException if an invalid severity level is configured */
+    /**
+     * @param list<SourceRange> $affectedRanges
+     * @throws \LogicException if an invalid severity level is configured
+     */
     protected function createViolation(
         string $filePath,
         int $line,
+        int $beginOffset,
+        int $untilOffset,
         string $message,
+        ?string $content = null,
         Severity $severity = Severity::ERROR,
+        array $affectedRanges = [],
     ): Violation {
         return new Violation(
-            sniffCode: $this->getCode(),
+            sniffCode: static::getCode(),
             filePath: $filePath,
             line: $line,
+            beginOffset: $beginOffset,
+            untilOffset: $untilOffset,
             message: $message,
+            content: $content,
             severity: Severity::tryFrom($this->getProperty('severity', $severity->value))
                 ?: throw new \LogicException('Invalid severity level configured for ExceptionNameSniff.'),
+            affectedRanges: $affectedRanges,
         );
     }
 }

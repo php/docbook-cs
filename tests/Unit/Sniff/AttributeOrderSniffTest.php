@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Sniff;
 
-use DocbookCS\Report\Violation;
 use DocbookCS\Sniff\AttributeOrderSniff;
+use DocbookCS\Source\File;
+use DocbookCS\Source\Line;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(AttributeOrderSniff::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(File::class),
+    UsesClass(Line::class),
+    UsesClass(SourceRange::class),
 ]
 final class AttributeOrderSniffTest extends TestCase
 {
@@ -34,7 +42,7 @@ final class AttributeOrderSniffTest extends TestCase
 
         self::assertSame(
             [],
-            $sniff->process($doc, $content, 'test.xml')
+            $sniff->process($doc, new File('test.xml', $content))
         );
     }
 
@@ -48,7 +56,7 @@ final class AttributeOrderSniffTest extends TestCase
 
         self::assertSame(
             [],
-            $sniff->process($doc, $content, 'test.xml')
+            $sniff->process($doc, new File('test.xml', $content))
         );
     }
 
@@ -60,7 +68,7 @@ final class AttributeOrderSniffTest extends TestCase
         $content = '<root><tag xmlns="urn:test" xml:id="a"/></root>';
         $doc = $this->createDocument('<root/>');
 
-        $violations = $sniff->process($doc, $content, 'file.xml');
+        $violations = $sniff->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertStringContainsString(
@@ -79,7 +87,7 @@ final class AttributeOrderSniffTest extends TestCase
 
         self::assertCount(
             1,
-            $sniff->process($doc, $content, 'file.xml')
+            $sniff->process($doc, new File('file.xml', $content))
         );
     }
 
@@ -97,7 +105,7 @@ final class AttributeOrderSniffTest extends TestCase
 
         $doc = $this->createDocument('<root/>');
 
-        $violations = $sniff->process($doc, $content, 'file.xml');
+        $violations = $sniff->process($doc, new File('file.xml', $content));
 
         self::assertCount(2, $violations);
     }
@@ -113,7 +121,7 @@ final class AttributeOrderSniffTest extends TestCase
 
         $doc = $this->createDocument('<root/>');
 
-        $violations = $sniff->process($doc, $content, 'file.xml');
+        $violations = $sniff->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertSame(2, $violations[0]->line);
@@ -128,7 +136,24 @@ final class AttributeOrderSniffTest extends TestCase
 
         self::assertSame(
             [],
-            $sniff->process($doc, '', 'file.xml')
+            $sniff->process($doc, new File('file.xml', ''))
         );
+    }
+
+    #[Test]
+    public function itAddsSourceContent(): void
+    {
+        $sniff = new AttributeOrderSniff();
+
+        $content = '<root xmlns="urn:test" xml:id="root"/>';
+        $doc = $this->createDocument('<root/>');
+
+        $violations = $sniff->process($doc, new File('file.xml', $content));
+
+        self::assertCount(1, $violations);
+        self::assertSame('<root xmlns="urn:test" xml:id="root"/>', $violations[0]->content);
+        self::assertSame(0, $violations[0]->beginOffset);
+        self::assertSame(38, $violations[0]->untilOffset);
+        self::assertSame(1, $violations[0]->line);
     }
 }

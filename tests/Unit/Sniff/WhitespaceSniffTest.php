@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Sniff;
 
-use DocbookCS\Report\Violation;
 use DocbookCS\Sniff\WhitespaceSniff;
+use DocbookCS\Source\File;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(Violation::class),
     CoversClass(WhitespaceSniff::class),
+    //
+    UsesClass(File::class),
+    UsesClass(SourceRange::class),
 ]
 final class WhitespaceSniffTest extends TestCase
 {
@@ -32,7 +38,7 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('file.xml', $content));
 
         self::assertSame([], $violations);
     }
@@ -44,11 +50,14 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertSame('Trailing whitespace detected.', $violations[0]->message);
         self::assertSame(1, $violations[0]->line);
+        self::assertSame('<root> ', $violations[0]->content);
+        self::assertSame(0, $violations[0]->beginOffset);
+        self::assertSame(7, $violations[0]->untilOffset);
     }
 
     #[Test]
@@ -59,11 +68,14 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertSame('Mixed tabs and spaces in indentation.', $violations[0]->message);
         self::assertSame(2, $violations[0]->line);
+        self::assertSame(" \t<tag/>", $violations[0]->content);
+        self::assertSame(strlen("<root>" . PHP_EOL), $violations[0]->beginOffset);
+        self::assertSame(strlen("<root>" . PHP_EOL . " \t<tag/>"), $violations[0]->untilOffset);
     }
 
     #[Test]
@@ -74,7 +86,7 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertSame('Mixed tabs and spaces in indentation.', $violations[0]->message);
@@ -88,7 +100,7 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertSame('Mixed tabs and spaces in indentation.', $violations[0]->message);
@@ -103,7 +115,7 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('file.xml', $content));
 
         self::assertCount(3, $violations);
     }
@@ -115,7 +127,7 @@ final class WhitespaceSniffTest extends TestCase
             "</root>";
 
         $doc = $this->createDocument($content);
-        $violations = (new WhitespaceSniff())->process($doc, $content, 'my-file.xml');
+        $violations = (new WhitespaceSniff())->process($doc, new File('my-file.xml', $content));
 
         self::assertCount(1, $violations);
         self::assertSame('my-file.xml', $violations[0]->filePath);
