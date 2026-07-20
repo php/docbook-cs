@@ -31,11 +31,11 @@
   },
   "scripts": {
     "test": "./vendor/bin/phpunit --no-coverage",
-    "stan": "./vendor/bin/phpstan analyse --no-progress",
+    "phpstan": "./vendor/bin/phpstan analyse --no-progress",
     "phpcs": "./vendor/bin/phpcs",
     "quality": [
       "@phpcs",
-      "@stan",
+      "@phpstan",
       "@test"
     ]
   },
