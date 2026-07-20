@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(WhitespaceSniff::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(Violation::class),
+    CoversClass(WhitespaceSniff::class),
+]
 final class WhitespaceSniffTest extends TestCase
 {
     private function createDocument(string $xml): \DOMDocument

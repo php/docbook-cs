@@ -12,9 +12,11 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Report::class)]
-#[CoversClass(Violation::class)]
-#[CoversClass(FileReport::class)]
+#[
+    CoversClass(FileReport::class),
+    CoversClass(Report::class),
+    CoversClass(Violation::class),
+]
 final class ReportTest extends TestCase
 {
     private function createViolation(

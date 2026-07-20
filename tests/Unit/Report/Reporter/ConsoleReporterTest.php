@@ -13,10 +13,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ConsoleReporter::class)]
-#[CoversClass(FileReport::class)]
-#[CoversClass(Report::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(ConsoleReporter::class),
+    CoversClass(FileReport::class),
+    CoversClass(Report::class),
+    CoversClass(Violation::class),
+]
 final class ConsoleReporterTest extends TestCase
 {
     private ConsoleReporter $reporter;

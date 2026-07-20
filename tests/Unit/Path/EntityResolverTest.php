@@ -11,8 +11,11 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(EntityResolver::class)]
-#[UsesClass(EntityPreprocessor::class)]
+#[
+    CoversClass(EntityResolver::class),
+    //
+    UsesClass(EntityPreprocessor::class),
+]
 final class EntityResolverTest extends TestCase
 {
     private string $fixtureRoot;

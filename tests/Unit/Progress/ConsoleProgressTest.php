@@ -9,7 +9,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ConsoleProgress::class)]
+#[
+    CoversClass(ConsoleProgress::class),
+]
 final class ConsoleProgressTest extends TestCase
 {
     /** @var resource */

@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(PathLoader::class)]
-#[CoversClass(PathMatcher::class)]
+#[
+    CoversClass(PathLoader::class),
+    CoversClass(PathMatcher::class),
+]
 final class PathLoaderTest extends TestCase
 {
     private const string FIXTURE_ROOT = __DIR__ . '/../../fixtures/sample_tree';

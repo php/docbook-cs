@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(SimparaSniff::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(SimparaSniff::class),
+    CoversClass(Violation::class),
+]
 final class SimparaSniffTest extends TestCase
 {
     private function createDocument(string $xml): \DOMDocument

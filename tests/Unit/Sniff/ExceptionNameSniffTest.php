@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ExceptionNameSniff::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(ExceptionNameSniff::class),
+    CoversClass(Violation::class),
+]
 final class ExceptionNameSniffTest extends TestCase
 {
     private function createDocument(string $xml): \DOMDocument
