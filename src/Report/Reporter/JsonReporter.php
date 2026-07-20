@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\Report;
 
 final class JsonReporter implements ReporterInterface
@@ -38,7 +39,7 @@ final class JsonReporter implements ReporterInterface
                 ];
             }
 
-            $data['files'][$fileReport->filePath] = [
+            $data['files'][RelativePath::fromWorkingDirectory($fileReport->filePath)] = [
                 'violations' => count($violations),
                 'messages' => $violations,
             ];

@@ -160,7 +160,7 @@ final class SniffRunnerTest extends TestCase
     }
 
     #[Test]
-    public function itStoresRelativePathsInFileReports(): void
+    public function itStoresAbsolutePathsInFileReports(): void
     {
         $sniff = new class implements SniffInterface {
             public function getCode(): string
@@ -192,9 +192,9 @@ final class SniffRunnerTest extends TestCase
         $report = $runner->run($this->planPaths($config));
 
         foreach ($report->getFileReports() as $fileReport) {
-            self::assertFalse(
+            self::assertTrue(
                 str_starts_with($fileReport->filePath, '/'),
-                'Expected relative path, got: ' . $fileReport->filePath,
+                'Expected absolute path, got: ' . $fileReport->filePath,
             );
         }
     }

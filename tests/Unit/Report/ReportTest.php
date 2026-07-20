@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Report;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Severity;
@@ -14,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(FileReport::class),
+    CoversClass(RelativePath::class),
     CoversClass(Report::class),
     CoversClass(Violation::class),
 ]
@@ -92,6 +94,16 @@ final class ReportTest extends TestCase
 
         self::assertCount(1, $report->getFileReports());
         self::assertSame($second, $report->getFileReports()['file.xml']);
+    }
+
+    #[Test]
+    public function itKeepsTheFileReportPathWhileRenderingItRelativeToWorkingDirectory(): void
+    {
+        $filePath = (getcwd() ?: '') . '/src/chapter.xml';
+        $fileReport = new FileReport($filePath);
+
+        self::assertSame($filePath, $fileReport->filePath);
+        self::assertSame('src/chapter.xml', RelativePath::fromWorkingDirectory($fileReport->filePath));
     }
 
     #[Test]
