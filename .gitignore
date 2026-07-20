@@ -1,5 +1,9 @@
 /vendor/
-/.phpunit.cache/
-/.phpstan.cache/
 /composer.lock
-/.phpcs-cache.json
+
+# ------------------------------------------------------------------------------
+# Editor configuration directories
+# ------------------------------------------------------------------------------
+/.idea/
+/.vscode/
+/.zed/

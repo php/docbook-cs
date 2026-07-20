@@ -1,5 +1,6 @@
 includes:
   - vendor/phpstan/phpstan-phpunit/extension.neon
+  - vendor/shipmonk/dead-code-detector/rules.neon
 
 parameters:
   level: max
@@ -8,7 +9,7 @@ parameters:
     - src/
     - tests/
 
-  tmpDir: .phpstan.cache
+  tmpDir: var/.phpstan.cache
 
   treatPhpDocTypesAsCertain: false
 

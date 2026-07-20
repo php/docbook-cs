@@ -3,7 +3,7 @@
 	<description>DocbookCS Coding Standard</description>
     <rule ref="PSR12"/>
 
-	<arg name="cache" value=".phpcs-cache.json"/>
+	<arg name="cache" value="var/.phpcs-cache.json"/>
 	<arg name="basepath" value="./"/>
 	<arg name="colors"/>
 	<arg value="p"/>
