@@ -21,6 +21,9 @@
 		<testsuite name="integration">
 			<directory>tests/Integration</directory>
 		</testsuite>
+		<testsuite name="feature">
+			<directory>tests/Feature</directory>
+		</testsuite>
 	</testsuites>
 
 	<source restrictNotices="true" restrictWarnings="true">
