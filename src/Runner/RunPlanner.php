@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Runner;
 
 use DocbookCS\Config\ConfigData;
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\DiffProviderInterface;
 use DocbookCS\Diff\GitDiffProvider;
@@ -65,7 +65,7 @@ final readonly class RunPlanner
     }
 
     /** @throws \UnexpectedValueException if an entity directory cannot be read. */
-    public function planDiff(Diff $diff): RunPlan
+    public function planDiff(DiffChangeset $diff): RunPlan
     {
         return new RunPlan(
             mode: $this->mode,
