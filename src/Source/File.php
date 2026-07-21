@@ -36,30 +36,9 @@ final class File
     }
 
     /** @throws \OutOfBoundsException if the offset lies outside the source */
-    public function lineAtOffset(int $offset): Line
+    public function lineNumberAtOffset(int $offset): int
     {
-        $sourceLength = strlen($this->content);
-        if ($offset < 0 || $offset > $sourceLength) {
-            throw new \OutOfBoundsException(
-                sprintf('Source offset %d is outside the valid range 0..%d.', $offset, $sourceLength),
-            );
-        }
-
-        $lineBeginOffsets = $this->lineBeginOffsets();
-        $low = 0;
-        $high = count($lineBeginOffsets) - 1;
-
-        while ($low < $high) {
-            $middle = intdiv($low + $high + 1, 2);
-
-            if ($lineBeginOffsets[$middle] <= $offset) {
-                $low = $middle;
-            } else {
-                $high = $middle - 1;
-            }
-        }
-
-        return $this->createLineAtOffset($low + 1, $lineBeginOffsets[$low]);
+        return $this->lineIndexAtOffset($offset, $this->lineBeginOffsets()) + 1;
     }
 
     public function withContent(string $content): self
@@ -77,16 +56,56 @@ final class File
         }
 
         $lineBeginOffsets = [0];
+        $sourceLength = strlen($this->content);
+        $lineBeginOffset = 0;
 
-        foreach ($this->lines() as $line) {
-            if ($line->number === 1) {
-                continue;
+        while ($lineBeginOffset < $sourceLength) {
+            $lineLength = strcspn($this->content, "\r\n", $lineBeginOffset);
+            $lineEndingOffset = $lineBeginOffset + $lineLength;
+
+            if ($lineEndingOffset === $sourceLength) {
+                break;
             }
 
-            $lineBeginOffsets[] = $line->beginOffset;
+            $lineBeginOffset = $lineEndingOffset + (
+                $this->content[$lineEndingOffset] === "\r"
+                && ($this->content[$lineEndingOffset + 1] ?? null) === "\n"
+                    ? 2
+                    : 1
+            );
+            $lineBeginOffsets[] = $lineBeginOffset;
         }
 
         return $this->lineBeginOffsets = $lineBeginOffsets;
+    }
+
+    /**
+     * @param non-empty-list<int> $lineBeginOffsets
+     * @throws \OutOfBoundsException if the offset lies outside the source
+     */
+    private function lineIndexAtOffset(int $offset, array $lineBeginOffsets): int
+    {
+        $sourceLength = strlen($this->content);
+        if ($offset < 0 || $offset > $sourceLength) {
+            throw new \OutOfBoundsException(
+                sprintf('Source offset %d is outside the valid range 0..%d.', $offset, $sourceLength),
+            );
+        }
+
+        $low = 0;
+        $high = count($lineBeginOffsets) - 1;
+
+        while ($low < $high) {
+            $middle = intdiv($low + $high + 1, 2);
+
+            if ($lineBeginOffsets[$middle] <= $offset) {
+                $low = $middle;
+            } else {
+                $high = $middle - 1;
+            }
+        }
+
+        return $low;
     }
 
     private function createLineAtOffset(int $lineNumber, int $lineBeginOffset): Line

@@ -39,17 +39,17 @@ final class FileTest extends TestCase
     }
 
     #[Test]
-    public function itResolvesOffsetsToLines(): void
+    public function itResolvesOffsetsToLineNumbers(): void
     {
         $file = new File('file.xml', "one\r\ntwo\nthree");
 
-        self::assertSame(1, $file->lineAtOffset(0)->number);
-        self::assertSame(1, $file->lineAtOffset(3)->number);
-        self::assertSame(1, $file->lineAtOffset(4)->number);
-        self::assertSame(2, $file->lineAtOffset(5)->number);
-        self::assertSame(2, $file->lineAtOffset(8)->number);
-        self::assertSame(3, $file->lineAtOffset(9)->number);
-        self::assertSame(3, $file->lineAtOffset(14)->number);
+        self::assertSame(1, $file->lineNumberAtOffset(0));
+        self::assertSame(1, $file->lineNumberAtOffset(3));
+        self::assertSame(1, $file->lineNumberAtOffset(4));
+        self::assertSame(2, $file->lineNumberAtOffset(5));
+        self::assertSame(2, $file->lineNumberAtOffset(8));
+        self::assertSame(3, $file->lineNumberAtOffset(9));
+        self::assertSame(3, $file->lineNumberAtOffset(14));
     }
 
     #[Test]
@@ -62,7 +62,7 @@ final class FileTest extends TestCase
             new Line(2, '', '', 4),
         ], iterator_to_array($file->lines()));
 
-        self::assertSame(2, $file->lineAtOffset(4)->number);
+        self::assertSame(2, $file->lineNumberAtOffset(4));
     }
 
     #[Test]
@@ -91,6 +91,6 @@ final class FileTest extends TestCase
         $file = new File('file.xml', 'one');
 
         $this->expectException(\OutOfBoundsException::class);
-        $file->lineAtOffset(4);
+        $file->lineNumberAtOffset(4);
     }
 }

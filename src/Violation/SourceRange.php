@@ -15,7 +15,7 @@ final readonly class SourceRange
     public static function fromFile(File $file, int $beginOffset, int $untilOffset): self
     {
         return new self(
-            line: $file->lineAtOffset($beginOffset)->number,
+            line: $file->lineNumberAtOffset($beginOffset),
             beginOffset: $beginOffset,
             untilOffset: $untilOffset,
             content: substr($file->content, $beginOffset, $untilOffset - $beginOffset),
