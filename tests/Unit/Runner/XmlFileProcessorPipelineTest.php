@@ -72,6 +72,52 @@ final class XmlFileProcessorPipelineTest extends TestCase
         }
     }
 
+    #[Test] // TODO: should be integration
+    public function itHandlesEntitiesWithoutParseErrors(): void
+    {
+        $xml = $this->xml(
+            '<!DOCTYPE chapter SYSTEM "docbook.dtd">
+        <chapter>
+          <simpara>&link.superglobals; &php.ini; &amp;</simpara>
+        </chapter>'
+        );
+
+        $processor = $this->processor([], new EntityPreprocessor([
+            'link.superglobals' => '',
+            'php.ini' => '',
+        ]));
+
+        $report = $this->process($processor, $xml);
+
+        self::assertCount(
+            0,
+            array_filter(
+                $report->getViolations(),
+                fn($v) => $v->sniffCode === 'DocbookCS.Internal'
+            )
+        );
+    }
+
+    #[Test] // TODO: should be integration
+    public function itUsesCustomPreprocessor(): void
+    {
+        $processor = $this->processor([], new EntityPreprocessor([
+            'custom.entity' => '[X]',
+        ]));
+
+        $xml = $this->xml('<chapter><simpara>&custom.entity;</simpara></chapter>');
+
+        $report = $this->process($processor, $xml);
+
+        self::assertCount(
+            0,
+            array_filter(
+                $report->getViolations(),
+                fn($v) => $v->sniffCode === 'DocbookCS.Internal'
+            )
+        );
+    }
+
     private function process(XmlFileProcessor $processor, string $content, string $path = 'input.xml'): FileReport
     {
         return $processor->process(new File($path, $content))->fileReport;
@@ -88,6 +134,14 @@ final class XmlFileProcessorPipelineTest extends TestCase
         }
 
         return $result->fileReport;
+    }
+
+    private function xml(string $body): string
+    {
+        return <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+$body
+XML;
     }
 
     /** @param list<SniffInterface> $sniffs */
