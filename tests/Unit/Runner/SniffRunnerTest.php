@@ -19,6 +19,7 @@ use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Severity;
 use DocbookCS\Report\Violation;
+use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\EntityPreprocessor;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
@@ -48,6 +49,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(XmlFileProcessor::class),
     UsesClass(Diff::class),
     UsesClass(DiffPathLoader::class),
+    UsesClass(EntityExpansionMarker::class),
     UsesClass(FileChange::class),
     UsesClass(GitDiffProvider::class),
     UsesClass(RunScopeResolver::class),
@@ -294,6 +296,50 @@ final class SniffRunnerTest extends TestCase
         $report = $runner->run($this->planPaths($config));
 
         self::assertSame(2, $report->getFilesScanned());
+    }
+
+    #[Test]
+    public function itScansLexicallyEquivalentWideTargetsOnlyOnce(): void
+    {
+        $directory = sys_get_temp_dir() . '/docbook-cs-scan-' . bin2hex(random_bytes(6));
+        mkdir($directory);
+
+        $sourceFile = $directory . '/source.xml';
+        $targetFile = $directory . '/target.xml';
+        $entityFile = $directory . '/bridge.ent';
+
+        file_put_contents($sourceFile, '<root>&bridge;</root>');
+        file_put_contents($targetFile, '<target/>');
+        file_put_contents($entityFile, '&target;');
+
+        try {
+            $config = new ConfigData([], [], [], [], [], $directory);
+            $resolver = new RunScopeResolver(
+                $config,
+                [
+                    'bridge' => $entityFile,
+                    'target' => $directory . '/./target.xml',
+                ],
+                wide: true,
+            );
+            $plan = new RunPlan(
+                sniffs: [],
+                targets: $resolver->resolvePaths([$directory . '/.']),
+                entities: [
+                    'bridge' => '&target;',
+                    'target' => '<target/>',
+                ],
+            );
+
+            $report = new SniffRunner()->run($plan);
+
+            self::assertSame(2, $report->getFilesScanned());
+        } finally {
+            @unlink($sourceFile);
+            @unlink($targetFile);
+            @unlink($entityFile);
+            @rmdir($directory);
+        }
     }
 
     #[Test]

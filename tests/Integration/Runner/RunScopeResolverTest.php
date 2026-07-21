@@ -98,6 +98,27 @@ final class RunScopeResolverTest extends TestCase
         self::assertSame([$absolutePath => null], $this->resolver()->resolvePaths([$path]));
     }
 
+    #[Test]
+    public function widePathScopeDoesNotDuplicateLexicallyEquivalentTargets(): void
+    {
+        $resolver = new RunScopeResolver(
+            $this->config(),
+            [
+                'bridge' => $this->entityFile,
+                'target' => $this->directory . '/./target.xml',
+            ],
+            wide: true,
+        );
+
+        self::assertSame(
+            [
+                $this->sourceFile => null,
+                $this->targetFile => null,
+            ],
+            $resolver->resolvePaths([$this->directory . '/.']),
+        );
+    }
+
     private function resolver(bool $wide = false): RunScopeResolver
     {
         return new RunScopeResolver(

@@ -91,12 +91,11 @@ final readonly class RunScopeResolver
         $absolutePaths = [];
 
         foreach ($paths as $path) {
-            if (str_starts_with($path, '/') || preg_match('#^[a-zA-Z]:[/\\\\]#', $path)) {
-                $absolutePaths[] = $path;
-                continue;
-            }
+            $absolutePath = str_starts_with($path, '/') || preg_match('#^[a-zA-Z]:[/\\\\]#', $path)
+                ? $path
+                : $workingDirectory . '/' . $path;
 
-            $absolutePaths[] = $workingDirectory . '/' . $path;
+            $absolutePaths[] = $this->normalizePath($absolutePath);
         }
 
         return $absolutePaths;
@@ -165,7 +164,7 @@ final readonly class RunScopeResolver
      */
     private function expandEntityPath(string $path, array &$visited): array
     {
-        $path = str_replace('\\', '/', $path);
+        $path = $this->normalizePath($path);
 
         if (isset($visited[$path]) || !is_file($path)) {
             return [];
@@ -182,5 +181,32 @@ final readonly class RunScopeResolver
         return $content !== false
             ? $this->targetFilesFromContent($content, $visited)
             : [];
+    }
+
+    private function normalizePath(string $path): string
+    {
+        $path = str_replace('\\', '/', $path);
+        $prefix = '';
+
+        if (preg_match('#^([a-zA-Z]:/|/)#', $path, $matches)) {
+            $prefix = $matches[1];
+            $path = substr($path, strlen($prefix));
+        }
+
+        $segments = [];
+        foreach (explode('/', $path) as $segment) {
+            if ($segment === '' || $segment === '.') {
+                continue;
+            }
+
+            if ($segment === '..' && $segments !== [] && end($segments) !== '..') {
+                array_pop($segments);
+                continue;
+            }
+
+            $segments[] = $segment;
+        }
+
+        return $prefix . implode('/', $segments);
     }
 }
