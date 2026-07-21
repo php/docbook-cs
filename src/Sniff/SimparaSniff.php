@@ -206,7 +206,9 @@ final class SimparaSniff extends AbstractSniff implements Fixable
         $additional = array_map('trim', explode(',', $extra));
         $additional = array_filter($additional, static fn(string $s): bool => $s !== '');
 
-        return array_values(array_unique(array_merge(self::SIMPARA_ALLOWED, $additional)));
+        return array_merge(self::SIMPARA_ALLOWED, $additional)
+                |> array_unique(...)
+                |> array_values(...);
     }
 
     /**
