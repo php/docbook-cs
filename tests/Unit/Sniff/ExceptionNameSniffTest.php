@@ -156,4 +156,101 @@ final class ExceptionNameSniffTest extends TestCase
         self::assertCount(1, $violations);
         self::assertSame('my-file.xml', $violations[0]->filePath);
     }
+
+    #[Test]
+    public function itFlagsAdditionalSuffix(): void
+    {
+        $content = '<root><classname>SoapFault</classname></root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalSuffixes', 'Fault');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('SoapFault', $violations[0]->message);
+    }
+
+    #[Test]
+    public function itStillFlagsDefaultSuffixesWhenAdditionalConfigured(): void
+    {
+        $content = '<root>
+                <classname>RuntimeException</classname>
+                <classname>SoapFault</classname>
+            </root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalSuffixes', 'Fault');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(2, $violations);
+    }
+
+    #[Test]
+    public function itDoesNotFlagAdditionalSuffixWhenNotConfigured(): void
+    {
+        $content = '<root><classname>SoapFault</classname></root>';
+        $doc = $this->createDocument($content);
+        $violations = new ExceptionNameSniff()->process($doc, $content, 'file.xml');
+
+        self::assertSame([], $violations);
+    }
+
+    #[Test]
+    public function itParsesMultipleAdditionalSuffixesAndTrimsWhitespace(): void
+    {
+        $content = '<root>
+                <classname>SoapFault</classname>
+                <classname>HttpProblem</classname>
+            </root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalSuffixes', ' Fault , Problem ');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(2, $violations);
+    }
+
+    #[Test]
+    public function itFlagsAdditionalExactName(): void
+    {
+        $content = '<root><classname>Whoops</classname></root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalExactNames', 'Whoops');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(1, $violations);
+        self::assertStringContainsString('Whoops', $violations[0]->message);
+    }
+
+    #[Test]
+    public function itMatchesAdditionalExactNameOnBaseNameInNamespace(): void
+    {
+        $content = '<root><classname>Foo\Bar\Whoops</classname></root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalExactNames', 'Whoops');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertCount(1, $violations);
+    }
+
+    #[Test]
+    public function itDoesNotFlagUnrelatedNameWhenOptionsConfigured(): void
+    {
+        $content = '<root><classname>MyService</classname></root>';
+        $doc = $this->createDocument($content);
+
+        $sniff = new ExceptionNameSniff();
+        $sniff->setProperty('additionalSuffixes', 'Fault');
+        $sniff->setProperty('additionalExactNames', 'Whoops');
+        $violations = $sniff->process($doc, $content, 'file.xml');
+
+        self::assertSame([], $violations);
+    }
 }
