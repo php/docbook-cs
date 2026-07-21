@@ -13,10 +13,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(JsonReporter::class)]
-#[CoversClass(FileReport::class)]
-#[CoversClass(Report::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(FileReport::class),
+    CoversClass(JsonReporter::class),
+    CoversClass(Report::class),
+    CoversClass(Violation::class),
+]
 final class JsonReporterTest extends TestCase
 {
     private JsonReporter $reporter;

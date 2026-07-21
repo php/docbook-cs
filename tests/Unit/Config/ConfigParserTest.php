@@ -12,10 +12,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ConfigParser::class)]
-#[CoversClass(ConfigData::class)]
-#[CoversClass(SniffEntry::class)]
-#[CoversClass(ConfigParserException::class)]
+#[
+    CoversClass(ConfigData::class),
+    CoversClass(ConfigParser::class),
+    CoversClass(ConfigParserException::class),
+    CoversClass(SniffEntry::class),
+]
 final class ConfigParserTest extends TestCase
 {
     private ConfigParser $parser;

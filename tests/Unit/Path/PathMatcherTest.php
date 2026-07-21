@@ -10,7 +10,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(PathMatcher::class)]
+#[
+    CoversClass(PathMatcher::class),
+]
 final class PathMatcherTest extends TestCase
 {
     /**

@@ -13,10 +13,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(CheckstyleReporter::class)]
-#[CoversClass(FileReport::class)]
-#[CoversClass(Report::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(CheckstyleReporter::class),
+    CoversClass(FileReport::class),
+    CoversClass(Report::class),
+    CoversClass(Violation::class),
+]
 final class CheckstyleReporterTest extends TestCase
 {
     private CheckstyleReporter $reporter;

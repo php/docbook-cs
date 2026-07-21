@@ -9,7 +9,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(NullProgress::class)]
+#[
+    CoversClass(NullProgress::class),
+]
 final class NullProgressTest extends TestCase
 {
     #[Test]

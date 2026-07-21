@@ -9,7 +9,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(AbstractSniff::class)]
+#[
+    CoversClass(AbstractSniff::class),
+]
 final class AbstractSniffTest extends TestCase
 {
     private function createSniff(): AbstractSniff

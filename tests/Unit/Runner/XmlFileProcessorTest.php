@@ -15,11 +15,13 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(EntityPreprocessor::class)]
-#[CoversClass(FileReport::class)]
-#[CoversClass(Violation::class)]
-#[CoversClass(XmlFileProcessor::class)]
-#[CoversClass(Report::class)]
+#[
+    CoversClass(EntityPreprocessor::class),
+    CoversClass(FileReport::class),
+    CoversClass(Report::class),
+    CoversClass(Violation::class),
+    CoversClass(XmlFileProcessor::class),
+]
 final class XmlFileProcessorTest extends TestCase
 {
     #[Test]

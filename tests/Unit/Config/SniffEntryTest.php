@@ -9,7 +9,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(SniffEntry::class)]
+#[
+    CoversClass(SniffEntry::class),
+]
 final class SniffEntryTest extends TestCase
 {
     #[Test]

@@ -10,8 +10,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(AttributeOrderSniff::class)]
-#[CoversClass(Violation::class)]
+#[
+    CoversClass(AttributeOrderSniff::class),
+    CoversClass(Violation::class),
+]
 final class AttributeOrderSniffTest extends TestCase
 {
     private function createDocument(string $xml): \DOMDocument

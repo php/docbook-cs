@@ -10,7 +10,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(EntityPreprocessor::class)]
+#[
+    CoversClass(EntityPreprocessor::class),
+]
 final class EntityPreprocessorTest extends TestCase
 {
     #[Test]
