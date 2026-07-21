@@ -63,7 +63,7 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
                 $tagName,
                 $attrString,
                 $file->path,
-                $file->lineAtOffset($beginOffset)->number,
+                $file->lineNumberAtOffset($beginOffset),
                 $beginOffset,
                 $beginOffset + strlen($fullMatch),
                 $violations,

@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\RunMode;
+use DocbookCS\Source\File;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
@@ -39,6 +40,36 @@ abstract class AbstractSniff implements SniffInterface
     protected function isSourceBacked(\DOMNode $node): bool
     {
         return !EntityExpansionMarker::contains($node);
+    }
+
+    /**
+     * The offsets point at the opening "<" and closing "<" in the source.
+     *
+     * @return array{SourceRange, SourceRange}
+     * @throws \OutOfBoundsException if a tag offset lies outside the source
+     */
+    protected function elementNameRanges(
+        File $file,
+        int $openingTagOffset,
+        int $closingTagOffset,
+        string $elementName,
+    ): array {
+        $openingNameOffset = $openingTagOffset + 1;
+        $closingNameOffset = $closingTagOffset + 2;
+        $elementNameLength = strlen($elementName);
+
+        return [
+            new SourceRange(
+                $file->lineNumberAtOffset($openingNameOffset),
+                $openingNameOffset,
+                $openingNameOffset + $elementNameLength,
+            ),
+            new SourceRange(
+                $file->lineNumberAtOffset($closingNameOffset),
+                $closingNameOffset,
+                $closingNameOffset + $elementNameLength,
+            ),
+        ];
     }
 
     /**

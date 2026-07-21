@@ -6,7 +6,6 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Fix\Fixer\SimparaFixer;
 use DocbookCS\Source\File;
-use DocbookCS\Violation\SourceRange;
 
 final class SimparaSniff extends AbstractSniff implements Fixable
 {
@@ -160,14 +159,26 @@ final class SimparaSniff extends AbstractSniff implements Fixable
                 continue;
             }
 
+            $closingOffset = $match['closingOffset'];
+            if ($closingOffset === null) {
+                throw new \LogicException('Could not map simpara violation to source content.');
+            }
+
+            $affectedRanges = $this->elementNameRanges(
+                $file,
+                $match['beginOffset'],
+                $closingOffset,
+                self::ELEMENT_NAME,
+            );
+
             $violations[] = $this->createViolation(
                 $file->path,
-                $match['affectedRanges'][0]->line,
+                $affectedRanges[0]->line,
                 $match['beginOffset'],
                 $match['untilOffset'],
                 self::MESSAGE,
                 $match['content'],
-                affectedRanges: $match['affectedRanges'],
+                affectedRanges: $affectedRanges,
             );
         }
 
@@ -217,9 +228,8 @@ final class SimparaSniff extends AbstractSniff implements Fixable
      *     untilOffset: int,
      *     content: string,
      *     selfClosing: bool,
-     *     affectedRanges: non-empty-list<SourceRange>
+     *     closingOffset: int|null
      * }>
-     * @throws \OutOfBoundsException if a matched tag offset lies outside the source
      */
     private function sourceMatches(File $file): array
     {
@@ -230,7 +240,7 @@ final class SimparaSniff extends AbstractSniff implements Fixable
             PREG_OFFSET_CAPTURE,
         );
 
-        /** @var list<array{offset: int, range: SourceRange}> $stack */
+        /** @var list<int> $stack */
         $stack = [];
         $sourceMatches = [];
 
@@ -243,24 +253,13 @@ final class SimparaSniff extends AbstractSniff implements Fixable
                     'untilOffset' => $offset + strlen($tag),
                     'content' => $tag,
                     'selfClosing' => true,
-                    'affectedRanges' => [new SourceRange(
-                        $file->lineAtOffset($offset)->number,
-                        $offset + 1,
-                        $offset + 1 + strlen(self::ELEMENT_NAME),
-                    )],
+                    'closingOffset' => null,
                 ];
                 continue;
             }
 
             if (!str_starts_with($tag, '</')) {
-                $stack[] = [
-                    'offset' => $offset,
-                    'range' => new SourceRange(
-                        $file->lineAtOffset($offset)->number,
-                        $offset + 1,
-                        $offset + 1 + strlen(self::ELEMENT_NAME),
-                    ),
-                ];
+                $stack[] = $offset;
                 continue;
             }
 
@@ -268,21 +267,13 @@ final class SimparaSniff extends AbstractSniff implements Fixable
                 continue;
             }
 
-            $start = $opening['offset'];
             $untilOffset = $offset + strlen($tag);
             $sourceMatches[] = [
-                'beginOffset' => $start,
+                'beginOffset' => $opening,
                 'untilOffset' => $untilOffset,
-                'content' => substr($file->content, (int)$start, $untilOffset - $start),
+                'content' => substr($file->content, $opening, $untilOffset - $opening),
                 'selfClosing' => false,
-                'affectedRanges' => [
-                    $opening['range'],
-                    new SourceRange(
-                        $file->lineAtOffset($offset)->number,
-                        $offset + 2,
-                        $offset + 2 + strlen(self::ELEMENT_NAME),
-                    ),
-                ],
+                'closingOffset' => $offset,
             ];
         }
 

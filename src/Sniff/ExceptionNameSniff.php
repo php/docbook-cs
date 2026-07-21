@@ -6,7 +6,6 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Fix\Fixer\ExceptionNameFixer;
 use DocbookCS\Source\File;
-use DocbookCS\Violation\SourceRange;
 
 /**
  * Detects exception/error class names wrapped in <classname> that
@@ -84,14 +83,21 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
                 throw new \LogicException('Could not map classname violation to source content.');
             }
 
+            $affectedRanges = $this->elementNameRanges(
+                $file,
+                $match['beginOffset'],
+                $match['closingOffset'],
+                self::ELEMENT_NAME,
+            );
+
             $violations[] = $this->createViolation(
                 $file->path,
-                $match['affectedRanges'][0]->line,
+                $affectedRanges[0]->line,
                 $match['beginOffset'],
                 $match['untilOffset'],
                 sprintf('"%s" is wrapped in <classname> but should use <exceptionname>.', $text),
                 $match['content'],
-                affectedRanges: $match['affectedRanges'],
+                affectedRanges: $affectedRanges,
             );
         }
 
@@ -112,9 +118,8 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
      *     untilOffset: int,
      *     content: string,
      *     text: string,
-     *     affectedRanges: non-empty-list<SourceRange>
+     *     closingOffset: int
      * }>
-     * @throws \OutOfBoundsException if a matched tag offset lies outside the source
      */
     private function sourceMatches(File $file): array
     {
@@ -134,18 +139,7 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
                 'untilOffset' => $offset + strlen($fullMatch),
                 'content' => $fullMatch,
                 'text' => trim($matches[1][$i][0]),
-                'affectedRanges' => [
-                    new SourceRange(
-                        $file->lineAtOffset($offset)->number,
-                        $offset + 1,
-                        $offset + 1 + strlen(self::ELEMENT_NAME),
-                    ),
-                    new SourceRange(
-                        $file->lineAtOffset($closingOffset)->number,
-                        $closingOffset + 2,
-                        $closingOffset + 2 + strlen(self::ELEMENT_NAME),
-                    ),
-                ],
+                'closingOffset' => $closingOffset,
             ];
         }
 
