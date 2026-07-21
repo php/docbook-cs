@@ -30,7 +30,7 @@ final class DiffParserTest extends TestCase
     #[Test]
     public function itReturnsEmptyArrayForEmptyDiff(): void
     {
-        self::assertSame([], $this->lineNumbersByFile($this->parser->parse('')));
+        self::assertSame([], $this->parser->parse('')->fileChanges);
     }
 
     #[Test]
@@ -47,10 +47,10 @@ diff --git a/reference/file.xml b/reference/file.xml
  line3
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $change = $this->parser->parse($diff)->changeFor('reference/file.xml');
 
-        self::assertArrayHasKey('reference/file.xml', $result);
-        self::assertSame([2], $result['reference/file.xml']);
+        self::assertNotNull($change);
+        self::assertSame([2], $change->addedLineNumbers);
     }
 
     #[Test]
@@ -68,9 +68,9 @@ diff --git a/doc/chapter.xml b/doc/chapter.xml
  last line
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $result = $this->parser->parse($diff);
 
-        self::assertSame([6, 7], $result['doc/chapter.xml']);
+        self::assertSame([6, 7], $result->changeFor('doc/chapter.xml')?->addedLineNumbers);
     }
 
     #[Test]
@@ -85,10 +85,10 @@ diff --git a/src/file.xml b/src/file.xml
 +added
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $result = $this->parser->parse($diff);
 
-        self::assertArrayHasKey('src/file.xml', $result);
-        self::assertArrayNotHasKey('b/src/file.xml', $result);
+        self::assertCount(1, $result->fileChanges);
+        self::assertSame('src/file.xml', $result->fileChanges[0]->filePath);
     }
 
     #[Test]
@@ -105,7 +105,7 @@ deleted file mode 100644
 -line3
 DIFF;
 
-        self::assertSame([], $this->lineNumbersByFile($this->parser->parse($diff)));
+        self::assertSame([], $this->parser->parse($diff)->fileChanges);
     }
 
     #[Test]
@@ -122,10 +122,10 @@ new file mode 100644
 +line3
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $change = $this->parser->parse($diff)->changeFor('new.xml');
 
-        self::assertArrayHasKey('new.xml', $result);
-        self::assertSame([1, 2, 3], $result['new.xml']);
+        self::assertNotNull($change);
+        self::assertSame([1, 2, 3], $change->addedLineNumbers);
     }
 
     #[Test]
@@ -148,12 +148,14 @@ diff --git a/second.xml b/second.xml
  unchanged
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $result = $this->parser->parse($diff);
+        $firstChange = $result->changeFor('first.xml');
+        $secondChange = $result->changeFor('second.xml');
 
-        self::assertArrayHasKey('first.xml', $result);
-        self::assertArrayHasKey('second.xml', $result);
-        self::assertSame([2], $result['first.xml']);
-        self::assertSame([2], $result['second.xml']);
+        self::assertNotNull($firstChange);
+        self::assertNotNull($secondChange);
+        self::assertSame([2], $firstChange->addedLineNumbers);
+        self::assertSame([2], $secondChange->addedLineNumbers);
     }
 
     #[Test]
@@ -170,11 +172,11 @@ diff --git a/file.xml b/file.xml
  line3
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $change = $this->parser->parse($diff)->changeFor('file.xml');
 
         // No lines added, so the changed set is empty (not absent — the file is tracked).
-        self::assertArrayHasKey('file.xml', $result);
-        self::assertSame([], $result['file.xml']);
+        self::assertNotNull($change);
+        self::assertSame([], $change->addedLineNumbers);
     }
 
     #[Test]
@@ -211,9 +213,9 @@ diff --git a/file.xml b/file.xml
 +second
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $result = $this->parser->parse($diff);
 
-        self::assertSame([1, 2], $result['file.xml']);
+        self::assertSame([1, 2], $result->changeFor('file.xml')?->addedLineNumbers);
     }
 
     #[Test]
@@ -255,9 +257,9 @@ diff --git a/file.xml b/file.xml
  line12
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $result = $this->parser->parse($diff);
 
-        self::assertSame([2, 12], $result['file.xml']);
+        self::assertSame([2, 12], $result->changeFor('file.xml')?->addedLineNumbers);
     }
 
     #[Test]
@@ -271,21 +273,8 @@ diff --git a/file.xml b/file.xml
 +only line
 DIFF;
 
-        $result = $this->lineNumbersByFile($this->parser->parse($diff));
+        $result = $this->parser->parse($diff);
 
-        self::assertSame([1], $result['file.xml']);
-    }
-
-    // TODO: avoids test diff churn; remove when fixers merged
-    /** @return array<string, list<int>> */
-    private function lineNumbersByFile(DiffChangeset $diff): array
-    {
-        $lineNumbersByFile = [];
-
-        foreach ($diff->fileChanges as $fileChange) {
-            $lineNumbersByFile[$fileChange->filePath] = $fileChange->addedLineNumbers;
-        }
-
-        return $lineNumbersByFile;
+        self::assertSame([1], $result->changeFor('file.xml')?->addedLineNumbers);
     }
 }
