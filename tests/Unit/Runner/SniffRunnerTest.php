@@ -100,9 +100,9 @@ final class SniffRunnerTest extends TestCase
         $runner = new RunCoordinator();
         $report = $runner->run($this->planPaths($config));
 
-        self::assertSame(2, $report->getFilesScanned());
+        self::assertSame(2, $report->filesScanned);
         self::assertFalse($report->hasViolations());
-        self::assertCount(0, $report->getFileReports());
+        self::assertCount(0, $report->fileReports);
     }
 
     #[Test] // TODO: should be integration
@@ -116,7 +116,7 @@ final class SniffRunnerTest extends TestCase
             [self::FIXTURE_DIR . '/../override'],
         ));
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->filesScanned);
     }
 
     #[Test] // TODO: should be integration
@@ -178,8 +178,8 @@ final class SniffRunnerTest extends TestCase
         $runner = new RunCoordinator();
         $report = $runner->run($this->planPaths($config));
 
-        self::assertSame(2, $report->getFilesScanned());
-        self::assertCount(2, $report->getFileReports());
+        self::assertSame(2, $report->filesScanned);
+        self::assertCount(2, $report->fileReports);
         self::assertTrue($report->hasViolations());
     }
 
@@ -221,7 +221,7 @@ final class SniffRunnerTest extends TestCase
         $runner = new RunCoordinator();
         $report = $runner->run($this->planPaths($config));
 
-        foreach ($report->getFileReports() as $fileReport) {
+        foreach ($report->fileReports as $fileReport) {
             self::assertTrue(
                 str_starts_with($fileReport->filePath, '/'),
                 'Expected absolute path, got: ' . $fileReport->filePath,
@@ -301,7 +301,7 @@ final class SniffRunnerTest extends TestCase
         $diff = new DiffChangeset([new FileChange(self::FIXTURE_DIR . '/file_a.xml', [1])]);
         $report = $runner->run($this->planDiff($config, $diff));
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->filesScanned);
     }
 
     #[Test] // TODO: should be integration
@@ -313,7 +313,7 @@ final class SniffRunnerTest extends TestCase
         $diff = new DiffChangeset([new FileChange('completely/different/file.xml', [1, 2, 3])]);
         $report = $runner->run($this->planDiff($config, $diff));
 
-        self::assertSame(0, $report->getFilesScanned());
+        self::assertSame(0, $report->filesScanned);
     }
 
     #[Test] // TODO: should be integration
@@ -327,7 +327,7 @@ final class SniffRunnerTest extends TestCase
         $diff = new DiffChangeset([new FileChange($discoveredPath, [1])]);
         $report = $runner->run($this->planDiff($config, $diff));
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->filesScanned);
     }
 
     #[Test] // TODO: should be integration
@@ -338,7 +338,7 @@ final class SniffRunnerTest extends TestCase
 
         $report = $runner->run($this->planPaths($config));
 
-        self::assertSame(2, $report->getFilesScanned());
+        self::assertSame(2, $report->filesScanned);
     }
 
     #[Test] // TODO: should be integration
@@ -377,7 +377,7 @@ final class SniffRunnerTest extends TestCase
 
             $report = new RunCoordinator()->run($plan);
 
-            self::assertSame(2, $report->getFilesScanned());
+            self::assertSame(2, $report->filesScanned);
         } finally {
             @unlink($sourceFile);
             @unlink($targetFile);
@@ -425,7 +425,7 @@ final class SniffRunnerTest extends TestCase
         $diff = new DiffChangeset([new FileChange(self::FIXTURE_DIR . '/file_a.xml', [])]);
         $report = $runner->run($this->planDiff($config, $diff));
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->filesScanned);
         self::assertFalse($report->hasViolations());
     }
 

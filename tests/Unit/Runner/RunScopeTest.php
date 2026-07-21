@@ -120,14 +120,14 @@ final class RunScopeTest extends TestCase
     {
         $config = $this->config();
 
-        self::assertSame(1, $this->executePaths($config, [$this->sourceFile])->getFilesScanned());
+        self::assertSame(1, $this->executePaths($config, [$this->sourceFile])->filesScanned);
         self::assertSame(
             2,
             $this->executePaths(
                 $config,
                 [$this->sourceFile],
                 wide: true,
-            )->getFilesScanned(),
+            )->filesScanned,
         );
     }
 
@@ -170,7 +170,7 @@ final class RunScopeTest extends TestCase
             ]),
         );
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->filesScanned);
     }
 
     #[Test]
@@ -192,7 +192,7 @@ final class RunScopeTest extends TestCase
             ]),
         );
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->filesScanned);
     }
 
     /** @param list<SniffEntry> $sniffs */

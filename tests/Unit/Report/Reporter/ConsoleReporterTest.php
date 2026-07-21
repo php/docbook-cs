@@ -83,6 +83,24 @@ final class ConsoleReporterTest extends TestCase
     }
 
     #[Test]
+    public function itShowsFixingOutcome(): void
+    {
+        $report = new Report();
+        $report->recordModifiedFile();
+        $report->recordModifiedFile();
+        $report->recordFixPass(applied: 3, skipped: 1);
+        $report->recordFixPass(applied: 2, skipped: 1);
+        $report->recordFixPass(applied: 2, skipped: 0);
+
+        $output = $this->reporter->generate($report);
+
+        self::assertStringContainsString(
+            'Applied 7 fix(es) in 2 file(s) across 3 fixing pass(es). Skipped 2 fix(es).',
+            $output,
+        );
+    }
+
+    #[Test]
     public function itShowsFilePathInHeader(): void
     {
         $fileReport = new FileReport('src/broken.xml');
@@ -448,6 +466,21 @@ final class ConsoleReporterTest extends TestCase
         $output = $reporter->generate($report);
 
         self::assertStringContainsString('1.000s ( 50.0%)', $output);
+    }
+
+    #[Test]
+    public function itDisplaysFixingTimeAndPercentage(): void
+    {
+        $reporter = new ConsoleReporter(useColors: false, showPerformance: true);
+
+        $report = new Report();
+        $report->setTotalTime(2.0);
+        $report->addFixTime(0.5);
+
+        $output = $reporter->generate($report);
+
+        self::assertStringContainsString('Fixing', $output);
+        self::assertStringContainsString('0.500s ( 25.0%)', $output);
     }
 
     #[Test]

@@ -71,7 +71,10 @@ final readonly class XmlFileProcessor
                 break;
             }
 
-            $fixResult = new FixApplier()->apply($currentFile, $fixes);
+            $fixResult = $this->report->measureFixing(
+                static fn() => new FixApplier()->apply($currentFile, $fixes),
+            );
+            $this->report->recordFixPass($fixResult->applied, $fixResult->skipped);
 
             if ($fixResult->applied === 0) {
                 break;
@@ -111,11 +114,10 @@ final readonly class XmlFileProcessor
         $fixes = [];
 
         foreach ($this->sniffs as $sniff) {
-            $start = microtime(true);
-
-            $sniffViolations = $sniff->process($document, $file);
-
-            $this->report->addSniffTime($sniff::getCode(), microtime(true) - $start);
+            $sniffViolations = $this->report->measureSniff(
+                $sniff::getCode(),
+                static fn() => $sniff->process($document, $file),
+            );
 
             $relevantViolations = $this->violationScopeFilter->filter($sniffViolations, $document, $file, $scope);
 
@@ -125,11 +127,11 @@ final readonly class XmlFileProcessor
                 continue;
             }
 
-            $fixer = new ($sniff::fixerClassName());
+            $sniffFixes = $this->report->measureFixing(
+                fn() => $this->createFixes($sniff, $relevantViolations)
+            );
 
-            foreach ($relevantViolations as $violation) {
-                $fixes[] = $fixer->process($violation);
-            }
+            $fixes = array_merge($fixes, $sniffFixes);
         }
 
         return $fixes;
@@ -169,5 +171,22 @@ final readonly class XmlFileProcessor
         }
 
         return $document;
+    }
+
+    /**
+     * @param list<Violation> $violations
+     * @return list<Fix|FixPlan>
+     * @throws FixerException
+     */
+    private function createFixes(Fixable $sniff, array $violations): array
+    {
+        $fixes = [];
+        $fixer = new ($sniff::fixerClassName());
+
+        foreach ($violations as $violation) {
+            $fixes[] = $fixer->process($violation);
+        }
+
+        return $fixes;
     }
 }

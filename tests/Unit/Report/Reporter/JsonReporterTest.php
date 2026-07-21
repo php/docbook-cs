@@ -102,6 +102,26 @@ final class JsonReporterTest extends TestCase
     }
 
     #[Test]
+    public function itIncludesFixingOutcome(): void
+    {
+        $report = new Report();
+        $report->recordModifiedFile();
+        $report->recordModifiedFile();
+        $report->recordFixPass(applied: 3, skipped: 1);
+        $report->recordFixPass(applied: 2, skipped: 1);
+        $report->recordFixPass(applied: 2, skipped: 0);
+
+        $data = $this->parseOutput($this->reporter->generate($report));
+
+        self::assertSame([
+            'files_modified' => 2,
+            'fixes_applied' => 7,
+            'fixes_skipped' => 2,
+            'passes' => 3,
+        ], $data['fixing']);
+    }
+
+    #[Test]
     public function itSkipsFilesWithNoViolations(): void
     {
         $report = new Report();
@@ -358,7 +378,13 @@ final class JsonReporterTest extends TestCase
      *             message: string,
      *             source: string
      *         }>
-     *     }>
+     *     }>,
+     *     fixing: array{
+     *         files_modified: int,
+     *         fixes_applied: int,
+     *         fixes_skipped: int,
+     *         passes: int
+     *     }
      * }
      */
     private function parseOutput(string $json): array

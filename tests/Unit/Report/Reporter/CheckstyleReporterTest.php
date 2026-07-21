@@ -93,6 +93,22 @@ final class CheckstyleReporterTest extends TestCase
     }
 
     #[Test]
+    public function itExcludesFixingOutcome(): void
+    {
+        $report = new Report();
+        $report->recordModifiedFile();
+        $report->recordFixPass(applied: 3, skipped: 0);
+        $report->setTotalTime(1.25);
+
+        $output = $this->reporter->generate($report);
+        $dom = $this->parseOutput($output);
+
+        self::assertSame(0, $dom->getElementsByTagName('file')->length);
+        self::assertStringContainsString('total runtime: 1.250s', $output);
+        self::assertStringNotContainsString('fix', $output);
+    }
+
+    #[Test]
     public function itSkipsFilesWithNoViolations(): void
     {
         $report = new Report();

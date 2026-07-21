@@ -64,8 +64,12 @@ final class RunCoordinator
                 $result = $processor->process($file, $fileChange);
                 $fileReport = $result->fileReport;
 
-                if ($result->isModified() && @file_put_contents($filePath, $result->fixedContent()) === false) {
-                    throw FixerException::cannotPersist($filePath);
+                if ($result->isModified()) {
+                    if (@file_put_contents($filePath, $result->fixedContent()) === false) {
+                        throw FixerException::cannotPersist($filePath);
+                    }
+
+                    $report->recordModifiedFile();
                 }
             }
 
