@@ -19,20 +19,27 @@ final class FixApplier
 
         $plans = [];
         foreach ($fixes as $index => $fix) {
-            $plan = $fix instanceof FixPlan ? $fix : new FixPlan($fix);
             $plans[] = [
                 'index' => $index,
-                'plan' => $plan,
+                'plan' => $fix instanceof FixPlan ? $fix : new FixPlan($fix),
             ];
         }
 
-        usort($plans, static function (array $a, array $b): int {
-            $offsetComparison = $a['plan']->firstOffset() <=> $b['plan']->firstOffset();
+        usort(
+            /** @var list<array{index: int, plan: FixPlan}> $plans */
+            $plans,
+            /**
+             * @param array{index: int, plan: FixPlan} $a
+             * @param array{index: int, plan: FixPlan} $b
+             */
+            static function (array $a, array $b): int {
+                $offsetComparison = $a['plan']->firstOffset() <=> $b['plan']->firstOffset();
 
-            return $offsetComparison !== 0
-                ? $offsetComparison
-                : $a['index'] <=> $b['index'];
-        });
+                return $offsetComparison !== 0
+                    ? $offsetComparison
+                    : $a['index'] <=> $b['index'];
+            }
+        );
 
         /** @var list<Fix> $acceptedFixes */
         $acceptedFixes = [];
