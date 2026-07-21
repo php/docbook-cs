@@ -67,10 +67,10 @@ XML;
 
         // Sniffs
         self::assertCount(2, $config->getSniffs());
-        self::assertSame('App\Sniffs\ParaSniff', $config->getSniffs()[0]->getClassName());
-        self::assertSame([], $config->getSniffs()[0]->getProperties());
+        self::assertSame('App\Sniffs\ParaSniff', $config->getSniffs()[0]->className);
+        self::assertSame([], $config->getSniffs()[0]->properties);
 
-        self::assertSame('App\Sniffs\IdSniff', $config->getSniffs()[1]->getClassName());
+        self::assertSame('App\Sniffs\IdSniff', $config->getSniffs()[1]->className);
         self::assertSame('^[a-z]+$', $config->getSniffs()[1]->getProperty('pattern'));
 
         // Include paths (resolved relative to basePath)

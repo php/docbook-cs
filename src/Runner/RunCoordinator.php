@@ -85,7 +85,7 @@ final class RunCoordinator
         $sniffs = [];
 
         foreach ($entries as $entry) {
-            $className = $entry->getClassName();
+            $className = $entry->className;
 
             if (!class_exists($className)) {
                 throw new \RuntimeException(
@@ -101,7 +101,7 @@ final class RunCoordinator
                 );
             }
 
-            foreach ($entry->getProperties() as $name => $value) {
+            foreach ($entry->properties as $name => $value) {
                 $instance->setProperty($name, $value);
             }
 
