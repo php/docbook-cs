@@ -23,12 +23,6 @@ final class ConfigParserException extends \RuntimeException
 
     public static function missingAttribute(string $element, string $attribute): self
     {
-        return new self(
-            sprintf(
-                'Element <%s> is missing required attribute "%s".',
-                $element,
-                $attribute,
-            )
-        );
+        return new self(sprintf('Element <%s> is missing required attribute "%s".', $element, $attribute));
     }
 }
