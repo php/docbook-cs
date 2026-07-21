@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Diff;
 
+use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\DiffParser;
+use DocbookCS\Diff\FileChange;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(DiffParser::class),
+    UsesClass(Diff::class),
+    UsesClass(FileChange::class),
 ]
 final class DiffParserTest extends TestCase
 {
@@ -24,7 +29,7 @@ final class DiffParserTest extends TestCase
     #[Test]
     public function itReturnsEmptyArrayForEmptyDiff(): void
     {
-        self::assertSame([], $this->parser->parse(''));
+        self::assertSame([], $this->lineNumbersByFile($this->parser->parse('')));
     }
 
     #[Test]
@@ -41,7 +46,7 @@ diff --git a/reference/file.xml b/reference/file.xml
  line3
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertArrayHasKey('reference/file.xml', $result);
         self::assertSame([2], $result['reference/file.xml']);
@@ -62,7 +67,7 @@ diff --git a/doc/chapter.xml b/doc/chapter.xml
  last line
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertSame([6, 7], $result['doc/chapter.xml']);
     }
@@ -79,7 +84,7 @@ diff --git a/src/file.xml b/src/file.xml
 +added
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertArrayHasKey('src/file.xml', $result);
         self::assertArrayNotHasKey('b/src/file.xml', $result);
@@ -99,7 +104,7 @@ deleted file mode 100644
 -line3
 DIFF;
 
-        self::assertSame([], $this->parser->parse($diff));
+        self::assertSame([], $this->lineNumbersByFile($this->parser->parse($diff)));
     }
 
     #[Test]
@@ -116,7 +121,7 @@ new file mode 100644
 +line3
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertArrayHasKey('new.xml', $result);
         self::assertSame([1, 2, 3], $result['new.xml']);
@@ -142,7 +147,7 @@ diff --git a/second.xml b/second.xml
  unchanged
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertArrayHasKey('first.xml', $result);
         self::assertArrayHasKey('second.xml', $result);
@@ -164,7 +169,7 @@ diff --git a/file.xml b/file.xml
  line3
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         // No lines added, so the changed set is empty (not absent — the file is tracked).
         self::assertArrayHasKey('file.xml', $result);
@@ -185,7 +190,7 @@ diff --git a/file.xml b/file.xml
 +second
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertSame([1, 2], $result['file.xml']);
     }
@@ -209,7 +214,7 @@ diff --git a/file.xml b/file.xml
  line12
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertSame([2, 12], $result['file.xml']);
     }
@@ -225,8 +230,21 @@ diff --git a/file.xml b/file.xml
 +only line
 DIFF;
 
-        $result = $this->parser->parse($diff);
+        $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertSame([1], $result['file.xml']);
+    }
+
+    // TODO: avoids test diff churn; remove when fixers merged
+    /** @return array<string, list<int>> */
+    private function lineNumbersByFile(Diff $diff): array
+    {
+        $lineNumbersByFile = [];
+
+        foreach ($diff->fileChanges as $fileChange) {
+            $lineNumbersByFile[$fileChange->filePath] = $fileChange->addedLineNumbers;
+        }
+
+        return $lineNumbersByFile;
     }
 }

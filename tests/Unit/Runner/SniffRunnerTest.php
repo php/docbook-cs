@@ -6,6 +6,8 @@ namespace DocbookCS\Tests\Unit\Runner;
 
 use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\SniffEntry;
+use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
@@ -21,6 +23,7 @@ use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Sniff\SniffInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -36,6 +39,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(SniffRunner::class),
     CoversClass(Violation::class),
     CoversClass(XmlFileProcessor::class),
+    UsesClass(Diff::class),
+    UsesClass(FileChange::class),
 ]
 final class SniffRunnerTest extends TestCase
 {
@@ -238,8 +243,8 @@ final class SniffRunnerTest extends TestCase
         $config = $this->createConfig();
         $runner = new SniffRunner();
 
-        $diffLines = ['sniff_runner/default/file_a.xml' => [1]];
-        $report = $runner->run($config, null, $diffLines);
+        $diff = new Diff([new FileChange('sniff_runner/default/file_a.xml', [1])]);
+        $report = $runner->run($config, null, $diff);
 
         self::assertSame(1, $report->getFilesScanned());
     }
@@ -250,8 +255,8 @@ final class SniffRunnerTest extends TestCase
         $config = $this->createConfig();
         $runner = new SniffRunner();
 
-        $diffLines = ['completely/different/file.xml' => [1, 2, 3]];
-        $report = $runner->run($config, null, $diffLines);
+        $diff = new Diff([new FileChange('completely/different/file.xml', [1, 2, 3])]);
+        $report = $runner->run($config, null, $diff);
 
         self::assertSame(0, $report->getFilesScanned());
     }
@@ -264,8 +269,8 @@ final class SniffRunnerTest extends TestCase
 
         $discoveredPath = self::FIXTURE_DIR . '/file_a.xml';
 
-        $diffLines = [$discoveredPath => [1]];
-        $report = $runner->run($config, null, $diffLines);
+        $diff = new Diff([new FileChange($discoveredPath, [1])]);
+        $report = $runner->run($config, null, $diff);
 
         self::assertSame(1, $report->getFilesScanned());
     }
@@ -311,8 +316,8 @@ final class SniffRunnerTest extends TestCase
         $config = $this->createConfig(sniffs: [new SniffEntry($sniff::class)]);
         $runner = new SniffRunner();
 
-        $diffLines = ['sniff_runner/default/file_a.xml' => []];
-        $report = $runner->run($config, null, $diffLines);
+        $diff = new Diff([new FileChange('sniff_runner/default/file_a.xml', [])]);
+        $report = $runner->run($config, null, $diff);
 
         self::assertSame(1, $report->getFilesScanned());
         self::assertFalse($report->hasViolations());

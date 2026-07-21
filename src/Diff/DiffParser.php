@@ -8,10 +8,10 @@ final class DiffParser
 {
     private const string NO_FINAL_LINE_MARKER = '\ No newline at end of file';
 
-    /** @return array<string, list<int>> */
-    public function parse(string $diff): array
+    public function parse(string $diff): Diff
     {
-        $result = [];
+        /** @var array<string, list<int>> $changedLinesByFile */
+        $changedLinesByFile = [];
         $currentFile = null;
         $deleted = false;
         $newLineNumber = 0;
@@ -41,8 +41,8 @@ final class DiffParser
                 }
                 $currentFile = $path !== '/dev/null' ? $path : null;
                 $inHunk = false;
-                if ($currentFile !== null && !isset($result[$currentFile])) {
-                    $result[$currentFile] = [];
+                if ($currentFile !== null && !isset($changedLinesByFile[$currentFile])) {
+                    $changedLinesByFile[$currentFile] = [];
                 }
                 continue;
             }
@@ -67,7 +67,7 @@ final class DiffParser
             }
 
             if (str_starts_with($line, '+')) {
-                $result[$currentFile][] = $newLineNumber;
+                $changedLinesByFile[$currentFile][] = $newLineNumber;
                 $newLineNumber++;
                 $newLinesRemaining--;
             } elseif (str_starts_with($line, '-')) {
@@ -84,6 +84,12 @@ final class DiffParser
             }
         }
 
-        return $result;
+        $fileChanges = [];
+
+        foreach ($changedLinesByFile as $filePath => $lineNumbers) {
+            $fileChanges[] = new FileChange($filePath, $lineNumbers);
+        }
+
+        return new Diff($fileChanges);
     }
 }
