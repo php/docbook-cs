@@ -23,7 +23,7 @@ final class ConsoleReporter implements ReporterInterface
     {
         $output = '';
 
-        foreach ($report->getFileReports() as $fileReport) {
+        foreach ($report->fileReports as $fileReport) {
             if (!$fileReport->hasViolations()) {
                 continue;
             }
@@ -60,45 +60,45 @@ final class ConsoleReporter implements ReporterInterface
 
     private function buildSummary(Report $report): string
     {
-        $files = $report->getFilesScanned();
-        $errors = $report->getTotalErrors();
-        $warnings = $report->getTotalWarnings();
-        $total = $report->getTotalViolations();
-        $time = $report->getTotalTime();
+        $timeLine = sprintf('Total runtime: %.3fs', $report->totalTime);
 
-        $timeLine = sprintf('Total runtime: %.3fs', $time);
+        $suffix = $this->buildSummarySuffix($this->buildFixSummary($report), $timeLine);
 
-        if ($total === 0) {
+        if ($report->getTotalViolations() === 0) {
             return $this->green(
                 sprintf(
                     'OK -- %d file(s) scanned, no violations found.',
-                    $files,
+                    $report->filesScanned,
                 )
-            ) . PHP_EOL . $this->dim($timeLine);
+            ) . $suffix;
         }
 
         return $this->red(
             sprintf(
                 'FOUND %d violation(s) (%d error(s), %d warning(s)) in %d file(s).',
-                $total,
-                $errors,
-                $warnings,
-                count($report->getFileReports()),
+                $report->getTotalViolations(),
+                $report->getTotalErrors(),
+                $report->getTotalWarnings(),
+                count($report->fileReports),
             )
-        ) . PHP_EOL . $this->dim($timeLine);
+        ) . $suffix;
     }
 
     private function buildPerformance(Report $report): string
     {
-        $totalTime = $report->getTotalTime();
-        $sniffTimes = $report->getSniffTimes();
+        $totalTime = $report->totalTime;
+        $times = $report->sniffTimes;
 
-        if ($totalTime <= 0.0 || $sniffTimes === []) {
+        if ($report->fixingTime > 0.0) {
+            $times['Fixing'] = $report->fixingTime;
+        }
+
+        if ($totalTime <= 0.0 || $times === []) {
             return $this->dim('No performance data available.');
         }
 
-        // Sort slowest first
-        arsort($sniffTimes);
+        // Sort slowest first.
+        arsort($times);
 
         $output = $this->bold('PERFORMANCE') . PHP_EOL;
         $output .= str_repeat('-', 40) . PHP_EOL;
@@ -108,12 +108,12 @@ final class ConsoleReporter implements ReporterInterface
             $totalTime
         ) . PHP_EOL . PHP_EOL;
 
-        foreach ($sniffTimes as $sniff => $time) {
+        foreach ($times as $name => $time) {
             $percent = ($time / $totalTime) * 100;
 
             $output .= sprintf(
                 ' %-40s %6.3fs (%5.1f%%)',
-                $sniff,
+                $name,
                 $time,
                 $percent,
             ) . PHP_EOL;
@@ -129,6 +129,36 @@ final class ConsoleReporter implements ReporterInterface
             Severity::WARNING => $this->yellow(str_pad(Severity::WARNING->name, 7)),
             default => $this->dim(str_pad(strtoupper($severity->name), 7)),
         }; // @codeCoverageIgnore
+    }
+
+    private function buildSummarySuffix(string $fixSummary, string $timeLine): string
+    {
+        return ($fixSummary !== '' ? PHP_EOL . $fixSummary : '') . PHP_EOL . $this->dim($timeLine);
+    }
+
+    private function buildFixSummary(Report $report): string
+    {
+        $applied = $report->fixesApplied;
+        $skipped = $report->fixesSkipped;
+
+        if ($applied === 0 && $skipped === 0) {
+            return '';
+        }
+
+        if ($applied === 0) {
+            return sprintf('Skipped %d fix(es).', $skipped);
+        }
+
+        $summary = sprintf(
+            'Applied %d fix(es) in %d file(s) across %d fixing pass(es).',
+            $applied,
+            $report->filesModified,
+            $report->fixPasses,
+        );
+
+        return $skipped > 0
+            ? $summary . sprintf(' Skipped %d fix(es).', $skipped)
+            : $summary;
     }
 
     private function bold(string $text): string

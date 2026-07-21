@@ -13,18 +13,24 @@ final class JsonReporter implements ReporterInterface
     {
         $data = [
             'totals' => [
-                'files_scanned' => $report->getFilesScanned(),
+                'files_scanned' => $report->filesScanned,
                 'violations' => $report->getTotalViolations(),
                 'errors' => $report->getTotalErrors(),
                 'warnings' => $report->getTotalWarnings(),
             ],
             'files' => [],
+            'fixing' => [
+                'files_modified' => $report->filesModified,
+                'fixes_applied' => $report->fixesApplied,
+                'fixes_skipped' => $report->fixesSkipped,
+                'passes' => $report->fixPasses,
+            ],
             'performance' => [
-                'total_runtime_seconds' => $report->getTotalTime(),
+                'total_runtime_seconds' => $report->totalTime,
             ],
         ];
 
-        foreach ($report->getFileReports() as $fileReport) {
+        foreach ($report->fileReports as $fileReport) {
             if (!$fileReport->hasViolations()) {
                 continue;
             }

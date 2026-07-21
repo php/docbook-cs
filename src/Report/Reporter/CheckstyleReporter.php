@@ -19,11 +19,11 @@ final class CheckstyleReporter implements ReporterInterface
         $dom->appendChild($root);
 
         $comment = $dom->createComment(
-            sprintf(' total runtime: %.3fs ', $report->getTotalTime())
+            sprintf(' total runtime: %.3fs ', $report->totalTime)
         );
         $root->appendChild($comment);
 
-        foreach ($report->getFileReports() as $fileReport) {
+        foreach ($report->fileReports as $fileReport) {
             if (!$fileReport->hasViolations()) {
                 continue;
             }

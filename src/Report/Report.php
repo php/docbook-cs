@@ -9,14 +9,24 @@ use DocbookCS\Violation\Violation;
 final class Report
 {
     /** @var array<string, FileReport> */
-    private array $fileReports = [];
+    public private(set) array $fileReports = [];
 
-    private int $filesScanned = 0;
+    public private(set) int $filesScanned = 0;
 
-    private float $totalTime = 0.0;
+    public private(set) float $totalTime = 0.0;
 
     /** @var array<string, float> */
-    private array $sniffTimes = [];
+    public private(set) array $sniffTimes = [];
+
+    public private(set) int $filesModified = 0;
+
+    public private(set) int $fixesApplied = 0;
+
+    public private(set) int $fixesSkipped = 0;
+
+    public private(set) int $fixPasses = 0;
+
+    public private(set) float $fixingTime = 0.0;
 
     public function addFileReport(FileReport $fileReport): void
     {
@@ -26,17 +36,6 @@ final class Report
     public function incrementFilesScanned(): void
     {
         $this->filesScanned++;
-    }
-
-    public function getFilesScanned(): int
-    {
-        return $this->filesScanned;
-    }
-
-    /** @return array<string, FileReport> */
-    public function getFileReports(): array
-    {
-        return $this->fileReports;
     }
 
     public function getTotalViolations(): int
@@ -92,23 +91,61 @@ final class Report
         $this->totalTime = $time;
     }
 
-    public function addSniffTime(string $sniffClass, float $time): void
+    public function addSniffTime(string $sniffCode, float $time): void
     {
-        if (!isset($this->sniffTimes[$sniffClass])) {
-            $this->sniffTimes[$sniffClass] = 0.0;
+        if (!isset($this->sniffTimes[$sniffCode])) {
+            $this->sniffTimes[$sniffCode] = 0.0;
         }
 
-        $this->sniffTimes[$sniffClass] += $time;
+        $this->sniffTimes[$sniffCode] += $time;
     }
 
-    public function getTotalTime(): float
+    public function addFixTime(float $time): void
     {
-        return $this->totalTime;
+        $this->fixingTime += $time;
     }
 
-    /** @return array<string, float> */
-    public function getSniffTimes(): array
+    /**
+     * @template T
+     * @param callable(): T $operation
+     * @return T
+     */
+    public function measureFixing(callable $operation): mixed
     {
-        return $this->sniffTimes;
+        $start = microtime(true);
+
+        try {
+            return $operation();
+        } finally {
+            $this->addFixTime(microtime(true) - $start);
+        }
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $operation
+     * @return T
+     */
+    public function measureSniff(string $sniffCode, callable $operation): mixed
+    {
+        $start = microtime(true);
+
+        try {
+            return $operation();
+        } finally {
+            $this->addSniffTime($sniffCode, microtime(true) - $start);
+        }
+    }
+
+    public function recordModifiedFile(): void
+    {
+        $this->filesModified++;
+    }
+
+    public function recordFixPass(int $applied, int $skipped): void
+    {
+        $this->fixesApplied += $applied;
+        $this->fixesSkipped += $skipped;
+        $this->fixPasses++;
     }
 }

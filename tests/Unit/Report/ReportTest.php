@@ -40,7 +40,7 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame(0, $report->getFilesScanned());
+        self::assertSame(0, $report->filesScanned);
     }
 
     #[Test]
@@ -51,7 +51,7 @@ final class ReportTest extends TestCase
         $report->incrementFilesScanned();
         $report->incrementFilesScanned();
 
-        self::assertSame(3, $report->getFilesScanned());
+        self::assertSame(3, $report->filesScanned);
     }
 
     #[Test]
@@ -59,7 +59,7 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame([], $report->getFileReports());
+        self::assertSame([], $report->fileReports);
     }
 
     #[Test]
@@ -70,8 +70,8 @@ final class ReportTest extends TestCase
 
         $report->addFileReport($fileReport);
 
-        self::assertCount(1, $report->getFileReports());
-        self::assertSame($fileReport, $report->getFileReports()['src/chapter.xml']);
+        self::assertCount(1, $report->fileReports);
+        self::assertSame($fileReport, $report->fileReports['src/chapter.xml']);
     }
 
     #[Test]
@@ -91,7 +91,7 @@ final class ReportTest extends TestCase
         $report->addFileReport(new FileReport('a.xml'));
         $report->addFileReport(new FileReport('b.xml'));
 
-        $keys = array_keys($report->getFileReports());
+        $keys = array_keys($report->fileReports);
 
         self::assertSame(['a.xml', 'b.xml'], $keys);
     }
@@ -106,8 +106,8 @@ final class ReportTest extends TestCase
         $report->addFileReport($first);
         $report->addFileReport($second);
 
-        self::assertCount(1, $report->getFileReports());
-        self::assertSame($second, $report->getFileReports()['file.xml']);
+        self::assertCount(1, $report->fileReports);
+        self::assertSame($second, $report->fileReports['file.xml']);
     }
 
     #[Test]
@@ -288,7 +288,55 @@ final class ReportTest extends TestCase
         $report->incrementFilesScanned();
         $report->incrementFilesScanned();
 
-        self::assertSame(3, $report->getFilesScanned());
-        self::assertCount(0, $report->getFileReports());
+        self::assertSame(3, $report->filesScanned);
+        self::assertCount(0, $report->fileReports);
+    }
+
+    #[Test]
+    public function itAggregatesFixingOutcome(): void
+    {
+        $report = new Report();
+        $report->recordModifiedFile();
+        $report->recordModifiedFile();
+        $report->recordFixPass(applied: 3, skipped: 1);
+        $report->recordFixPass(applied: 4, skipped: 2);
+        $report->recordFixPass(applied: 0, skipped: 1);
+
+        self::assertSame(2, $report->filesModified);
+        self::assertSame(7, $report->fixesApplied);
+        self::assertSame(4, $report->fixesSkipped);
+        self::assertSame(3, $report->fixPasses);
+    }
+
+    #[Test]
+    public function itAggregatesSniffTimes(): void
+    {
+        $report = new Report();
+        $report->addSniffTime('Test.Sniff', 0.4);
+        $report->addSniffTime('Test.Sniff', 0.3);
+
+        self::assertSame(0.7, $report->sniffTimes['Test.Sniff']);
+    }
+
+    #[Test]
+    public function itMeasuresFixingAndReturnsTheOperationResult(): void
+    {
+        $report = new Report();
+
+        $result = $report->measureFixing(static fn(): string => 'result');
+
+        self::assertSame('result', $result);
+        self::assertGreaterThanOrEqual(0.0, $report->fixingTime);
+    }
+
+    #[Test]
+    public function itMeasuresSniffsAndReturnsTheOperationResult(): void
+    {
+        $report = new Report();
+
+        $result = $report->measureSniff('Test.Sniff', static fn(): string => 'result');
+
+        self::assertSame('result', $result);
+        self::assertGreaterThanOrEqual(0.0, $report->sniffTimes['Test.Sniff']);
     }
 }
