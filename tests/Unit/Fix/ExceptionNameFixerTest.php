@@ -118,6 +118,29 @@ final class ExceptionNameFixerTest extends TestCase
         self::assertSame(1, $result->applied);
     }
 
+    #[Test]
+    public function itPreservesTagShapedTextInsideComments(): void
+    {
+        $content = '<root><!-- <classname>CommentedException</classname> -->'
+            . '<classname>RuntimeException</classname></root>';
+        $document = $this->createDocument($content);
+        $source = new File('file.xml', $content);
+
+        $violations = new ExceptionNameSniff(RunMode::Fix)->process($document, $source);
+
+        self::assertCount(1, $violations);
+
+        $fix = new ExceptionNameFixer()->process($violations[0]);
+        $result = new FixApplier()->apply($source, [$fix]);
+
+        self::assertSame(
+            '<root><!-- <classname>CommentedException</classname> -->'
+                . '<exceptionname>RuntimeException</exceptionname></root>',
+            $result->file->content,
+        );
+        self::assertSame(1, $result->applied);
+    }
+
     private function createDocument(string $xml): \DOMDocument
     {
         $document = new \DOMDocument();

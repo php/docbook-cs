@@ -101,6 +101,27 @@ final class SimparaFixerTest extends TestCase
         self::assertSame(1, $result->applied);
     }
 
+    #[Test]
+    public function itPreservesTagShapedTextInsideComments(): void
+    {
+        $content = '<root><!-- <para>Commented</para> --><para>Source</para></root>';
+        $document = $this->createDocument($content);
+        $source = new File('file.xml', $content);
+
+        $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
+
+        self::assertCount(1, $violations);
+
+        $fix = new SimparaFixer()->process($violations[0]);
+        $result = new FixApplier()->apply($source, [$fix]);
+
+        self::assertSame(
+            '<root><!-- <para>Commented</para> --><simpara>Source</simpara></root>',
+            $result->file->content,
+        );
+        self::assertSame(1, $result->applied);
+    }
+
     private function createDocument(string $xml): \DOMDocument
     {
         $document = new \DOMDocument();

@@ -118,7 +118,12 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
      */
     private function sourceMatches(File $file): array
     {
-        preg_match_all(self::CLASSNAME_PATTERN, $file->content, $matches, PREG_OFFSET_CAPTURE);
+        preg_match_all(
+            self::CLASSNAME_PATTERN,
+            $this->maskNonElementMarkup($file->content),
+            $matches,
+            PREG_OFFSET_CAPTURE,
+        );
 
         $sourceMatches = [];
         foreach ($matches[0] as $i => [$fullMatch, $offset]) {

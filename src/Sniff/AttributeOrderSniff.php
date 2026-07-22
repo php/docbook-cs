@@ -38,7 +38,12 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
         $violations = [];
 
         // Match ONLY opening tags (skip closing, comments, xml decl)
-        preg_match_all(self::OPENING_TAG_PATTERN, $file->content, $matches, PREG_OFFSET_CAPTURE);
+        preg_match_all(
+            self::OPENING_TAG_PATTERN,
+            $this->maskNonElementMarkup($file->content),
+            $matches,
+            PREG_OFFSET_CAPTURE,
+        );
 
         foreach ($matches[0] as $i => [$fullMatch, $offset]) {
             $tagName = $matches[1][$i][0];

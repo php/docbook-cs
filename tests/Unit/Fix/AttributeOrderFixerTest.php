@@ -62,6 +62,29 @@ final class AttributeOrderFixerTest extends TestCase
         self::assertSame(1, $result->applied);
     }
 
+    #[Test]
+    public function itPreservesTagShapedTextInsideComments(): void
+    {
+        $content = '<root><!-- <tag xmlns="urn:test" xml:id="commented"/> -->'
+            . '<tag xmlns="urn:test" xml:id="source"/></root>';
+        $document = $this->createDocument($content);
+        $source = new File('file.xml', $content);
+
+        $violations = new AttributeOrderSniff(RunMode::Fix)->process($document, $source);
+
+        self::assertCount(1, $violations);
+
+        $fix = new AttributeOrderFixer()->process($violations[0]);
+        $result = new FixApplier()->apply($source, [$fix]);
+
+        self::assertSame(
+            '<root><!-- <tag xmlns="urn:test" xml:id="commented"/> -->'
+                . '<tag xml:id="source" xmlns="urn:test"/></root>',
+            $result->file->content,
+        );
+        self::assertSame(1, $result->applied);
+    }
+
     private function createDocument(string $xml): \DOMDocument
     {
         $document = new \DOMDocument();
