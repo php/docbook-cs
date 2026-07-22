@@ -201,4 +201,17 @@ final class ExceptionNameSniffTest extends TestCase
         self::assertSame($beginOffset, $violations[0]->beginOffset);
         self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->untilOffset);
     }
+
+    #[Test]
+    public function itIgnoresClassnamesInsideCommentsWhenMappingSource(): void
+    {
+        $content = '<root><!-- <classname>CommentedException</classname> -->'
+            . '<classname>RuntimeException</classname></root>';
+        $doc = $this->createDocument($content);
+
+        $violations = new ExceptionNameSniff()->process($doc, new File('file.xml', $content));
+
+        self::assertCount(1, $violations);
+        self::assertSame('<classname>RuntimeException</classname>', $violations[0]->content);
+    }
 }

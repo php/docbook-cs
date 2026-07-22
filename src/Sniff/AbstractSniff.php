@@ -12,6 +12,12 @@ use DocbookCS\Violation\Violation;
 
 abstract class AbstractSniff implements SniffInterface
 {
+    private const array NON_ELEMENT_DELIMITERS = [
+        '<!--' => '-->',
+        '<![CDATA[' => ']]>',
+        '<?' => '?>',
+    ];
+
     /** @var array<string, string> */
     protected array $properties = [];
 
@@ -61,5 +67,90 @@ abstract class AbstractSniff implements SniffInterface
                 ?: throw new \LogicException('Invalid severity level configured for ExceptionNameSniff.'),
             affectedRanges: $affectedRanges,
         );
+    }
+
+    protected function maskNonElementMarkup(string $source): string
+    {
+        $masked = $source;
+        $offset = 0;
+
+        while (false !== $start = strpos($source, '<', $offset)) {
+            $endOffset = $this->nonElementMarkupEndOffset($source, $start);
+
+            if ($endOffset === null) {
+                $offset = $start + 1;
+                continue;
+            }
+
+            for ($i = $start; $i < $endOffset; $i++) {
+                $masked[$i] = ' ';
+            }
+
+            $offset = $endOffset;
+        }
+
+        return $masked;
+    }
+
+    private function nonElementMarkupEndOffset(string $source, int $start): ?int
+    {
+        foreach (self::NON_ELEMENT_DELIMITERS as $opening => $closing) {
+            if (substr_compare($source, $opening, $start, strlen($opening)) === 0) {
+                return $this->offsetAfterDelimiter($source, $closing, $start);
+            }
+        }
+
+        if (substr_compare($source, '<!', $start, 2) === 0) {
+            return $this->declarationEndOffset($source, $start);
+        }
+
+        return null;
+    }
+
+    private function offsetAfterDelimiter(string $source, string $delimiter, int $offset): int
+    {
+        $end = strpos($source, $delimiter, $offset);
+
+        return $end === false ? strlen($source) : $end + strlen($delimiter);
+    }
+
+    private function declarationEndOffset(string $source, int $offset): int
+    {
+        $length = strlen($source);
+        $quote = null;
+        $bracketDepth = 0;
+
+        for ($i = $offset; $i < $length; $i++) {
+            $character = $source[$i];
+
+            if ($quote !== null) {
+                if ($character === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+
+            if ($character === '"' || $character === "'") {
+                $quote = $character;
+                continue;
+            }
+
+            if ($character === '[') {
+                $bracketDepth++;
+                continue;
+            }
+
+            if ($character === ']') {
+                $bracketDepth--;
+                continue;
+            }
+
+            if ($character === '>' && $bracketDepth === 0) {
+                return $i + 1;
+            }
+        }
+
+        return $length;
     }
 }

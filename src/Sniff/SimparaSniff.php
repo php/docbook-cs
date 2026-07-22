@@ -221,7 +221,12 @@ final class SimparaSniff extends AbstractSniff implements Fixable
      */
     private function sourceMatches(File $file): array
     {
-        preg_match_all(self::PARA_TAG_PATTERN, $file->content, $matches, PREG_OFFSET_CAPTURE);
+        preg_match_all(
+            self::PARA_TAG_PATTERN,
+            $this->maskNonElementMarkup($file->content),
+            $matches,
+            PREG_OFFSET_CAPTURE,
+        );
 
         /** @var list<array{offset: int, range: SourceRange}> $stack */
         $stack = [];

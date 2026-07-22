@@ -125,6 +125,27 @@ final class SimparaSniffTest extends TestCase
     }
 
     #[Test]
+    public function itIgnoresTagShapedTextOutsideElementsWhenMappingSource(): void
+    {
+        $content = <<<'XML'
+            <!DOCTYPE root [<!ENTITY sample "<para>Declared</para>">]>
+            <root>
+                <!-- <para>Commented</para> -->
+                <![CDATA[<para>CDATA</para>]]>
+                <?sample <para>Instruction</para>?>
+                <para>Source</para>
+            </root>
+            XML;
+        $doc = $this->createDocument($content);
+
+        $violations = new SimparaSniff()->process($doc, new File('file.xml', $content));
+
+        self::assertCount(1, $violations);
+        self::assertSame('<para>Source</para>', $violations[0]->content);
+        self::assertSame(6, $violations[0]->line);
+    }
+
+    #[Test]
     public function itDoesNotFlagParaInsideFormalpara(): void
     {
         $doc = $this->createDocument($content =

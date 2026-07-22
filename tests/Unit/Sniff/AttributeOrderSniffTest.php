@@ -156,4 +156,17 @@ final class AttributeOrderSniffTest extends TestCase
         self::assertSame(38, $violations[0]->untilOffset);
         self::assertSame(1, $violations[0]->line);
     }
+
+    #[Test]
+    public function itIgnoresElementsInsideComments(): void
+    {
+        $content = '<root><!-- <tag xmlns="urn:test" xml:id="commented"/> -->'
+            . '<tag xmlns="urn:test" xml:id="source"/></root>';
+        $doc = $this->createDocument($content);
+
+        $violations = new AttributeOrderSniff()->process($doc, new File('file.xml', $content));
+
+        self::assertCount(1, $violations);
+        self::assertSame('<tag xmlns="urn:test" xml:id="source"/>', $violations[0]->content);
+    }
 }
