@@ -50,6 +50,12 @@ final class ConsoleReporter implements ReporterInterface
         $output .= PHP_EOL;
         $output .= $this->buildSummary($report) . PHP_EOL;
 
+        $fixingStatistics = $this->buildFixingStatistics($report);
+        if ($fixingStatistics !== null) {
+            $output .= PHP_EOL;
+            $output .= $fixingStatistics . PHP_EOL;
+        }
+
         if ($this->showPerformance) {
             $output .= PHP_EOL;
             $output .= $this->buildPerformance($report) . PHP_EOL;
@@ -62,64 +68,89 @@ final class ConsoleReporter implements ReporterInterface
     {
         $timeLine = sprintf('Total runtime: %.3fs', $report->totalTime);
 
-        $suffix = $this->buildSummarySuffix($this->buildFixSummary($report), $timeLine);
-
         if ($report->getTotalViolations() === 0) {
             return $this->green(
                 sprintf(
                     'OK -- %d file(s) scanned, no violations found.',
                     $report->filesScanned,
                 )
-            ) . $suffix;
+            ) . PHP_EOL . $this->dim($timeLine);
         }
 
         return $this->red(
             sprintf(
-                'FOUND %d violation(s) (%d error(s), %d warning(s)) in %d file(s).',
+                '%s %d violation(s) (%d error(s), %d warning(s)) in %d file(s).',
+                $this->hasFixingStatistics($report) ? 'REMAINING' : 'FOUND',
                 $report->getTotalViolations(),
                 $report->getTotalErrors(),
                 $report->getTotalWarnings(),
                 count($report->fileReports),
             )
-        ) . $suffix;
+        ) . PHP_EOL . $this->dim($timeLine);
+    }
+
+    private function buildFixingStatistics(Report $report): ?string
+    {
+        if (!$this->hasFixingStatistics($report)) {
+            return null;
+        }
+
+        $statistics = [
+            'Files changed' => $report->filesModified,
+            'Fixes applied' => $report->fixesApplied,
+            'Fixes skipped' => $report->fixesSkipped,
+            'Fixing passes' => $report->fixPasses,
+        ];
+        $lines = [$this->bold('FIXING'), str_repeat('-', 40)];
+
+        foreach ($statistics as $name => $count) {
+            $lines[] = sprintf(' %-40s %d', $name, $count);
+        }
+
+        return implode(PHP_EOL, $lines);
+    }
+
+    private function hasFixingStatistics(Report $report): bool
+    {
+        return $report->fixesApplied > 0 || $report->fixesSkipped > 0;
     }
 
     private function buildPerformance(Report $report): string
     {
         $totalTime = $report->totalTime;
-        $times = $report->sniffTimes;
+        $sniffTimes = $report->sniffTimes;
 
-        if ($report->fixingTime > 0.0) {
-            $times['Fixing'] = $report->fixingTime;
-        }
-
-        if ($totalTime <= 0.0 || $times === []) {
+        if ($totalTime <= 0.0 || ($sniffTimes === [] && $report->fixingTime <= 0.0)) {
             return $this->dim('No performance data available.');
         }
 
         // Sort slowest first.
-        arsort($times);
+        arsort($sniffTimes);
 
-        $output = $this->bold('PERFORMANCE') . PHP_EOL;
-        $output .= str_repeat('-', 40) . PHP_EOL;
+        $lines = [
+            $this->bold('PERFORMANCE'),
+            str_repeat('-', 40),
+            '',
+        ];
 
-        $output .= sprintf(
-            ' Total runtime: %.3fs',
-            $totalTime
-        ) . PHP_EOL . PHP_EOL;
+        if ($sniffTimes !== []) {
+            $lines[] = $this->bold('Sniffing:');
 
-        foreach ($times as $name => $time) {
-            $percent = ($time / $totalTime) * 100;
-
-            $output .= sprintf(
-                ' %-40s %6.3fs (%5.1f%%)',
-                $name,
-                $time,
-                $percent,
-            ) . PHP_EOL;
+            foreach ($sniffTimes as $name => $time) {
+                $lines[] = $this->formatPerformanceRow($name, $time, $totalTime);
+            }
         }
 
-        return $output;
+        if ($report->fixingTime > 0.0) {
+            if ($sniffTimes !== []) {
+                $lines[] = '';
+            }
+
+            $lines[] = $this->bold('Fixing:');
+            $lines[] = $this->formatPerformanceRow('Total', $report->fixingTime, $totalTime);
+        }
+
+        return implode(PHP_EOL, $lines);
     }
 
     private function formatSeverity(Severity $severity): string
@@ -131,34 +162,9 @@ final class ConsoleReporter implements ReporterInterface
         }; // @codeCoverageIgnore
     }
 
-    private function buildSummarySuffix(string $fixSummary, string $timeLine): string
+    private function formatPerformanceRow(string $name, float $time, float $totalTime): string
     {
-        return ($fixSummary !== '' ? PHP_EOL . $fixSummary : '') . PHP_EOL . $this->dim($timeLine);
-    }
-
-    private function buildFixSummary(Report $report): string
-    {
-        $applied = $report->fixesApplied;
-        $skipped = $report->fixesSkipped;
-
-        if ($applied === 0 && $skipped === 0) {
-            return '';
-        }
-
-        if ($applied === 0) {
-            return sprintf('Skipped %d fix(es).', $skipped);
-        }
-
-        $summary = sprintf(
-            'Applied %d fix(es) in %d file(s) across %d fixing pass(es).',
-            $applied,
-            $report->filesModified,
-            $report->fixPasses,
-        );
-
-        return $skipped > 0
-            ? $summary . sprintf(' Skipped %d fix(es).', $skipped)
-            : $summary;
+        return sprintf(' %-40s %6.3fs (%5.1f%%)', $name, $time, ($time / $totalTime) * 100);
     }
 
     private function bold(string $text): string

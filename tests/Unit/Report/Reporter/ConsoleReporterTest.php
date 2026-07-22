@@ -64,6 +64,7 @@ final class ConsoleReporterTest extends TestCase
         $output = $this->reporter->generate($report);
 
         self::assertStringContainsString('OK -- 1 file(s) scanned, no violations found.', $output);
+        self::assertStringNotContainsString('FIXING', $output);
     }
 
     #[Test]
@@ -83,7 +84,25 @@ final class ConsoleReporterTest extends TestCase
     }
 
     #[Test]
-    public function itShowsFixingOutcome(): void
+    public function itShowsRemainingViolationsAfterFixing(): void
+    {
+        $fileReport = new FileReport('dirty.xml');
+        $fileReport->addViolation($this->createViolation());
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+        $report->recordFixPass(applied: 1, skipped: 0);
+
+        $output = $this->reporter->generate($report);
+
+        self::assertStringContainsString(
+            'REMAINING 1 violation(s) (1 error(s), 0 warning(s)) in 1 file(s).',
+            $output,
+        );
+    }
+
+    #[Test]
+    public function itShowsFixingStatistics(): void
     {
         $report = new Report();
         $report->recordModifiedFile();
@@ -94,10 +113,16 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString(
-            'Applied 7 fix(es) in 2 file(s) across 3 fixing pass(es). Skipped 2 fix(es).',
-            $output,
-        );
+        $expected = implode(PHP_EOL, [
+            'FIXING',
+            str_repeat('-', 40),
+            sprintf(' %-40s %d', 'Files changed', 2),
+            sprintf(' %-40s %d', 'Fixes applied', 7),
+            sprintf(' %-40s %d', 'Fixes skipped', 2),
+            sprintf(' %-40s %d', 'Fixing passes', 3),
+        ]);
+
+        self::assertStringContainsString($expected, $output);
     }
 
     #[Test]
@@ -429,6 +454,8 @@ final class ConsoleReporterTest extends TestCase
 
         self::assertStringContainsString('PERFORMANCE', $output);
         self::assertStringContainsString('Total runtime: 2.000s', $output);
+        self::assertSame(1, substr_count($output, 'Total runtime: 2.000s'));
+        self::assertStringContainsString('Sniffing:', $output);
     }
 
     #[Test]
@@ -475,12 +502,15 @@ final class ConsoleReporterTest extends TestCase
 
         $report = new Report();
         $report->setTotalTime(2.0);
-        $report->addFixTime(0.5);
+        $report->addSniffTime('SniffA', 1.0);
+        $report->addFixingTime(0.5);
 
         $output = $reporter->generate($report);
 
-        self::assertStringContainsString('Fixing', $output);
+        self::assertStringContainsString('Sniffing:', $output);
+        self::assertStringContainsString('Fixing:', $output);
         self::assertStringContainsString('0.500s ( 25.0%)', $output);
+        self::assertTrue(strpos($output, 'Sniffing:') < strpos($output, 'Fixing:'));
     }
 
     #[Test]
