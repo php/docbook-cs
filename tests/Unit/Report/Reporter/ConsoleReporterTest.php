@@ -68,6 +68,34 @@ final class ConsoleReporterTest extends TestCase
     }
 
     #[Test]
+    public function itShowsNoViolationsRemainingAfterFixing(): void
+    {
+        $report = new Report();
+        $report->incrementFilesScanned();
+        $report->recordFixPass(applied: 1, skipped: 0);
+
+        $output = $this->reporter->generate($report);
+
+        self::assertStringContainsString('OK -- 1 file(s) scanned, no violations remaining.', $output);
+    }
+
+    #[Test]
+    public function itShowsViolationsRemainingAfterFixing(): void
+    {
+        $fileReport = new FileReport('dirty.xml');
+        $fileReport->addViolation($this->createViolation());
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+        $report->incrementFilesScanned();
+        $report->recordFixPass(applied: 0, skipped: 1);
+
+        $output = $this->reporter->generate($report);
+
+        self::assertStringContainsString('REMAINING 1 violation(s) (1 error(s), 0 warning(s)) in 1 file(s).', $output);
+    }
+
+    #[Test]
     public function itShowsViolationSummaryWhenViolationsExist(): void
     {
         $fileReport = new FileReport('dirty.xml');

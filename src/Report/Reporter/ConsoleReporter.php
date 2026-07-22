@@ -69,10 +69,15 @@ final class ConsoleReporter implements ReporterInterface
         $timeLine = sprintf('Total runtime: %.3fs', $report->totalTime);
 
         if ($report->getTotalViolations() === 0) {
+            $outcome = $this->hasFixingStatistics($report)
+                ? 'no violations remaining.'
+                : 'no violations found.';
+
             return $this->green(
                 sprintf(
-                    'OK -- %d file(s) scanned, no violations found.',
+                    'OK -- %d file(s) scanned, %s',
                     $report->filesScanned,
+                    $outcome,
                 )
             ) . PHP_EOL . $this->dim($timeLine);
         }
