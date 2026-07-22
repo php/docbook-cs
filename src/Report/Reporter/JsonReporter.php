@@ -20,10 +20,10 @@ final class JsonReporter implements ReporterInterface
             ],
             'files' => [],
             'fixing' => [
-                'files_modified' => $report->filesModified,
+                'files_changed' => $report->filesChanged,
                 'fixes_applied' => $report->fixesApplied,
                 'fixes_skipped' => $report->fixesSkipped,
-                'passes' => $report->fixPasses,
+                'fixing_passes' => $report->fixingPasses,
             ],
             'performance' => [
                 'total_runtime_seconds' => $report->totalTime,

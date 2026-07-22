@@ -96,10 +96,10 @@ final class ConsoleReporter implements ReporterInterface
         }
 
         $statistics = [
-            'Files changed' => $report->filesModified,
+            'Files changed' => $report->filesChanged,
             'Fixes applied' => $report->fixesApplied,
             'Fixes skipped' => $report->fixesSkipped,
-            'Fixing passes' => $report->fixPasses,
+            'Fixing passes' => $report->fixingPasses,
         ];
         $lines = [$this->bold('FIXING'), str_repeat('-', 40)];
 

@@ -503,7 +503,7 @@ final class ConsoleReporterTest extends TestCase
         $report = new Report();
         $report->setTotalTime(2.0);
         $report->addSniffTime('SniffA', 1.0);
-        $report->addFixingTime(0.5);
+        $report->addFixTime(0.5);
 
         $output = $reporter->generate($report);
 

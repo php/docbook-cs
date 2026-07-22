@@ -8,25 +8,25 @@ use DocbookCS\Violation\Violation;
 
 final class Report
 {
-    /** @var array<string, FileReport> */
-    public private(set) array $fileReports = [];
-
-    public private(set) int $filesScanned = 0;
-
     public private(set) float $totalTime = 0.0;
+
+    public private(set) float $fixingTime = 0.0;
 
     /** @var array<string, float> */
     public private(set) array $sniffTimes = [];
 
-    public private(set) int $filesModified = 0;
+    public private(set) int $filesScanned = 0;
+
+    public private(set) int $filesChanged = 0;
 
     public private(set) int $fixesApplied = 0;
 
     public private(set) int $fixesSkipped = 0;
 
-    public private(set) int $fixPasses = 0;
+    public private(set) int $fixingPasses = 0;
 
-    public private(set) float $fixingTime = 0.0;
+    /** @var array<string, FileReport> */
+    public private(set) array $fileReports = [];
 
     public function addFileReport(FileReport $fileReport): void
     {
@@ -100,7 +100,7 @@ final class Report
         $this->sniffTimes[$sniffCode] += $time;
     }
 
-    public function addFixingTime(float $time): void
+    public function addFixTime(float $time): void
     {
         $this->fixingTime += $time;
     }
@@ -117,7 +117,7 @@ final class Report
         try {
             return $operation();
         } finally {
-            $this->addFixingTime(microtime(true) - $start);
+            $this->addFixTime(microtime(true) - $start);
         }
     }
 
@@ -126,7 +126,7 @@ final class Report
      * @param callable(): T $operation
      * @return T
      */
-    public function measureSniff(string $sniffCode, callable $operation): mixed
+    public function measureSniffing(string $sniffCode, callable $operation): mixed
     {
         $start = microtime(true);
 
@@ -139,13 +139,13 @@ final class Report
 
     public function recordModifiedFile(): void
     {
-        $this->filesModified++;
+        $this->filesChanged++;
     }
 
     public function recordFixPass(int $applied, int $skipped): void
     {
         $this->fixesApplied += $applied;
         $this->fixesSkipped += $skipped;
-        $this->fixPasses++;
+        $this->fixingPasses++;
     }
 }
