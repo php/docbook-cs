@@ -34,8 +34,8 @@ use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunCoordinator;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
+use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\RunScopeResolver;
-use DocbookCS\Runner\SourceScope;
 use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Runner\XmlProcessingResult;
@@ -79,8 +79,8 @@ use PHPUnit\Framework\TestCase;
     UsesClass(GitException::class),
     UsesClass(NativeProcessRunner::class),
     UsesClass(ProcessResult::class),
+    UsesClass(RunScope::class),
     UsesClass(RunScopeResolver::class),
-    UsesClass(SourceScope::class),
     UsesClass(UpstreamResolver::class),
     UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlProcessingResult::class),

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Runner;
 
-use DocbookCS\Runner\SourceScope;
+use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\SourceRange;
@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
     //
     UsesClass(File::class),
     UsesClass(SourceRange::class),
-    UsesClass(SourceScope::class),
+    UsesClass(RunScope::class),
     UsesClass(Violation::class),
 ]
 final class ViolationScopeFilterTest extends TestCase
@@ -43,7 +43,7 @@ final class ViolationScopeFilterTest extends TestCase
             $violations,
             $document,
             $file,
-            SourceScope::wholeFile(),
+            RunScope::wholeFile(),
         );
 
         self::assertSame($violations, $result);

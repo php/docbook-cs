@@ -10,7 +10,7 @@ use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\Violation;
 
-final readonly class SourceScope
+final readonly class RunScope
 {
     /**
      * Null means the whole source file; an empty list means no source range.

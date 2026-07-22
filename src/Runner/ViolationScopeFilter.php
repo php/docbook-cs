@@ -13,7 +13,7 @@ final readonly class ViolationScopeFilter
      * @param list<Violation> $violations
      * @return list<Violation>
      */
-    public function filter(array $violations, \DOMDocument $document, File $file, SourceScope $scope): array
+    public function filter(array $violations, \DOMDocument $document, File $file, RunScope $scope): array
     {
         if ($scope->isWholeFile()) {
             return $violations;

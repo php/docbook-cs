@@ -11,7 +11,7 @@ use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityPreprocessor;
 use DocbookCS\Runner\RunMode;
-use DocbookCS\Runner\SourceScope;
+use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Runner\XmlProcessingResult;
@@ -42,7 +42,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(Line::class),
     UsesClass(RunMode::class),
     UsesClass(SourceRange::class),
-    UsesClass(SourceScope::class),
+    UsesClass(RunScope::class),
     UsesClass(XmlProcessingResult::class),
 ]
 final class XmlFileProcessorTest extends TestCase

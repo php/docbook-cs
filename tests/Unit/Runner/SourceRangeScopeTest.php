@@ -15,7 +15,7 @@ use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\EntityPreprocessor;
 use DocbookCS\Runner\RunMode;
-use DocbookCS\Runner\SourceScope;
+use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Runner\XmlProcessingResult;
@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(SimparaSniff::class),
-    CoversClass(SourceScope::class),
+    CoversClass(RunScope::class),
     CoversClass(XmlFileProcessor::class),
     //
     UsesClass(EntityExpansionMarker::class),
