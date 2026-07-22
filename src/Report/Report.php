@@ -100,7 +100,7 @@ final class Report
         $this->sniffTimes[$sniffCode] += $time;
     }
 
-    public function addFixTime(float $time): void
+    public function addFixingTime(float $time): void
     {
         $this->fixingTime += $time;
     }
@@ -117,7 +117,7 @@ final class Report
         try {
             return $operation();
         } finally {
-            $this->addFixTime(microtime(true) - $start);
+            $this->addFixingTime(microtime(true) - $start);
         }
     }
 
