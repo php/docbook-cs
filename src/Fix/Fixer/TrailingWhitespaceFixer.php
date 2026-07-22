@@ -15,21 +15,23 @@ final class TrailingWhitespaceFixer implements Fixer
     /** @throws FixerException */
     public function process(Violation $violation): Fix
     {
-        if ($violation->content === null) {
+        $affectedRange = $violation->rangeOne();
+
+        if ($affectedRange->content === null) {
             throw FixerException::cannotFixMissingContent();
         }
 
-        if (!preg_match(self::WHITESPACE_PATTERN, $violation->content)) {
+        if (!preg_match(self::WHITESPACE_PATTERN, $affectedRange->content)) {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
         return new Fix(
             filePath: $violation->filePath,
-            beginOffset: $violation->beginOffset,
-            untilOffset: $violation->untilOffset,
+            beginOffset: $affectedRange->beginOffset,
+            untilOffset: $affectedRange->untilOffset,
             replacement: '',
             sniffCode: $violation->sniffCode,
-            expectedContent: $violation->content,
+            expectedContent: $affectedRange->content,
         );
     }
 }

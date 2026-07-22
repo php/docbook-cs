@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Violation;
 
 use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -17,34 +19,76 @@ use PHPUnit\Framework\TestCase;
 final class AffectedRangesTest extends TestCase
 {
     #[Test]
-    public function itDefaultsToTheExistingFindingRange(): void
+    public function itRejectsViolationsWithoutAffectedRanges(): void
     {
-        $violation = new Violation('Test', 'file.xml', 3, 10, 20, 'Message', 'content');
+        $this->expectException(\InvalidArgumentException::class);
 
-        self::assertEquals([new SourceRange(3, 10, 20)], $violation->affectedRanges);
+        // Bypass the static non-empty-list contract to exercise runtime validation.
+        new \ReflectionClass(Violation::class)->newInstanceArgs(['Test', 'file.xml', 'Message', []]);
     }
 
     #[Test]
-    public function relatedRangesDoNotChangeTheExistingFinding(): void
+    public function itRejectsUnorderedOrOverlappingAffectedRanges(): void
     {
-        $ranges = [
-            new SourceRange(3, 11, 15),
-            new SourceRange(8, 40, 44),
-        ];
-        $violation = new Violation(
-            sniffCode: 'Test',
-            filePath: 'file.xml',
-            line: 3,
-            beginOffset: 10,
-            untilOffset: 45,
-            message: 'Message',
-            content: '<para>content</para>',
-            affectedRanges: $ranges,
-        );
+        $this->expectException(\InvalidArgumentException::class);
 
-        self::assertSame(10, $violation->beginOffset);
-        self::assertSame(45, $violation->untilOffset);
-        self::assertSame('<para>content</para>', $violation->content);
-        self::assertSame($ranges, $violation->affectedRanges);
+        new Violation('Test', 'file.xml', 'Message', [
+            new SourceRange(1, 10, 20),
+            new SourceRange(1, 15, 25),
+        ]);
+    }
+
+    #[Test, DataProvider('invalidSourceRanges')]
+    public function itRejectsInvalidSourceRanges(int $line, int $beginOffset, int $untilOffset, ?string $content): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new SourceRange($line, $beginOffset, $untilOffset, $content);
+    }
+
+    /** @return iterable<string, array{int, int, int, string|null}> */
+    public static function invalidSourceRanges(): iterable
+    {
+        yield 'negative line' => [-1, 0, 0, null];
+        yield 'negative begin offset' => [1, -1, 0, null];
+        yield 'end before beginning' => [1, 2, 1, null];
+        yield 'content length differs' => [1, 0, 2, 'x'];
+    }
+
+    #[Test]
+    public function itCreatesFileReadFailureViolations(): void
+    {
+        $violation = Violation::fromFileReadFailure('file.xml');
+
+        self::assertSame('DocbookCS.Internal', $violation->sniffCode);
+        self::assertSame('file.xml', $violation->filePath);
+        self::assertSame('Could not read file.', $violation->message);
+        self::assertSame(Severity::ERROR, $violation->severity);
+        self::assertEquals(new SourceRange(0, 0, 0), $violation->rangeOne());
+    }
+
+    #[Test]
+    public function itCreatesXmlParseErrorViolations(): void
+    {
+        $error = new \LibXMLError();
+        $error->message = "Invalid XML\n";
+        $error->line = 7;
+
+        $violation = Violation::fromXmlParseError('file.xml', $error);
+
+        self::assertSame('DocbookCS.Internal', $violation->sniffCode);
+        self::assertSame('file.xml', $violation->filePath);
+        self::assertSame('XML parse error: Invalid XML', $violation->message);
+        self::assertSame(Severity::ERROR, $violation->severity);
+        self::assertEquals(new SourceRange(7, 0, 0), $violation->rangeOne());
+    }
+
+    #[Test]
+    public function itCreatesXmlParseErrorViolationsWithoutLibxmlDetails(): void
+    {
+        $violation = Violation::fromXmlParseError('file.xml', null);
+
+        self::assertSame('XML parse error: unknown', $violation->message);
+        self::assertEquals(new SourceRange(0, 0, 0), $violation->rangeOne());
     }
 }

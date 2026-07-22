@@ -46,12 +46,12 @@ final class WhitespaceFixerTest extends TestCase
         $secondLineOffset = (int) strpos($content, " \t<tag/>");
 
         self::assertCount(2, $violations);
-        self::assertSame('<root> ', $violations[0]->content);
-        self::assertSame(0, $violations[0]->beginOffset);
-        self::assertSame(strlen('<root> '), $violations[0]->untilOffset);
-        self::assertSame(" \t<tag/>", $violations[1]->content);
-        self::assertSame($secondLineOffset, $violations[1]->beginOffset);
-        self::assertSame($secondLineOffset + strlen(" \t<tag/>"), $violations[1]->untilOffset);
+        self::assertSame('<root> ', $violations[0]->rangeOne()->content);
+        self::assertSame(0, $violations[0]->rangeOne()->beginOffset);
+        self::assertSame(strlen('<root> '), $violations[0]->rangeOne()->untilOffset);
+        self::assertSame(" \t<tag/>", $violations[1]->rangeOne()->content);
+        self::assertSame($secondLineOffset, $violations[1]->rangeOne()->beginOffset);
+        self::assertSame($secondLineOffset + strlen(" \t<tag/>"), $violations[1]->rangeOne()->untilOffset);
 
         $fixes = [];
         $fixer = new WhitespaceFixer();

@@ -49,10 +49,10 @@ final class AttributeOrderFixerTest extends TestCase
         $sourceContent = '<root xmlns="urn:test" xml:id="root"/>';
 
         self::assertCount(1, $violations);
-        self::assertSame($sourceContent, $violations[0]->content);
-        self::assertSame($beginOffset, $violations[0]->beginOffset);
-        self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->untilOffset);
-        self::assertSame(1, $violations[0]->line);
+        self::assertSame($sourceContent, $violations[0]->rangeOne()->content);
+        self::assertSame($beginOffset, $violations[0]->rangeOne()->beginOffset);
+        self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->rangeOne()->untilOffset);
+        self::assertSame(1, $violations[0]->rangeOne()->line);
 
         $fix = new AttributeOrderFixer()->process($violations[0]);
 

@@ -33,10 +33,8 @@ final class ViolationScopeFilterTest extends TestCase
         $violations = [new Violation(
             sniffCode: 'Test.Stub',
             filePath: $file->path,
-            line: 1,
-            beginOffset: 0,
-            untilOffset: 0,
             message: 'violation at line 1',
+            affectedRanges: [new SourceRange(1, 0, 0)],
         )];
 
         $result = new ViolationScopeFilter()->filter(

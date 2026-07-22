@@ -17,11 +17,13 @@ final class AttributeOrderFixer implements Fixer
     /** @throws FixerException */
     public function process(Violation $violation): Fix
     {
-        if ($violation->content === null) {
+        $affectedRange = $violation->rangeOne();
+
+        if ($affectedRange->content === null) {
             throw FixerException::cannotFixMissingContent();
         }
 
-        if (!preg_match(self::OPENING_TAG_PATTERN, $violation->content, $matches)) {
+        if (!preg_match(self::OPENING_TAG_PATTERN, $affectedRange->content, $matches)) {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
@@ -33,10 +35,11 @@ final class AttributeOrderFixer implements Fixer
 
         return new Fix(
             $violation->filePath,
-            $violation->beginOffset,
-            $violation->untilOffset,
+            $affectedRange->beginOffset,
+            $affectedRange->untilOffset,
             sprintf(self::OPENING_TAG_FORMAT, $matches[1], $fixedAttributeString),
             $violation->sniffCode,
+            $affectedRange->content,
         );
     }
 

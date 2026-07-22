@@ -124,7 +124,7 @@ final class AttributeOrderSniffTest extends TestCase
         $violations = $sniff->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
-        self::assertSame(2, $violations[0]->line);
+        self::assertSame(2, $violations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -151,10 +151,10 @@ final class AttributeOrderSniffTest extends TestCase
         $violations = $sniff->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
-        self::assertSame('<root xmlns="urn:test" xml:id="root"/>', $violations[0]->content);
-        self::assertSame(0, $violations[0]->beginOffset);
-        self::assertSame(38, $violations[0]->untilOffset);
-        self::assertSame(1, $violations[0]->line);
+        self::assertSame('<root xmlns="urn:test" xml:id="root"/>', $violations[0]->rangeOne()->content);
+        self::assertSame(0, $violations[0]->rangeOne()->beginOffset);
+        self::assertSame(38, $violations[0]->rangeOne()->untilOffset);
+        self::assertSame(1, $violations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -167,6 +167,6 @@ final class AttributeOrderSniffTest extends TestCase
         $violations = new AttributeOrderSniff()->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
-        self::assertSame('<tag xmlns="urn:test" xml:id="source"/>', $violations[0]->content);
+        self::assertSame('<tag xmlns="urn:test" xml:id="source"/>', $violations[0]->rangeOne()->content);
     }
 }

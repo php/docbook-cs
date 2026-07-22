@@ -41,8 +41,8 @@ use PHPUnit\Framework\TestCase;
     UsesClass(FixerException::class),
     UsesClass(Line::class),
     UsesClass(RunMode::class),
-    UsesClass(SourceRange::class),
     UsesClass(RunScope::class),
+    UsesClass(SourceRange::class),
     UsesClass(XmlProcessingResult::class),
 ]
 final class XmlFileProcessorTest extends TestCase
@@ -182,7 +182,7 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         self::assertSame(1, $report->getViolationCount());
-        self::assertSame(3, $report->getViolations()[0]->line);
+        self::assertSame(3, $report->violations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -369,11 +369,8 @@ final class XmlFileProcessorTest extends TestCase
                     new Violation(
                         sniffCode: self::getCode(),
                         filePath: $file->path,
-                        line: 2,
-                        beginOffset: 0,
-                        untilOffset: 7,
                         message: 'Reported only.',
-                        content: '<root/>',
+                        affectedRanges: [new SourceRange(2, 0, 7, '<root/>')],
                         severity: Severity::ERROR,
                     ),
                 ];
@@ -413,10 +410,8 @@ final class XmlFileProcessorTest extends TestCase
                     new Violation(
                         sniffCode: self::getCode(),
                         filePath: $file->path,
-                        line: 1,
-                        beginOffset: 0,
-                        untilOffset: 7,
                         message: 'Missing source content.',
+                        affectedRanges: [new SourceRange(1, 0, 7)],
                         severity: Severity::ERROR,
                     ),
                 ];
@@ -428,7 +423,7 @@ final class XmlFileProcessorTest extends TestCase
         };
 
         $this->expectException(FixerException::class);
-        $this->expectExceptionMessageIsOrContains('Violations cannot be content-less when passed to a fixer.');
+        $this->expectExceptionMessageIsOrContains('Fixers require affected source ranges with source content.');
 
         $this->process($this->processor([$sniff]), $this->xml('<root xmlns="urn:test" xml:id="root"/>'));
     }
@@ -455,10 +450,8 @@ final class XmlFileProcessorTest extends TestCase
                     fn(int $line) => new Violation(
                         sniffCode: self::getCode(),
                         filePath: $file->path,
-                        line: $line,
-                        beginOffset: 0,
-                        untilOffset: 0,
                         message: "violation at line {$line}",
+                        affectedRanges: [new SourceRange($line, 0, 0)],
                         severity: Severity::WARNING
                     ),
                     $this->lines

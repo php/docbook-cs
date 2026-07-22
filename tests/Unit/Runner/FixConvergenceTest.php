@@ -7,12 +7,11 @@ namespace DocbookCS\Tests\Unit\Runner;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixApplier;
-use DocbookCS\Fix\FixPlan;
-use DocbookCS\Fix\FixResult;
-use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Fix\Fixer\ExceptionNameFixer;
 use DocbookCS\Fix\Fixer\SimparaFixer;
 use DocbookCS\Fix\FixerException;
+use DocbookCS\Fix\FixPlan;
+use DocbookCS\Fix\FixResult;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityExpansionMarker;
@@ -28,6 +27,7 @@ use DocbookCS\Sniff\Fixable;
 use DocbookCS\Sniff\SimparaSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
+use DocbookCS\Tests\Support\Fix\InvalidXmlFixer;
 use DocbookCS\Tests\Support\Fix\LineBreakFixer;
 use DocbookCS\Tests\Support\Fix\ToggleElementFixer;
 use DocbookCS\Violation\SourceRange;
@@ -41,7 +41,6 @@ use PHPUnit\Framework\TestCase;
     CoversClass(XmlFileProcessor::class),
     //
     UsesClass(AbstractSniff::class),
-    UsesClass(AttributeOrderFixer::class),
     UsesClass(EntityExpansionMarker::class),
     UsesClass(EntityPreprocessor::class),
     UsesClass(ExceptionNameFixer::class),
@@ -120,11 +119,13 @@ final class FixConvergenceTest extends TestCase
 
                     return [$this->createViolation(
                         $file->path,
-                        substr_count($file->content, "\n", 0, $offset) + 1,
-                        $offset,
-                        $offset + strlen(self::ELEMENT),
                         'Replace the line-break marker.',
-                        self::ELEMENT,
+                        [new SourceRange(
+                            substr_count($file->content, "\n", 0, $offset) + 1,
+                            $offset,
+                            $offset + strlen(self::ELEMENT),
+                            self::ELEMENT,
+                        )],
                     )];
                 }
             };
@@ -148,11 +149,8 @@ final class FixConvergenceTest extends TestCase
 
                     return [$this->createViolation(
                         $file->path,
-                        $element->getLineNo(),
-                        $offset,
-                        $offset + strlen('<bad/>'),
                         'Bad element.',
-                        '<bad/>',
+                        [new SourceRange($element->getLineNo(), $offset, $offset + strlen('<bad/>'), '<bad/>')],
                     )];
                 }
             };
@@ -165,7 +163,7 @@ final class FixConvergenceTest extends TestCase
 
             self::assertSame("<root>\n<bad/></root>", file_get_contents($filePath));
             self::assertSame(1, $report->getViolationCount());
-            self::assertSame(2, $report->getViolations()[0]->line);
+            self::assertSame(2, $report->violations[0]->rangeOne()->line);
         } finally {
             @unlink($filePath);
         }
@@ -199,11 +197,8 @@ final class FixConvergenceTest extends TestCase
 
                     return [$this->createViolation(
                         $file->path,
-                        2,
-                        $offset,
-                        $offset + strlen($element),
                         'Replace the line-break marker.',
-                        $element,
+                        [new SourceRange(2, $offset, $offset + strlen($element), $element)],
                     )];
                 }
             };
@@ -224,11 +219,8 @@ final class FixConvergenceTest extends TestCase
 
                     return [$this->createViolation(
                         $file->path,
-                        $element->getLineNo(),
-                        $offset,
-                        $offset + strlen('<bad/>'),
                         'Bad element.',
-                        '<bad/>',
+                        [new SourceRange($element->getLineNo(), $offset, $offset + strlen('<bad/>'), '<bad/>')],
                     )];
                 }
             };
@@ -242,7 +234,7 @@ final class FixConvergenceTest extends TestCase
 
             self::assertSame("<root>\n\n<bad/>\n</root>", file_get_contents($filePath));
             self::assertSame(1, $report->getViolationCount());
-            self::assertSame(3, $report->getViolations()[0]->line);
+            self::assertSame(3, $report->violations[0]->rangeOne()->line);
         } finally {
             @unlink($filePath);
         }
@@ -276,11 +268,8 @@ final class FixConvergenceTest extends TestCase
 
                     return [$this->createViolation(
                         $file->path,
-                        1,
-                        $offset,
-                        $offset + strlen($element),
                         'Toggle the element.',
-                        $element,
+                        [new SourceRange(1, $offset, $offset + strlen($element), $element)],
                     )];
                 }
             };
@@ -316,7 +305,7 @@ final class FixConvergenceTest extends TestCase
 
                 public static function fixerClassName(): string
                 {
-                    return AttributeOrderFixer::class;
+                    return InvalidXmlFixer::class;
                 }
 
                 public function process(\DOMDocument $document, File $file): array
@@ -328,11 +317,8 @@ final class FixConvergenceTest extends TestCase
 
                     return [$this->createViolation(
                         $file->path,
-                        1,
-                        $offset,
-                        $offset + strlen('<valid/>'),
                         'Produce invalid XML.',
-                        '<tag xmlns="urn:test" xml:id="id">',
+                        [new SourceRange(1, $offset, $offset + strlen('<valid/>'), '<valid/>')],
                     )];
                 }
             };

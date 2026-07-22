@@ -37,11 +37,9 @@ final class AffectedRangesTest extends TestCase
             new File('file.xml', $content),
         )[0];
 
-        self::assertSame('<para>Text</para>', $violation->content);
-        self::assertSame((int) strpos($content, '<para>'), $violation->beginOffset);
         self::assertEquals([
-            new SourceRange(2, 8, 12),
-            new SourceRange(2, 19, 23),
+            new SourceRange(2, 8, 12, 'para'),
+            new SourceRange(2, 19, 23, 'para'),
         ], $violation->affectedRanges);
     }
 
@@ -54,10 +52,9 @@ final class AffectedRangesTest extends TestCase
             new File('file.xml', $content),
         )[0];
 
-        self::assertSame("<classname>RuntimeException\n</classname>", $violation->content);
         self::assertEquals([
-            new SourceRange(2, 8, 17),
-            new SourceRange(3, 37, 46),
+            new SourceRange(2, 8, 17, 'classname'),
+            new SourceRange(3, 37, 46, 'classname'),
         ], $violation->affectedRanges);
     }
 

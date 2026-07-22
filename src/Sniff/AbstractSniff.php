@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\RunMode;
+use DocbookCS\Source\File;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
@@ -18,6 +19,8 @@ abstract class AbstractSniff implements SniffInterface
         '<?' => '?>',
     ];
 
+    protected Severity $severity = Severity::ERROR;
+
     /** @var array<string, string> */
     protected array $properties = [];
 
@@ -26,9 +29,20 @@ abstract class AbstractSniff implements SniffInterface
     ) {
     }
 
+    /** @throws \InvalidArgumentException if a configured severity is invalid */
     public function setProperty(string $name, string $value): void
     {
-        $this->properties[$name] = $value;
+        if ($name !== 'severity') {
+            $this->properties[$name] = $value;
+            return;
+        }
+
+        if (null !== $severity = Severity::tryFrom($value)) {
+            $this->severity = $severity;
+            return;
+        }
+
+        throw new \InvalidArgumentException(sprintf('Invalid severity "%s" config for %s.', $value, static::getCode()));
     }
 
     protected function getProperty(string $name, string $default = ''): string
@@ -42,30 +56,47 @@ abstract class AbstractSniff implements SniffInterface
     }
 
     /**
-     * @param list<SourceRange> $affectedRanges
-     * @throws \LogicException if an invalid severity level is configured
+     * The offsets point at the opening "<" and closing "<" in the source.
+     *
+     * @return array{SourceRange, SourceRange}
+     * @throws \InvalidArgumentException if a generated source range is inconsistent
+     * @throws \OutOfBoundsException if a tag offset lies outside the source
      */
-    protected function createViolation(
-        string $filePath,
-        int $line,
-        int $beginOffset,
-        int $untilOffset,
-        string $message,
-        ?string $content = null,
-        Severity $severity = Severity::ERROR,
-        array $affectedRanges = [],
-    ): Violation {
+    protected function elementNameRanges(File $file, int $beginOffset, int $untilOffset, string $elementName): array
+    {
+        $openingNameOffset = $beginOffset + 1;
+        $closingNameOffset = $untilOffset + 2;
+        $elementNameLength = strlen($elementName);
+
+        return [
+            new SourceRange(
+                $file->lineAtOffset($openingNameOffset)->number,
+                $openingNameOffset,
+                $openingNameOffset + $elementNameLength,
+                $elementName,
+            ),
+            new SourceRange(
+                $file->lineAtOffset($closingNameOffset)->number,
+                $closingNameOffset,
+                $closingNameOffset + $elementNameLength,
+                $elementName,
+            ),
+        ];
+    }
+
+    /**
+     * @param non-empty-list<SourceRange> $affectedRanges
+     *
+     * @throws \InvalidArgumentException if the affected ranges are inconsistent
+     */
+    protected function createViolation(string $filePath, string $message, array $affectedRanges): Violation
+    {
         return new Violation(
             sniffCode: static::getCode(),
             filePath: $filePath,
-            line: $line,
-            beginOffset: $beginOffset,
-            untilOffset: $untilOffset,
             message: $message,
-            content: $content,
-            severity: Severity::tryFrom($this->getProperty('severity', $severity->value))
-                ?: throw new \LogicException('Invalid severity level configured for ExceptionNameSniff.'),
             affectedRanges: $affectedRanges,
+            severity: $this->severity,
         );
     }
 

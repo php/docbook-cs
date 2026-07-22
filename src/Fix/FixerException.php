@@ -15,7 +15,7 @@ final class FixerException extends \RuntimeException
 
     public static function cannotFixMissingContent(): self
     {
-        return new self('Violations cannot be content-less when passed to a fixer.');
+        return new self('Fixers require affected source ranges with source content.');
     }
 
     public static function cannotFixInvalidContent(Violation $violation): self
@@ -24,7 +24,7 @@ final class FixerException extends \RuntimeException
             'Cannot fix violation %s in %s on line %d because its source content is not valid fixer input.',
             $violation->sniffCode,
             $violation->filePath,
-            $violation->line,
+            $violation->rangeOne()->line,
         ));
     }
 

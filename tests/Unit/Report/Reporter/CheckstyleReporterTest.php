@@ -40,7 +40,7 @@ final class CheckstyleReporterTest extends TestCase
         string $sniffCode = 'DocbookCS.Test',
         Severity $severity = Severity::ERROR,
     ): Violation {
-        return new Violation($sniffCode, 'filepath.xml', $line, 0, 0, $message, severity: $severity);
+        return new Violation($sniffCode, 'filepath.xml', $message, [new SourceRange($line, 0, 0)], severity: $severity);
     }
 
     private function parseOutput(string $xml): \DOMDocument

@@ -2,30 +2,19 @@
 
 declare(strict_types=1);
 
-namespace DocbookCS\Fix\Fixer;
+namespace DocbookCS\Tests\Support\Fix;
 
 use DocbookCS\Fix\Fix;
+use DocbookCS\Fix\Fixer\Fixer;
 use DocbookCS\Fix\FixerException;
 use DocbookCS\Violation\Violation;
 
-final class MixedIndentationFixer implements Fixer
+final class InvalidXmlFixer implements Fixer
 {
-    private const string INDENTATION_PATTERN = '/^[ \t]+$/';
-
-    /** @throws FixerException */
     public function process(Violation $violation): Fix
     {
         $affectedRange = $violation->rangeOne();
-
-        if ($affectedRange->content === null) {
-            throw FixerException::cannotFixMissingContent();
-        }
-
-        if (
-            !preg_match(self::INDENTATION_PATTERN, $affectedRange->content)
-            || !str_contains($affectedRange->content, ' ')
-            || !str_contains($affectedRange->content, "\t")
-        ) {
+        if ($affectedRange->content !== '<valid/>') {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
@@ -33,7 +22,7 @@ final class MixedIndentationFixer implements Fixer
             filePath: $violation->filePath,
             beginOffset: $affectedRange->beginOffset,
             untilOffset: $affectedRange->untilOffset,
-            replacement: str_replace("\t", ' ', $affectedRange->content),
+            replacement: '<invalid>',
             sniffCode: $violation->sniffCode,
             expectedContent: $affectedRange->content,
         );

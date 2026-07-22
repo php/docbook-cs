@@ -10,7 +10,7 @@ use DocbookCS\Violation\Violation;
 final class FileReport
 {
     /** @var list<Violation> */
-    private array $violations = [];
+    public private(set) array $violations = [];
 
     public function __construct(
         public readonly string $filePath,

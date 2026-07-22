@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Fix\Fixer\MixedIndentationFixer;
 use DocbookCS\Source\File;
+use DocbookCS\Violation\SourceRange;
 
 final class MixedIndentationSniff extends AbstractSniff implements Fixable
 {
@@ -22,7 +23,7 @@ final class MixedIndentationSniff extends AbstractSniff implements Fixable
         return MixedIndentationFixer::class;
     }
 
-    /** @throws \LogicException if an invalid severity level is configured */
+    /** @throws \InvalidArgumentException if a generated source range is inconsistent */
     public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
@@ -39,11 +40,15 @@ final class MixedIndentationSniff extends AbstractSniff implements Fixable
 
             $violations[] = $this->createViolation(
                 $file->path,
-                $line->number,
-                $line->beginOffset,
-                $line->beginOffset + strlen($indentation),
                 self::MESSAGE,
-                $indentation,
+                [
+                    new SourceRange(
+                        $line->number,
+                        $line->beginOffset,
+                        $line->beginOffset + strlen($indentation),
+                        $indentation,
+                    ),
+                ],
             );
         }
 

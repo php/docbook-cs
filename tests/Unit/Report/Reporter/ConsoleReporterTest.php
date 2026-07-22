@@ -41,7 +41,7 @@ final class ConsoleReporterTest extends TestCase
         Severity $severity = Severity::ERROR,
         string $filePath = 'filepath.xml',
     ): Violation {
-        return new Violation($sniffCode, $filePath, $line, 0, 0, $message, severity: $severity);
+        return new Violation($sniffCode, $filePath, $message, [new SourceRange($line, 0, 0)], severity: $severity);
     }
 
     #[Test]

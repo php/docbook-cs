@@ -22,25 +22,32 @@ final readonly class ViolationScopeFilter
         /** @var array<int, true> $changedLineSet */
         $changedLineSet = array_fill_keys($scope->lineNumbers($file), true);
 
-        return array_values(array_filter(
-            $violations,
-            fn(Violation $violation) => $scope->includes($violation)
+        return array_values(array_filter($violations, function (Violation $violation) use (
+            $scope,
+            $document,
+            $changedLineSet,
+        ): bool {
+            $affectedRange = $violation->rangeOne();
+
+            return $scope->includes($violation)
                 || (
-                    $violation->content === null
-                    && $violation->beginOffset === $violation->untilOffset
+                    $affectedRange->content === null
+                    && $affectedRange->beginOffset === $affectedRange->untilOffset
                     && $this->isRelevant($violation, $document, $changedLineSet)
-                ),
-        ));
+                );
+        }));
     }
 
     /** @param array<int, true> $changedLineSet */
     private function isRelevant(Violation $violation, \DOMDocument $document, array $changedLineSet): bool
     {
-        if (isset($changedLineSet[$violation->line])) {
+        $line = $violation->rangeOne()->line;
+
+        if (isset($changedLineSet[$line])) {
             return true;
         }
 
-        $violationElement = $this->firstElementOnLine($document, $violation->line);
+        $violationElement = $this->firstElementOnLine($document, $line);
         if ($violationElement === null) {
             return false;
         }

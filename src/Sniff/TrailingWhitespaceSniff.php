@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Fix\Fixer\TrailingWhitespaceFixer;
 use DocbookCS\Source\File;
+use DocbookCS\Violation\SourceRange;
 
 final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
 {
@@ -22,7 +23,7 @@ final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
         return TrailingWhitespaceFixer::class;
     }
 
-    /** @throws \LogicException if an invalid severity level is configured */
+    /** @throws \InvalidArgumentException if a generated source range is inconsistent */
     public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
@@ -37,11 +38,8 @@ final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
 
             $violations[] = $this->createViolation(
                 $file->path,
-                $line->number,
-                $beginOffset,
-                $beginOffset + strlen($whitespace),
                 self::MESSAGE,
-                $whitespace,
+                [new SourceRange($line->number, $beginOffset, $beginOffset + strlen($whitespace), $whitespace)],
             );
         }
 

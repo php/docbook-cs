@@ -13,17 +13,18 @@ final class LineBreakFixer implements Fixer
 {
     public function process(Violation $violation): Fix
     {
-        if ($violation->content !== '<line-break/>') {
+        $affectedRange = $violation->rangeOne();
+        if ($affectedRange->content !== '<line-break/>') {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
         return new Fix(
             filePath: $violation->filePath,
-            beginOffset: $violation->beginOffset,
-            untilOffset: $violation->untilOffset,
+            beginOffset: $affectedRange->beginOffset,
+            untilOffset: $affectedRange->untilOffset,
             replacement: "\n",
             sniffCode: $violation->sniffCode,
-            expectedContent: $violation->content,
+            expectedContent: $affectedRange->content,
         );
     }
 }

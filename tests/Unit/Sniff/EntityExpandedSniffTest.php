@@ -41,7 +41,8 @@ final class EntityExpandedSniffTest extends TestCase
         $violations = new SimparaSniff()->process($document, new File('file.xml', $source));
 
         self::assertCount(1, $violations);
-        self::assertSame('<para>Source</para>', $violations[0]->content);
+        self::assertSame('para', $violations[0]->rangeOne()->content);
+        self::assertSame('para', $violations[0]->rangeTwo()->content);
     }
 
     #[Test]
@@ -53,7 +54,8 @@ final class EntityExpandedSniffTest extends TestCase
         $violations = new ExceptionNameSniff()->process($document, new File('file.xml', $source));
 
         self::assertCount(1, $violations);
-        self::assertSame('<classname>RuntimeException</classname>', $violations[0]->content);
+        self::assertSame('classname', $violations[0]->rangeOne()->content);
+        self::assertSame('classname', $violations[0]->rangeTwo()->content);
     }
 
     private function processedDocument(string $source, string $expanded): \DOMDocument

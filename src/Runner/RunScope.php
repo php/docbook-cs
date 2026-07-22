@@ -102,9 +102,19 @@ final readonly class RunScope
             return true;
         }
 
+        $firstAffectedRange = $violation->rangeOne();
+        $lastAffectedRange = $violation->affectedRanges[array_key_last($violation->affectedRanges)];
+
         /** @noinspection PhpLoopCanBeConvertedToArrayAnyInspection */
         foreach ($this->ranges as [$beginOffset, $untilOffset]) {
-            if (self::overlaps($beginOffset, $untilOffset, $violation->beginOffset, $violation->untilOffset)) {
+            if (
+                self::overlaps(
+                    $beginOffset,
+                    $untilOffset,
+                    $firstAffectedRange->beginOffset,
+                    $lastAffectedRange->untilOffset,
+                )
+            ) {
                 return true;
             }
         }

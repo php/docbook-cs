@@ -48,7 +48,8 @@ final class SimparaFixerTest extends TestCase
         $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
 
         self::assertCount(1, $violations);
-        self::assertSame('<para>Text <emphasis>inline</emphasis></para>', $violations[0]->content);
+        self::assertSame('para', $violations[0]->rangeOne()->content);
+        self::assertSame('para', $violations[0]->rangeTwo()->content);
 
         $fix = new SimparaFixer()->process($violations[0]);
 
@@ -68,7 +69,8 @@ final class SimparaFixerTest extends TestCase
         $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
 
         self::assertCount(1, $violations);
-        self::assertSame('<para xml:id="example">Text</para>', $violations[0]->content);
+        self::assertSame('para', $violations[0]->rangeOne()->content);
+        self::assertSame('para', $violations[0]->rangeTwo()->content);
 
         $fix = new SimparaFixer()->process($violations[0]);
 
@@ -88,7 +90,8 @@ final class SimparaFixerTest extends TestCase
         $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
 
         self::assertCount(1, $violations);
-        self::assertSame('<para>Inner</para>', $violations[0]->content);
+        self::assertSame('para', $violations[0]->rangeOne()->content);
+        self::assertSame('para', $violations[0]->rangeTwo()->content);
 
         $fix = new SimparaFixer()->process($violations[0]);
 

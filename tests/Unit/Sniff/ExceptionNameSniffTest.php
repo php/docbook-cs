@@ -176,13 +176,15 @@ final class ExceptionNameSniffTest extends TestCase
         $violations = new ExceptionNameSniff()->process($doc, new File('file.xml', $content));
 
         $beginOffset = (int) strpos($content, '<classname>');
-        $sourceContent = '<classname>RuntimeException</classname>';
+        $untilOffset = (int) strpos($content, '</classname>');
 
         self::assertCount(1, $violations);
-        self::assertSame($sourceContent, $violations[0]->content);
-        self::assertSame($beginOffset, $violations[0]->beginOffset);
-        self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->untilOffset);
-        self::assertSame(1, $violations[0]->line);
+        self::assertSame('classname', $violations[0]->rangeOne()->content);
+        self::assertSame('classname', $violations[0]->rangeTwo()->content);
+        self::assertEquals([
+            new SourceRange(1, $beginOffset + 1, $beginOffset + 10, 'classname'),
+            new SourceRange(1, $untilOffset + 2, $untilOffset + 11, 'classname'),
+        ], $violations[0]->affectedRanges);
     }
 
     #[Test]
@@ -195,11 +197,15 @@ final class ExceptionNameSniffTest extends TestCase
 
         $sourceContent = '<classname>RuntimeException</classname>';
         $beginOffset = (int) strpos($content, $sourceContent);
+        $untilOffset = (int) strpos($content, '</classname>', $beginOffset);
 
         self::assertCount(1, $violations);
-        self::assertSame($sourceContent, $violations[0]->content);
-        self::assertSame($beginOffset, $violations[0]->beginOffset);
-        self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->untilOffset);
+        self::assertSame('classname', $violations[0]->rangeOne()->content);
+        self::assertSame('classname', $violations[0]->rangeTwo()->content);
+        self::assertEquals([
+            new SourceRange(1, $beginOffset + 1, $beginOffset + 10, 'classname'),
+            new SourceRange(1, $untilOffset + 2, $untilOffset + 11, 'classname'),
+        ], $violations[0]->affectedRanges);
     }
 
     #[Test]
@@ -212,6 +218,7 @@ final class ExceptionNameSniffTest extends TestCase
         $violations = new ExceptionNameSniff()->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
-        self::assertSame('<classname>RuntimeException</classname>', $violations[0]->content);
+        self::assertSame('classname', $violations[0]->rangeOne()->content);
+        self::assertSame('classname', $violations[0]->rangeTwo()->content);
     }
 }

@@ -38,10 +38,10 @@ final class WhitespaceConcernSniffsTest extends TestCase
         self::assertCount(1, $violations);
         self::assertSame('DocbookCS.TrailingWhitespace', $violations[0]->sniffCode);
         self::assertSame('Trailing whitespace detected.', $violations[0]->message);
-        self::assertSame('  ', $violations[0]->content);
-        self::assertSame(strlen('<root>'), $violations[0]->beginOffset);
-        self::assertSame(strlen('<root>  '), $violations[0]->untilOffset);
-        self::assertSame(1, $violations[0]->line);
+        self::assertSame('  ', $violations[0]->rangeOne()->content);
+        self::assertSame(strlen('<root>'), $violations[0]->rangeOne()->beginOffset);
+        self::assertSame(strlen('<root>  '), $violations[0]->rangeOne()->untilOffset);
+        self::assertSame(1, $violations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -57,10 +57,10 @@ final class WhitespaceConcernSniffsTest extends TestCase
         self::assertCount(1, $violations);
         self::assertSame('DocbookCS.MixedIndentation', $violations[0]->sniffCode);
         self::assertSame('Mixed tabs and spaces in indentation.', $violations[0]->message);
-        self::assertSame(" \t", $violations[0]->content);
-        self::assertSame($lineOffset, $violations[0]->beginOffset);
-        self::assertSame($lineOffset + 2, $violations[0]->untilOffset);
-        self::assertSame(2, $violations[0]->line);
+        self::assertSame(" \t", $violations[0]->rangeOne()->content);
+        self::assertSame($lineOffset, $violations[0]->rangeOne()->beginOffset);
+        self::assertSame($lineOffset + 2, $violations[0]->rangeOne()->untilOffset);
+        self::assertSame(2, $violations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -73,9 +73,12 @@ final class WhitespaceConcernSniffsTest extends TestCase
         $indentation = new MixedIndentationSniff()->process($document, $source)[0];
         $trailing = new TrailingWhitespaceSniff()->process($document, $source)[0];
 
-        self::assertSame(2, $indentation->line);
-        self::assertSame(2, $trailing->line);
-        self::assertLessThanOrEqual($trailing->beginOffset, $indentation->untilOffset);
+        self::assertSame(2, $indentation->rangeOne()->line);
+        self::assertSame(2, $trailing->rangeOne()->line);
+        self::assertLessThanOrEqual(
+            $trailing->rangeOne()->beginOffset,
+            $indentation->rangeOne()->untilOffset,
+        );
     }
 
     private function createDocument(string $xml): \DOMDocument

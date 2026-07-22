@@ -131,10 +131,8 @@ final class SourceScopeTest extends TestCase
         return new Violation(
             sniffCode: 'Test',
             filePath: 'file.xml',
-            line: $line,
-            beginOffset: $beginOffset,
-            untilOffset: $untilOffset,
             message: 'Test violation.',
+            affectedRanges: [new SourceRange($line, $beginOffset, $untilOffset)],
         );
     }
 }

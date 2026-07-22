@@ -43,10 +43,16 @@ final class SimparaSniffTest extends TestCase
 
         $violations = new SimparaSniff()->process($doc, new File('file.xml', $content));
 
+        $beginOffset = (int) strpos($content, '<para>');
+        $untilOffset = (int) strpos($content, '</para>');
+
         self::assertCount(1, $violations);
-        self::assertSame('<para>Text</para>', $violations[0]->content);
-        self::assertSame((int) strpos($content, '<para>'), $violations[0]->beginOffset);
-        self::assertSame((int) strpos($content, '</para>') + strlen('</para>'), $violations[0]->untilOffset);
+        self::assertSame('para', $violations[0]->rangeOne()->content);
+        self::assertSame('para', $violations[0]->rangeTwo()->content);
+        self::assertEquals([
+            new SourceRange(1, $beginOffset + 1, $beginOffset + 5, 'para'),
+            new SourceRange(1, $untilOffset + 2, $untilOffset + 6, 'para'),
+        ], $violations[0]->affectedRanges);
     }
 
     #[Test]
@@ -121,7 +127,7 @@ final class SimparaSniffTest extends TestCase
 
         $violations = new SimparaSniff()->process($doc, new File('file.xml', $content));
 
-        self::assertSame(2, $violations[0]->line);
+        self::assertSame(2, $violations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -141,8 +147,9 @@ final class SimparaSniffTest extends TestCase
         $violations = new SimparaSniff()->process($doc, new File('file.xml', $content));
 
         self::assertCount(1, $violations);
-        self::assertSame('<para>Source</para>', $violations[0]->content);
-        self::assertSame(6, $violations[0]->line);
+        self::assertSame('para', $violations[0]->rangeOne()->content);
+        self::assertSame('para', $violations[0]->rangeTwo()->content);
+        self::assertSame(6, $violations[0]->rangeOne()->line);
     }
 
     #[Test]

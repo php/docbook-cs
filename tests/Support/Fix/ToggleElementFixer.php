@@ -13,11 +13,12 @@ final class ToggleElementFixer implements Fixer
 {
     public function process(Violation $violation): Fix
     {
-        if ($violation->content === null) {
+        $affectedRange = $violation->rangeOne();
+        if ($affectedRange->content === null) {
             throw FixerException::cannotFixMissingContent();
         }
 
-        $replacement = match ($violation->content) {
+        $replacement = match ($affectedRange->content) {
             '<alpha/>' => '<beta/>',
             '<beta/>' => '<alpha/>',
             default => throw FixerException::cannotFixInvalidContent($violation),
@@ -25,11 +26,11 @@ final class ToggleElementFixer implements Fixer
 
         return new Fix(
             filePath: $violation->filePath,
-            beginOffset: $violation->beginOffset,
-            untilOffset: $violation->untilOffset,
+            beginOffset: $affectedRange->beginOffset,
+            untilOffset: $affectedRange->untilOffset,
             replacement: $replacement,
             sniffCode: $violation->sniffCode,
-            expectedContent: $violation->content,
+            expectedContent: $affectedRange->content,
         );
     }
 }

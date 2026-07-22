@@ -54,10 +54,10 @@ final class WhitespaceSniffTest extends TestCase
 
         self::assertCount(1, $violations);
         self::assertSame('Trailing whitespace detected.', $violations[0]->message);
-        self::assertSame(1, $violations[0]->line);
-        self::assertSame('<root> ', $violations[0]->content);
-        self::assertSame(0, $violations[0]->beginOffset);
-        self::assertSame(7, $violations[0]->untilOffset);
+        self::assertSame(1, $violations[0]->rangeOne()->line);
+        self::assertSame('<root> ', $violations[0]->rangeOne()->content);
+        self::assertSame(0, $violations[0]->rangeOne()->beginOffset);
+        self::assertSame(7, $violations[0]->rangeOne()->untilOffset);
     }
 
     #[Test]
@@ -72,10 +72,10 @@ final class WhitespaceSniffTest extends TestCase
 
         self::assertCount(1, $violations);
         self::assertSame('Mixed tabs and spaces in indentation.', $violations[0]->message);
-        self::assertSame(2, $violations[0]->line);
-        self::assertSame(" \t<tag/>", $violations[0]->content);
-        self::assertSame(strlen("<root>" . PHP_EOL), $violations[0]->beginOffset);
-        self::assertSame(strlen("<root>" . PHP_EOL . " \t<tag/>"), $violations[0]->untilOffset);
+        self::assertSame(2, $violations[0]->rangeOne()->line);
+        self::assertSame(" \t<tag/>", $violations[0]->rangeOne()->content);
+        self::assertSame(strlen("<root>" . PHP_EOL), $violations[0]->rangeOne()->beginOffset);
+        self::assertSame(strlen("<root>" . PHP_EOL . " \t<tag/>"), $violations[0]->rangeOne()->untilOffset);
     }
 
     #[Test]

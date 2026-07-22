@@ -14,7 +14,6 @@ use DocbookCS\Report\Report;
 use DocbookCS\Sniff\Fixable;
 use DocbookCS\Sniff\SniffInterface;
 use DocbookCS\Source\File;
-use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\Violation;
 
 final readonly class XmlFileProcessor
@@ -42,7 +41,10 @@ final readonly class XmlFileProcessor
         $this->violationScopeFilter = new ViolationScopeFilter();
     }
 
-    /** @throws FixerException */
+    /**
+     * @throws FixerException
+     * @throws \InvalidArgumentException if an internal violation is inconsistent
+     */
     public function process(File $initialFile, ?FileChange $fileChange = null): XmlProcessingResult
     {
         $fileReport = new FileReport($initialFile->path);
@@ -133,6 +135,7 @@ final readonly class XmlFileProcessor
         return $fixes;
     }
 
+    /** @throws \InvalidArgumentException if an internal violation is inconsistent */
     private function parseXml(File $file, FileReport $fileReport): ?\DOMDocument
     {
         $content = $this->preprocessor->processForParsing($file->content);
@@ -150,19 +153,7 @@ final readonly class XmlFileProcessor
         libxml_use_internal_errors($previousUseErrors);
 
         if (!$loaded) {
-            $message = $errors !== []
-                ? trim($errors[0]->message)
-                : 'Unknown XML parse error'; // @codeCoverageIgnore
-
-            $fileReport->addViolation(new Violation(
-                sniffCode: 'DocbookCS.Internal',
-                filePath: $file->path,
-                line: $errors !== [] ? $errors[0]->line : 0,
-                beginOffset: 0,
-                untilOffset: 0,
-                message: 'XML parse error: ' . $message,
-                severity: Severity::ERROR,
-            ));
+            $fileReport->addViolation(Violation::fromXmlParseError($file->path, $errors[0] ?? null));
             return null;
         }
 

@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Source\File;
+use DocbookCS\Violation\SourceRange;
 
 /**
  * Ensures that when an element has both xml:id and xmlns (or xmlns:*)
@@ -31,7 +32,7 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
     }
 
     /**
-     * @throws \LogicException if an invalid severity level is configured
+     * @throws \InvalidArgumentException if a generated source range is inconsistent
      * @throws \OutOfBoundsException if a matched tag offset lies outside the source
      */
     public function process(\DOMDocument $document, File $file): array
@@ -64,11 +65,13 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
                 $tagName,
                 $attrString,
                 $file->path,
-                $file->lineAtOffset($beginOffset)->number,
-                $beginOffset,
-                $beginOffset + strlen($fullMatch),
+                new SourceRange(
+                    $file->lineAtOffset($beginOffset)->number,
+                    $beginOffset,
+                    $beginOffset + strlen($fullMatch),
+                    $fullMatch,
+                ),
                 $violations,
-                $fullMatch,
             );
         }
 
@@ -77,18 +80,14 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
 
     /**
      * @param list<\DocbookCS\Violation\Violation> &$violations
-     *
-     * @throws \LogicException if an invalid severity level is configured
+     * @throws \InvalidArgumentException if the affected ranges are inconsistent
      */
     private function checkAttributes(
         string $tagName,
         string $attrString,
         string $filePath,
-        int $line,
-        int $beginOffset,
-        int $untilOffset,
+        SourceRange $affectedRange,
         array &$violations,
-        string $content,
     ): void {
         preg_match_all(self::ATTRIBUTE_NAME_PATTERN, $attrString, $matches);
         $attributes = $matches[1];
@@ -115,11 +114,8 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
 
         $violations[] = $this->createViolation(
             $filePath,
-            $line,
-            $beginOffset,
-            $untilOffset,
             sprintf(self::REPORTING_MESSAGE, $tagName),
-            $content,
+            [$affectedRange],
         );
     }
 }

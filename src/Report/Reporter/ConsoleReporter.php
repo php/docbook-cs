@@ -37,7 +37,7 @@ final class ConsoleReporter implements ReporterInterface
             foreach ($fileReport->getViolations() as $violation) {
                 $output .= sprintf(
                     ' %4d | %s | %s | %s',
-                    $violation->line,
+                    $violation->rangeOne()->line,
                     $this->formatSeverity($violation->severity),
                     $this->dim($violation->sniffCode),
                     $violation->message,
