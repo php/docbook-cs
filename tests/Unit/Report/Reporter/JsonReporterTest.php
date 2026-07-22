@@ -114,10 +114,10 @@ final class JsonReporterTest extends TestCase
         $data = $this->parseOutput($this->reporter->generate($report));
 
         self::assertSame([
-            'files_modified' => 2,
+            'files_changed' => 2,
             'fixes_applied' => 7,
             'fixes_skipped' => 2,
-            'passes' => 3,
+            'fixing_passes' => 3,
         ], $data['fixing']);
     }
 

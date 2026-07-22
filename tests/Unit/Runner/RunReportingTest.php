@@ -35,10 +35,10 @@ final class RunReportingTest extends TestCase
             $report = new RunCoordinator()->run($plan);
 
             self::assertSame('<root><simpara>Text</simpara></root>', file_get_contents($filePath));
-            self::assertSame(1, $report->filesModified);
+            self::assertSame(1, $report->filesChanged);
             self::assertSame(1, $report->fixesApplied);
             self::assertSame(0, $report->fixesSkipped);
-            self::assertSame(1, $report->fixPasses);
+            self::assertSame(1, $report->fixingPasses);
             self::assertFalse($report->hasViolations());
             self::assertArrayHasKey(SimparaSniff::getCode(), $report->sniffTimes);
             self::assertGreaterThan(0.0, $report->fixingTime);

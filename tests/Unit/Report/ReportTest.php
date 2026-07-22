@@ -302,10 +302,10 @@ final class ReportTest extends TestCase
         $report->recordFixPass(applied: 4, skipped: 2);
         $report->recordFixPass(applied: 0, skipped: 1);
 
-        self::assertSame(2, $report->filesModified);
+        self::assertSame(2, $report->filesChanged);
         self::assertSame(7, $report->fixesApplied);
         self::assertSame(4, $report->fixesSkipped);
-        self::assertSame(3, $report->fixPasses);
+        self::assertSame(3, $report->fixingPasses);
     }
 
     #[Test]
@@ -334,7 +334,7 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        $result = $report->measureSniff('Test.Sniff', static fn(): string => 'result');
+        $result = $report->measureSniffing('Test.Sniff', static fn(): string => 'result');
 
         self::assertSame('result', $result);
         self::assertGreaterThanOrEqual(0.0, $report->sniffTimes['Test.Sniff']);

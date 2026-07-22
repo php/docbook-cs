@@ -114,7 +114,7 @@ final readonly class XmlFileProcessor
         $fixes = [];
 
         foreach ($this->sniffs as $sniff) {
-            $sniffViolations = $this->report->measureSniff(
+            $sniffViolations = $this->report->measureSniffing(
                 $sniff::getCode(),
                 static fn() => $sniff->process($document, $file),
             );
