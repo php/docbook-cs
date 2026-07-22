@@ -69,7 +69,7 @@ final class XmlFileProcessor
         FileReport $fileReport,
         ?array $changedLines = null,
     ): FileReport {
-        $content = $this->preprocessor->process($content);
+        $content = $this->preprocessor->processForParsing($content);
 
         $document = $this->parseXml($content, $filePath, $fileReport);
         if ($document === null) {

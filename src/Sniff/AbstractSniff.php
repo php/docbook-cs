@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Report\Severity;
 use DocbookCS\Report\Violation;
+use DocbookCS\Runner\EntityExpansionMarker;
 
 abstract class AbstractSniff implements SniffInterface
 {
@@ -20,6 +21,11 @@ abstract class AbstractSniff implements SniffInterface
     protected function getProperty(string $name, string $default = ''): string
     {
         return $this->properties[$name] ?? $default;
+    }
+
+    protected function isSourceBacked(\DOMNode $node): bool
+    {
+        return !EntityExpansionMarker::contains($node);
     }
 
     /** @throws \LogicException if an invalid severity level is configured */
