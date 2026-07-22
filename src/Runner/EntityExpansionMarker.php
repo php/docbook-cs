@@ -11,9 +11,7 @@ final class EntityExpansionMarker
 
     public static function wrap(string $content): string
     {
-        return '<!--' . self::START . '-->'
-            . $content
-            . '<!--' . self::END . '-->';
+        return sprintf('<!--%s-->%s<!--%s-->', self::START, $content, self::END);
     }
 
     public static function contains(\DOMNode $node): bool
