@@ -21,13 +21,12 @@ final readonly class RunScope
     {
     }
 
-    public static function wholeFile(): self
+    public static function fromFileAndFileChange(File $file, ?FileChange $fileChange): self
     {
-        return new self(null);
-    }
+        if ($fileChange === null) {
+            return new self(null);
+        }
 
-    public static function fromFileChange(File $file, FileChange $fileChange): self
-    {
         $selectedLines = array_fill_keys($fileChange->addedLineNumbers, true);
         $ranges = [];
         $lineBeginOffsets = [];

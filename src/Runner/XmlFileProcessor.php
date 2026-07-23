@@ -47,9 +47,7 @@ final readonly class XmlFileProcessor
     {
         $fileReport = new FileReport($initialFile->path);
         $currentFile = $initialFile;
-        $scope = $fileChange === null
-            ? RunScope::wholeFile()
-            : RunScope::fromFileChange($initialFile, $fileChange);
+        $scope = RunScope::fromFileAndFileChange($initialFile, $fileChange);
         $seenContentHashes = [hash('sha256', $currentFile->content) => true];
         $fixPasses = 0;
 

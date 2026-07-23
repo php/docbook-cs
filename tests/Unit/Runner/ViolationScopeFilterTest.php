@@ -43,7 +43,7 @@ final class ViolationScopeFilterTest extends TestCase
             $violations,
             $document,
             $file,
-            RunScope::wholeFile(),
+            RunScope::fromFileAndFileChange($file, null),
         );
 
         self::assertSame($violations, $result);
