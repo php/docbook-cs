@@ -17,22 +17,12 @@ final class FixApplier
             return new FixResult($file);
         }
 
-        $plans = [];
-        foreach ($fixes as $index => $fix) {
-            $plan = $fix instanceof FixPlan ? $fix : new FixPlan($fix);
-            $plans[] = [
-                'index' => $index,
-                'plan' => $plan,
-            ];
-        }
+        $plans = array_map(
+            static fn ($fix): FixPlan => $fix instanceof FixPlan ? $fix : new FixPlan($fix),
+            $fixes,
+        );
 
-        usort($plans, static function (array $a, array $b): int {
-            $offsetComparison = $a['plan']->firstOffset() <=> $b['plan']->firstOffset();
-
-            return $offsetComparison !== 0
-                ? $offsetComparison
-                : $a['index'] <=> $b['index'];
-        });
+        usort($plans, static fn (FixPlan $a, FixPlan $b): int => $a->firstOffset() <=> $b->firstOffset());
 
         /** @var list<Fix> $acceptedFixes */
         $acceptedFixes = [];
@@ -42,7 +32,7 @@ final class FixApplier
         $content = $file->content;
         $length = strlen($content);
 
-        foreach ($plans as ['plan' => $plan]) {
+        foreach ($plans as $plan) {
             if (!$this->canApply($file, $length, $plan, $acceptedFixes)) {
                 $skipped++;
                 continue;
@@ -69,10 +59,10 @@ final class FixApplier
             $sourceOffset = $fix->untilOffset;
         }
 
-        $content = $fixedContent . substr($content, $sourceOffset);
+        $fixedContent .= substr($content, $sourceOffset);
 
         return new FixResult(
-            file: $file->withContent($content),
+            file: $file->withContent($fixedContent),
             applied: $acceptedPlans,
             skipped: $skipped,
             appliedFixes: $acceptedFixes,
@@ -91,7 +81,6 @@ final class FixApplier
         foreach ($plan->fixes as $fix) {
             if (
                 $fix->filePath !== $file->path
-                || $fix->filePath !== $first->filePath
                 || $fix->sniffCode !== $first->sniffCode
                 || $fix->beginOffset < 0
                 || $fix->untilOffset < $fix->beginOffset
@@ -138,9 +127,7 @@ final class FixApplier
             || ($index < count($acceptedFixes) && self::overlaps($acceptedFixes[$index], $fix));
     }
 
-    /**
-     * @param list<Fix> $fixes
-     */
+    /** @param list<Fix> $fixes */
     private function insertFix(array &$fixes, Fix $fix): void
     {
         $lastIndex = count($fixes) - 1;
@@ -152,9 +139,7 @@ final class FixApplier
         array_splice($fixes, $this->insertionIndex($fixes, $fix), 0, [$fix]);
     }
 
-    /**
-     * @param list<Fix> $fixes
-     */
+    /**  @param list<Fix> $fixes  */
     private function insertionIndex(array $fixes, Fix $fix): int
     {
         $low = 0;
