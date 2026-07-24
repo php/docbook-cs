@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\CheckstyleReporter;
@@ -11,6 +12,7 @@ use DocbookCS\Report\Severity;
 use DocbookCS\Report\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -18,6 +20,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(FileReport::class),
     CoversClass(Report::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(RelativePath::class),
 ]
 final class CheckstyleReporterTest extends TestCase
 {
@@ -111,6 +115,23 @@ final class CheckstyleReporterTest extends TestCase
         $fileNodes = $dom->getElementsByTagName('file');
         self::assertSame(1, $fileNodes->length);
         self::assertSame('src/broken.xml', $fileNodes->item(0)?->getAttribute('name'));
+    }
+
+    #[Test]
+    public function itRendersAbsoluteFilePathRelativeToWorkingDirectory(): void
+    {
+        $fileReport = new FileReport((getcwd() ?: '') . '/src/broken.xml');
+        $fileReport->addViolation($this->createViolation());
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        $dom = $this->parseOutput($this->reporter->generate($report));
+
+        self::assertSame(
+            'src/broken.xml',
+            $dom->getElementsByTagName('file')->item(0)?->getAttribute('name'),
+        );
     }
 
     #[Test]

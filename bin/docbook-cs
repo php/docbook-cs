@@ -25,4 +25,4 @@ use DocbookCS\Application;
     exit(2);
 })();
 
-new Application($argv ?? [])->run();
+exit(Application::withArguments($argv ?? [])->run());
