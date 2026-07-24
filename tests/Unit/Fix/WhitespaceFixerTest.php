@@ -12,6 +12,7 @@ use DocbookCS\Fix\FixResult;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\WhitespaceSniff;
 use DocbookCS\Source\File;
+use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -30,6 +31,7 @@ use PHPUnit\Framework\TestCase;
     //
     UsesClass(File::class),
     UsesClass(FixPlan::class),
+    UsesClass(Line::class),
     UsesClass(SourceRange::class),
 ]
 final class WhitespaceFixerTest extends TestCase

@@ -17,9 +17,9 @@ use DocbookCS\Violation\SourceRange;
  */
 final class AttributeOrderSniff extends AbstractSniff implements Fixable
 {
-    private const string REPORTING_MESSAGE = 'Element <%s>: xml:id should appear before xmlns attributes.';
     private const string OPENING_TAG_PATTERN = '/<([a-zA-Z0-9:_-]+)\b([^<>]*?)>/';
     private const string ATTRIBUTE_NAME_PATTERN = '/([a-zA-Z0-9:_-]+)\s*=/';
+    private const string REPORTING_MESSAGE = 'Element <%s>: xml:id should appear before xmlns attributes.';
 
     public static function getCode(): string
     {
@@ -65,11 +65,10 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
                 $tagName,
                 $attrString,
                 $file->path,
-                new SourceRange(
-                    $file->lineAtOffset($beginOffset)->number,
+                SourceRange::fromFile(
+                    $file,
                     $beginOffset,
                     $beginOffset + strlen($fullMatch),
-                    $fullMatch,
                 ),
                 $violations,
             );

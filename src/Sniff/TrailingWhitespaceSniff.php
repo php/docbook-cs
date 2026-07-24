@@ -23,7 +23,10 @@ final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
         return TrailingWhitespaceFixer::class;
     }
 
-    /** @throws \InvalidArgumentException if a generated source range is inconsistent */
+    /**
+     * @throws \InvalidArgumentException if a generated source range is inconsistent
+     * @throws \OutOfBoundsException if a generated source range lies outside the source
+     */
     public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
@@ -39,7 +42,7 @@ final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
             $violations[] = $this->createViolation(
                 $file->path,
                 self::REPORTING_MESSAGE,
-                [new SourceRange($line->number, $beginOffset, $beginOffset + strlen($whitespace), $whitespace)],
+                [SourceRange::fromFile($file, $beginOffset, $beginOffset + strlen($whitespace))],
             );
         }
 

@@ -69,17 +69,15 @@ abstract class AbstractSniff implements SniffInterface
         $elementNameLength = strlen($elementName);
 
         return [
-            new SourceRange(
-                $file->lineAtOffset($openingNameOffset)->number,
+            SourceRange::fromFile(
+                $file,
                 $openingNameOffset,
                 $openingNameOffset + $elementNameLength,
-                $elementName,
             ),
-            new SourceRange(
-                $file->lineAtOffset($closingNameOffset)->number,
+            SourceRange::fromFile(
+                $file,
                 $closingNameOffset,
                 $closingNameOffset + $elementNameLength,
-                $elementName,
             ),
         ];
     }

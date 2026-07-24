@@ -6,6 +6,7 @@ namespace DocbookCS\Tests\Unit\Sniff;
 
 use DocbookCS\Sniff\WhitespaceSniff;
 use DocbookCS\Source\File;
+use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -18,6 +19,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(WhitespaceSniff::class),
     //
     UsesClass(File::class),
+    UsesClass(Line::class),
     UsesClass(SourceRange::class),
 ]
 final class WhitespaceSniffTest extends TestCase

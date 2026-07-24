@@ -4,8 +4,24 @@ declare(strict_types=1);
 
 namespace DocbookCS\Violation;
 
+use DocbookCS\Source\File;
+
 final readonly class SourceRange
 {
+    /**
+     * @throws \InvalidArgumentException if the source range is inconsistent
+     * @throws \OutOfBoundsException if the begin offset lies outside the source
+     */
+    public static function fromFile(File $file, int $beginOffset, int $untilOffset): self
+    {
+        return new self(
+            line: $file->lineAtOffset($beginOffset)->number,
+            beginOffset: $beginOffset,
+            untilOffset: $untilOffset,
+            content: substr($file->content, $beginOffset, $untilOffset - $beginOffset),
+        );
+    }
+
     /** @throws \InvalidArgumentException if the source range is inconsistent */
     public function __construct(
         public int $line,

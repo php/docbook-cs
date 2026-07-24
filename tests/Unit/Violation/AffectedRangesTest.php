@@ -4,20 +4,41 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Violation;
 
-use DocbookCS\Violation\SourceRange;
+use DocbookCS\Source\File;
+use DocbookCS\Source\Line;
 use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(SourceRange::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(File::class),
+    UsesClass(Line::class),
 ]
 final class AffectedRangesTest extends TestCase
 {
+    #[Test]
+    public function itCreatesSourceRangesFromFileOffsets(): void
+    {
+        $range = SourceRange::fromFile(
+            new File('file.xml', "first\nsecond\n"),
+            6,
+            12,
+        );
+
+        self::assertSame(2, $range->line);
+        self::assertSame(6, $range->beginOffset);
+        self::assertSame(12, $range->untilOffset);
+        self::assertSame('second', $range->content);
+    }
+
     #[Test]
     public function itRejectsViolationsWithoutAffectedRanges(): void
     {

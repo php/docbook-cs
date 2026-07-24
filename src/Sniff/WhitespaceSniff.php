@@ -32,12 +32,12 @@ final class WhitespaceSniff extends AbstractSniff implements Fixable
     /**
      * @throws \InvalidArgumentException if a generated source range is inconsistent
      * @throws \LogicException if source content cannot be split into lines
+     * @throws \OutOfBoundsException if a generated source range lies outside the source
      */
     public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
         $offset = 0;
-        $line = 1;
 
         $lines = preg_split(self::LINE_ENDING_PATTERN, $file->content, -1, PREG_SPLIT_DELIM_CAPTURE);
         if ($lines === false) {
@@ -59,12 +59,11 @@ final class WhitespaceSniff extends AbstractSniff implements Fixable
                 $violations[] = $this->createViolation(
                     $file->path,
                     $message,
-                    [new SourceRange($line, $offset, $offset + $lineContentLength, $lineContent)],
+                    [SourceRange::fromFile($file, $offset, $offset + $lineContentLength)],
                 );
             }
 
             $offset += $lineContentLength + strlen($lineEnding);
-            $line++;
         }
 
         return $violations;

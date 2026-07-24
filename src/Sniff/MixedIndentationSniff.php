@@ -23,7 +23,10 @@ final class MixedIndentationSniff extends AbstractSniff implements Fixable
         return MixedIndentationFixer::class;
     }
 
-    /** @throws \InvalidArgumentException if a generated source range is inconsistent */
+    /**
+     * @throws \InvalidArgumentException if a generated source range is inconsistent
+     * @throws \OutOfBoundsException if a generated source range lies outside the source
+     */
     public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
@@ -42,11 +45,10 @@ final class MixedIndentationSniff extends AbstractSniff implements Fixable
                 $file->path,
                 self::REPORTING_MESSAGE,
                 [
-                    new SourceRange(
-                        $line->number,
+                    SourceRange::fromFile(
+                        $file,
                         $line->beginOffset,
                         $line->beginOffset + strlen($indentation),
-                        $indentation,
                     ),
                 ],
             );
