@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace DocbookCS\Sniff;
 
+use DocbookCS\Fix\Fixer\ExceptionNameFixer;
+use DocbookCS\Source\File;
+
 /**
  * Detects exception/error class names wrapped in <classname> that
  * should use <exceptionname> instead.
@@ -12,10 +15,13 @@ namespace DocbookCS\Sniff;
  * exception." When a <classname> element's text content matches a
  * known exception/error pattern, this sniff flags it.
  */
-final class ExceptionNameSniff extends AbstractSniff
+final class ExceptionNameSniff extends AbstractSniff implements Fixable
 {
+    private const string ELEMENT_NAME = 'classname';
+
     /**
      * Default suffixes that indicate the class is an exception or error.
+     * @var list<string>
      */
     private const array DEFAULT_SUFFIXES = [
         'Exception',
@@ -23,18 +29,33 @@ final class ExceptionNameSniff extends AbstractSniff
         'Throwable',
     ];
 
-    public function getCode(): string
+    private const string CLASSNAME_PATTERN = '/<classname\b[^>]*>([^<]*)<\/classname>/';
+
+    public static function getCode(): string
     {
         return 'DocbookCS.ExceptionName';
     }
 
-    /** @throws \LogicException if an invalid severity level is configured */
-    public function process(\DOMDocument $document, string $content, string $filePath): array
+    public static function fixerClassName(): string
+    {
+        return ExceptionNameFixer::class;
+    }
+
+    /**
+     * @throws \LogicException
+     * @throws \OutOfBoundsException if a matched tag offset lies outside the source
+     */
+    public function process(\DOMDocument $document, File $file): array
     {
         $violations = [];
-        $suffixes = $this->getSuffixes();
+        $sourceMatchIndex = 0;
 
         $classnames = $document->getElementsByTagName('classname');
+        if ($classnames->length === 0) {
+            return [];
+        }
+
+        $sourceMatches = $this->sourceMatches($file);
 
         /** @var \DOMElement $node */
         foreach ($classnames as $node) {
@@ -43,6 +64,8 @@ final class ExceptionNameSniff extends AbstractSniff
             }
 
             $text = trim($node->textContent);
+            $match = $sourceMatches[$sourceMatchIndex] ?? null;
+            $sourceMatchIndex++;
 
             if ($text === '') {
                 continue;
@@ -52,38 +75,74 @@ final class ExceptionNameSniff extends AbstractSniff
                 continue;
             }
 
-            if ($this->looksLikeException($text, $suffixes)) {
-                $violations[] = $this->createViolation(
-                    $filePath,
-                    $node->getLineNo(),
-                    sprintf(
-                        '"%s" is wrapped in <classname> but should use <exceptionname>.',
-                        $text,
-                    ),
-                );
+            if (!self::looksLikeException($text)) {
+                continue;
             }
+
+            if ($match === null || $match['text'] !== $text) {
+                throw new \LogicException('Could not map classname violation to source content.');
+            }
+
+            $affectedRanges = $this->elementNameRanges(
+                $file,
+                $match['beginOffset'],
+                $match['closingOffset'],
+                self::ELEMENT_NAME,
+            );
+
+            $violations[] = $this->createViolation(
+                $file->path,
+                $affectedRanges[0]->line,
+                $match['beginOffset'],
+                $match['untilOffset'],
+                sprintf('"%s" is wrapped in <classname> but should use <exceptionname>.', $text),
+                $match['content'],
+                affectedRanges: $affectedRanges,
+            );
         }
 
         return $violations;
     }
 
-    /**
-     * @param list<string> $suffixes
-     */
-    private function looksLikeException(string $text, array $suffixes): bool
+    public static function looksLikeException(string $text): bool
     {
         $parts = explode('\\', $text);
         $baseName = end($parts);
 
-        return array_any(
-            $suffixes,
-            static fn($suffix) => str_ends_with($baseName, $suffix)
-        );
+        return array_any(self::DEFAULT_SUFFIXES, static fn(string $suffix): bool => str_ends_with($baseName, $suffix));
     }
 
-    /** @return list<string> */
-    private function getSuffixes(): array
+    /**
+     * @return list<array{
+     *     beginOffset: int,
+     *     untilOffset: int,
+     *     content: string,
+     *     text: string,
+     *     closingOffset: int
+     * }>
+     */
+    private function sourceMatches(File $file): array
     {
-        return self::DEFAULT_SUFFIXES;
+        preg_match_all(
+            self::CLASSNAME_PATTERN,
+            $this->maskNonElementMarkup($file->content),
+            $matches,
+            PREG_OFFSET_CAPTURE,
+        );
+
+        $sourceMatches = [];
+        foreach ($matches[0] as $i => [$fullMatch, $offset]) {
+            $offset = (int) $offset;
+            $closingOffset = $offset + (int) strrpos($fullMatch, '</classname>');
+            $sourceMatches[] = [
+                'beginOffset' => $offset,
+                'untilOffset' => $offset + strlen($fullMatch),
+                'content' => $fullMatch,
+                'text' => trim($matches[1][$i][0]),
+                'closingOffset' => $closingOffset,
+            ];
+        }
+
+        return $sourceMatches;
     }
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DocbookCS\Report;
 
+use DocbookCS\Violation\Violation;
+
 final class Report
 {
     /** @var array<string, FileReport> */
