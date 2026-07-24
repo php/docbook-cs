@@ -8,13 +8,11 @@ use DocbookCS\Process\NativeProcessRunner;
 use DocbookCS\Process\ProcessResult;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(NativeProcessRunner::class),
-    //
-    UsesClass(ProcessResult::class),
+    CoversClass(ProcessResult::class),
 ]
 final class NativeProcessRunnerTest extends TestCase
 {

@@ -95,6 +95,15 @@ final class GitDiffProviderTest extends TestCase
         new GitDiffProvider($this->processRunner)->for($this->repository);
     }
 
+    #[Test]
+    public function itIncludesGitErrorsWhenACommandFails(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessageIsOrContains('Could not find Git repository. fatal: not a git repository');
+
+        new GitDiffProvider($this->processRunner)->for($this->repository);
+    }
+
     private function configureAuthor(): void
     {
         $this->git('config', 'user.name', 'DocbookCS Tests');

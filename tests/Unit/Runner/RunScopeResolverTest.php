@@ -119,6 +119,57 @@ final class RunScopeResolverTest extends TestCase
         );
     }
 
+    #[Test]
+    public function wideScopeIgnoresUnknownEntityReferences(): void
+    {
+        file_put_contents($this->sourceFile, '<root>&unknown;&bridge;</root>');
+
+        $targets = $this->resolver(wide: true)->resolvePaths([$this->sourceFile]);
+
+        self::assertSame(
+            [
+                $this->sourceFile => null,
+                $this->targetFile => null,
+            ],
+            $targets,
+        );
+    }
+
+    #[Test]
+    public function wideScopeHandlesCyclicEntityReferences(): void
+    {
+        file_put_contents($this->entityFile, '&bridge;&target;');
+
+        self::assertSame(
+            [
+                $this->sourceFile => null,
+                $this->targetFile => null,
+            ],
+            $this->resolver(wide: true)->resolvePaths([$this->sourceFile]),
+        );
+    }
+
+    #[Test]
+    public function wideScopeNormalisesParentDirectorySegmentsInEntityPaths(): void
+    {
+        $resolver = new RunScopeResolver(
+            $this->config(),
+            [
+                'bridge' => $this->directory . '/nested/../bridge.ent',
+                'target' => $this->targetFile,
+            ],
+            wide: true,
+        );
+
+        self::assertSame(
+            [
+                $this->sourceFile => null,
+                $this->targetFile => null,
+            ],
+            $resolver->resolvePaths([$this->sourceFile]),
+        );
+    }
+
     private function resolver(bool $wide = false): RunScopeResolver
     {
         return new RunScopeResolver(

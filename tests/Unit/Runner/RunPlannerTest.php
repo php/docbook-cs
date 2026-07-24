@@ -64,4 +64,24 @@ DIFF);
 
         self::assertSame([], $planner->plan([], null)->targets);
     }
+
+    #[Test]
+    public function itRejectsPathsCombinedWithAPipedDiff(): void
+    {
+        $config = new ConfigData(
+            projectRoots: [],
+            sniffs: [],
+            includePaths: [],
+            excludePatterns: [],
+            entityPaths: [],
+            basePath: getcwd() ?: '.',
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageIs('Paths cannot be combined with diff input.');
+
+        $planner = new RunPlanner($config, diffProvider: $this->createStub(DiffProviderInterface::class));
+
+        $planner->plan(['file.xml'], '');
+    }
 }

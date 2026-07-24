@@ -14,8 +14,9 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(DiffParser::class),
+    CoversClass(FileChange::class),
+    //
     UsesClass(Diff::class),
-    UsesClass(FileChange::class),
 ]
 final class DiffParserTest extends TestCase
 {

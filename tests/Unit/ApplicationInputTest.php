@@ -5,11 +5,51 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit;
 
 use DocbookCS\Application;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use DocbookCS\Config\ConfigData;
+use DocbookCS\Config\ConfigParser;
+use DocbookCS\Config\SniffEntry;
+use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffParser;
+use DocbookCS\Diff\GitDiffProvider;
+use DocbookCS\Path\DiffPathLoader;
+use DocbookCS\Path\EntityResolver;
+use DocbookCS\Path\PathMatcher;
+use DocbookCS\Progress\NullProgress;
+use DocbookCS\Report\Report;
+use DocbookCS\Report\Reporter\ConsoleReporter;
+use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\RunPlan;
+use DocbookCS\Runner\RunPlanner;
+use DocbookCS\Runner\RunScopeResolver;
+use DocbookCS\Runner\SniffRunner;
+use DocbookCS\Runner\XmlFileProcessor;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversNothing]
+#[
+    CoversClass(Application::class),
+    //
+    UsesClass(ConfigData::class),
+    UsesClass(ConfigParser::class),
+    UsesClass(ConsoleReporter::class),
+    UsesClass(Diff::class),
+    UsesClass(DiffParser::class),
+    UsesClass(DiffPathLoader::class),
+    UsesClass(EntityPreprocessor::class),
+    UsesClass(EntityResolver::class),
+    UsesClass(GitDiffProvider::class),
+    UsesClass(NullProgress::class),
+    UsesClass(PathMatcher::class),
+    UsesClass(Report::class),
+    UsesClass(RunPlan::class),
+    UsesClass(RunPlanner::class),
+    UsesClass(RunScopeResolver::class),
+    UsesClass(SniffEntry::class),
+    UsesClass(SniffRunner::class),
+    UsesClass(XmlFileProcessor::class),
+]
 final class ApplicationInputTest extends TestCase
 {
     private const string FIXTURE_DIR = __DIR__ . '/../fixtures/application';
@@ -87,6 +127,20 @@ final class ApplicationInputTest extends TestCase
 
         self::assertStringContainsString('--wide', $output);
         self::assertStringNotContainsString('--diff', $output);
+    }
+
+    #[Test]
+    public function itAcceptsTheWideOption(): void
+    {
+        $app = new Application(
+            ['docbook-cs', '--config=' . self::VALID_CONFIG, '--wide'],
+            $this->stdout,
+            $this->stderr,
+            unifiedDiff: '',
+        );
+
+        self::assertSame(0, $app->run());
+        self::assertSame('', $this->readStream($this->stderr));
     }
 
     /** @param resource $stream */

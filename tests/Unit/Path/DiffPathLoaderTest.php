@@ -77,4 +77,38 @@ final class DiffPathLoaderTest extends TestCase
 
         self::assertSame([], $loader->load()->fileChanges);
     }
+
+    #[Test]
+    public function itLoadsAbsolutePaths(): void
+    {
+        $file = $this->directory . '/chapter.xml';
+        file_put_contents($file, '<chapter/>');
+
+        $loader = new DiffPathLoader(
+            new Diff([new FileChange($file, [1])]),
+            workingDirectory: $this->directory,
+            basePath: $this->directory,
+            projectRoots: [],
+            matcher: new PathMatcher($this->directory, []),
+        );
+
+        self::assertNotNull($loader->load()->changeFor($file));
+    }
+
+    #[Test]
+    public function itNormalisesParentDirectorySegments(): void
+    {
+        $file = $this->directory . '/chapter.xml';
+        file_put_contents($file, '<chapter/>');
+
+        $loader = new DiffPathLoader(
+            new Diff([new FileChange('nested/../chapter.xml', [1])]),
+            workingDirectory: $this->directory,
+            basePath: $this->directory,
+            projectRoots: [],
+            matcher: new PathMatcher($this->directory, []),
+        );
+
+        self::assertNotNull($loader->load()->changeFor($file));
+    }
 }
