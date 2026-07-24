@@ -11,7 +11,7 @@ use DocbookCS\Violation\SourceRange;
 final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
 {
     private const string TRAILING_WHITESPACE_PATTERN = '/[ \t]+$/';
-    private const string MESSAGE = 'Trailing whitespace detected.';
+    private const string REPORTING_MESSAGE = 'Trailing whitespace detected.';
 
     public static function getCode(): string
     {
@@ -38,7 +38,7 @@ final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
 
             $violations[] = $this->createViolation(
                 $file->path,
-                self::MESSAGE,
+                self::REPORTING_MESSAGE,
                 [new SourceRange($line->number, $beginOffset, $beginOffset + strlen($whitespace), $whitespace)],
             );
         }

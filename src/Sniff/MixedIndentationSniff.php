@@ -11,7 +11,7 @@ use DocbookCS\Violation\SourceRange;
 final class MixedIndentationSniff extends AbstractSniff implements Fixable
 {
     private const string INDENTATION_PATTERN = '/^[ \t]+/';
-    private const string MESSAGE = 'Mixed tabs and spaces in indentation.';
+    private const string REPORTING_MESSAGE = 'Mixed tabs and spaces in indentation.';
 
     public static function getCode(): string
     {
@@ -40,7 +40,7 @@ final class MixedIndentationSniff extends AbstractSniff implements Fixable
 
             $violations[] = $this->createViolation(
                 $file->path,
-                self::MESSAGE,
+                self::REPORTING_MESSAGE,
                 [
                     new SourceRange(
                         $line->number,
