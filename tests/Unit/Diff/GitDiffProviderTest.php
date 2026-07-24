@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocbookCS\Tests\Integration\Diff;
+namespace DocbookCS\Tests\Unit\Diff;
 
 use DocbookCS\Diff\GitDiffProvider;
 use DocbookCS\Process\NativeProcessRunner;

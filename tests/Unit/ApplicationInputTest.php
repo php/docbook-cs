@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocbookCS\Tests\Feature;
+namespace DocbookCS\Tests\Unit;
 
 use DocbookCS\Application;
 use PHPUnit\Framework\Attributes\CoversNothing;

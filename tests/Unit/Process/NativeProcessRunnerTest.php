@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocbookCS\Tests\Integration\Process;
+namespace DocbookCS\Tests\Unit\Process;
 
 use DocbookCS\Process\NativeProcessRunner;
 use DocbookCS\Process\ProcessResult;
