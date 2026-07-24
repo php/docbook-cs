@@ -39,7 +39,7 @@ final class Application
      * @throws \RuntimeException if redirected stdin cannot be read.
      * @api
      */
-    public static function fromGlobals(array $argv): self
+    public static function withArguments(array $argv): self
     {
         $stdin = null;
         $stat = fstat(STDIN);
