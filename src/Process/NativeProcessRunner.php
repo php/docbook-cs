@@ -6,7 +6,7 @@ namespace DocbookCS\Process;
 
 final class NativeProcessRunner implements ProcessRunnerInterface
 {
-    public function run(array $command, string $workingDirectory): ProcessResult
+    public function run(array $command, string $workingDirectory, array $environment = []): ProcessResult
     {
         $process = proc_open(
             $command,
@@ -17,10 +17,11 @@ final class NativeProcessRunner implements ProcessRunnerInterface
             ],
             $pipes,
             $workingDirectory,
+            $this->environmentWithOverrides($environment),
         );
 
         if (!is_resource($process)) {
-            throw new \RuntimeException('Could not start process.');
+            throw ProcessException::couldNotStart();
         }
 
         fclose($pipes[0]);
@@ -34,5 +35,22 @@ final class NativeProcessRunner implements ProcessRunnerInterface
             stdout: $stdout !== false ? $stdout : '',
             stderr: $stderr !== false ? $stderr : '',
         );
+    }
+
+    /**
+     * @param array<string, string> $overrides
+     * @return array<string, string>|null
+     */
+    private function environmentWithOverrides(array $overrides): ?array
+    {
+        if ($overrides === []) {
+            return null;
+        }
+
+        // proc_open replaces inherited variables with overrides.
+        // Keep them, then apply only the requested overrides.
+        $inherited = getenv();
+
+        return array_replace(is_array($inherited) ? $inherited : [], $overrides);
     }
 }

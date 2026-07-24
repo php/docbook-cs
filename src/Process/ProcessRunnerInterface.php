@@ -8,7 +8,8 @@ interface ProcessRunnerInterface
 {
     /**
      * @param list<string> $command
-     * @throws \RuntimeException if the process cannot be started.
+     * @param array<string, string> $environment
+     * @throws ProcessException if the process cannot be started.
      */
-    public function run(array $command, string $workingDirectory): ProcessResult;
+    public function run(array $command, string $workingDirectory, array $environment = []): ProcessResult;
 }

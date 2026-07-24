@@ -28,4 +28,17 @@ final class NativeProcessRunnerTest extends TestCase
         self::assertSame('out', $result->stdout);
         self::assertSame('err', $result->stderr);
     }
+
+    #[Test]
+    public function itPassesEnvironmentVariablesToTheProcess(): void
+    {
+        $result = new NativeProcessRunner()->run(
+            [PHP_BINARY, '-r', 'fwrite(STDOUT, getenv("DOCBOOK_CS_TEST") ?: "");'],
+            getcwd() ?: '.',
+            ['DOCBOOK_CS_TEST' => 'value'],
+        );
+
+        self::assertSame(0, $result->exitCode);
+        self::assertSame('value', $result->stdout);
+    }
 }

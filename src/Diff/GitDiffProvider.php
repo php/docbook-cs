@@ -4,89 +4,40 @@ declare(strict_types=1);
 
 namespace DocbookCS\Diff;
 
+use DocbookCS\Git\GitClient;
+use DocbookCS\Git\GitException;
 use DocbookCS\Process\NativeProcessRunner;
 use DocbookCS\Process\ProcessRunnerInterface;
 
 final readonly class GitDiffProvider implements DiffProviderInterface
 {
+    private GitClient $git;
+
+    private DiffBaseResolver $baseResolver;
+
     public function __construct(
-        private ProcessRunnerInterface $processRunner = new NativeProcessRunner(),
+        ProcessRunnerInterface $processRunner = new NativeProcessRunner(),
+        ?string $cacheDirectory = null,
     ) {
+        $gitClient =  new GitClient($processRunner);
+
+        $cacheDirectory ??= dirname(__DIR__, 2) . '/var/upstream';
+
+        $this->baseResolver = new DiffBaseResolver(
+            $gitClient,
+            new UpstreamResolver($gitClient, $cacheDirectory),
+        );
+
+        $this->git = $gitClient;
     }
 
-    /** @throws \RuntimeException if the repository, branch point, or diff cannot be determined. */
+    /** @throws GitException */
     public function for(string $workingDirectory): string
     {
-        $repositoryRoot = trim($this->runOrThrow(
-            ['git', 'rev-parse', '--show-toplevel'],
-            $workingDirectory,
-            'Could not find Git repository.',
-        ));
-
-        $baseReference = $this->resolveBaseReference($repositoryRoot);
-        $mergeBase = $this->runOrThrow(
-            ['git', 'merge-base', 'HEAD', $baseReference],
-            $repositoryRoot,
-            sprintf('Unclear where HEAD branched from %s.', $baseReference),
+        $mergeBase = $this->baseResolver->resolve(
+            $repoRoot = $this->git->repoRoot($workingDirectory)
         );
 
-        return $this->runOrThrow(
-            ['git', 'diff', '--no-ext-diff', '--no-color', trim($mergeBase), '--'],
-            $repositoryRoot,
-            'Could not read diff.',
-        );
-    }
-
-    /** @throws \RuntimeException if no default branch reference exists. */
-    private function resolveBaseReference(string $repositoryRoot): string
-    {
-        $candidates = [];
-
-        foreach (['upstream', 'origin'] as $remote) {
-            $result = $this->processRunner->run(
-                ['git', 'symbolic-ref', '--quiet', sprintf('refs/remotes/%s/HEAD', $remote)],
-                $repositoryRoot,
-            );
-
-            if ($result->exitCode === 0) {
-                $candidates[] = trim($result->stdout);
-            }
-
-            $candidates[] = sprintf('refs/remotes/%s/main', $remote);
-            $candidates[] = sprintf('refs/remotes/%s/master', $remote);
-        }
-
-        $candidates[] = 'refs/heads/main';
-        $candidates[] = 'refs/heads/master';
-
-        foreach (array_unique($candidates) as $candidate) {
-            $result = $this->processRunner->run(
-                ['git', 'rev-parse', '--verify', '--quiet', $candidate . '^{commit}'],
-                $repositoryRoot,
-            );
-
-            if ($result->exitCode === 0) {
-                return $candidate;
-            }
-        }
-
-        throw new \RuntimeException('Could not determine the upstream default branch for the contribution diff.');
-    }
-
-    /**
-     * @param list<string> $command
-     * @throws \RuntimeException if the command fails.
-     */
-    private function runOrThrow(array $command, string $workingDirectory, string $error): string
-    {
-        $result = $this->processRunner->run($command, $workingDirectory);
-
-        if ($result->exitCode === 0) {
-            return $result->stdout;
-        }
-
-        $detail = trim($result->stderr);
-
-        throw new \RuntimeException($detail !== '' ? "$error $detail" : $error);
+        return $this->git->diffFromMergeBase($repoRoot, $mergeBase);
     }
 }

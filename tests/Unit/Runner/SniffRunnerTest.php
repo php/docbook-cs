@@ -7,8 +7,11 @@ namespace DocbookCS\Tests\Unit\Runner;
 use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\SniffEntry;
 use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffBaseResolver;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Diff\GitDiffProvider;
+use DocbookCS\Diff\UpstreamResolver;
+use DocbookCS\Git\GitClient;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
@@ -48,11 +51,14 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Violation::class),
     CoversClass(XmlFileProcessor::class),
     UsesClass(Diff::class),
+    UsesClass(DiffBaseResolver::class),
     UsesClass(DiffPathLoader::class),
     UsesClass(EntityExpansionMarker::class),
     UsesClass(FileChange::class),
+    UsesClass(GitClient::class),
     UsesClass(GitDiffProvider::class),
     UsesClass(RunScopeResolver::class),
+    UsesClass(UpstreamResolver::class),
 ]
 final class SniffRunnerTest extends TestCase
 {

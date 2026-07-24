@@ -10,9 +10,13 @@ use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\ConfigParserException;
 use DocbookCS\Config\SniffEntry;
 use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffBaseResolver;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Diff\GitDiffProvider;
+use DocbookCS\Diff\UpstreamResolver;
+use DocbookCS\Git\GitClient;
+use DocbookCS\Git\GitException;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
@@ -60,12 +64,16 @@ use PHPUnit\Framework\TestCase;
     CoversClass(SniffRunner::class),
     CoversClass(XmlFileProcessor::class),
     UsesClass(Diff::class),
+    UsesClass(DiffBaseResolver::class),
     UsesClass(DiffPathLoader::class),
     UsesClass(FileChange::class),
+    UsesClass(GitClient::class),
     UsesClass(GitDiffProvider::class),
+    UsesClass(GitException::class),
     UsesClass(NativeProcessRunner::class),
     UsesClass(ProcessResult::class),
     UsesClass(RunScopeResolver::class),
+    UsesClass(UpstreamResolver::class),
 ]
 final class ApplicationTest extends TestCase
 {
