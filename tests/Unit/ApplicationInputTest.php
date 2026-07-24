@@ -84,16 +84,33 @@ final class ApplicationInputTest extends TestCase
     }
 
     #[Test]
-    public function itRejectsTheRemovedDiffOption(): void
+    public function itIgnoresTheLegacyDiffOption(): void
     {
         $app = new Application(
             ['docbook-cs', '--config=' . self::VALID_CONFIG, '--diff'],
             $this->stdout,
             $this->stderr,
+            unifiedDiff: '',
+        );
+
+        self::assertSame(0, $app->run());
+        self::assertSame('', $this->readStream($this->stderr));
+    }
+
+    #[Test]
+    public function itRejectsUnknownOptions(): void
+    {
+        $app = new Application(
+            ['docbook-cs', '--config=' . self::VALID_CONFIG, '--widde'],
+            $this->stdout,
+            $this->stderr,
         );
 
         self::assertSame(2, $app->run());
-        self::assertStringContainsString('Unknown option: --diff', $this->readStream($this->stderr));
+        self::assertStringContainsString(
+            'Unknown option: --widde',
+            $this->readStream($this->stderr),
+        );
     }
 
     #[Test]

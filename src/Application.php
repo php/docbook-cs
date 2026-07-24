@@ -242,6 +242,12 @@ final class Application
                 continue;
             }
 
+            // todo: remove; noop - for now kept for CI compatibility
+            if ($arg === '--diff') {
+                $i++;
+                continue;
+            }
+
             // Anything else is a path to scan.
             if (!str_starts_with($arg, '-')) {
                 $result['paths'][] = $arg;
