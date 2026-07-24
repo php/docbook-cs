@@ -45,7 +45,7 @@ final class Application
         $stat = fstat(STDIN);
 
         if ($stat === false) {
-            return new self($argv, stdin: $stdin);
+            return new self($argv, unifiedDiff: $stdin);
         }
 
         $type = $stat['mode'] & 0170000;
@@ -58,7 +58,7 @@ final class Application
             }
         }
 
-        return new self($argv, stdin: $stdin);
+        return new self($argv, unifiedDiff: $stdin);
     }
 
     /**
@@ -70,12 +70,12 @@ final class Application
         array $argv,
         mixed $stdout = null,
         mixed $stderr = null,
-        ?string $stdin = null,
+        ?string $unifiedDiff = null,
     ) {
         $this->argv = $argv;
         $this->stdout = $stdout ?? STDOUT;
         $this->stderr = $stderr ?? STDERR;
-        $this->stdin = $stdin;
+        $this->stdin = $unifiedDiff;
     }
 
     /**

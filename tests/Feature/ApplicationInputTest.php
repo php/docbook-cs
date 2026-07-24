@@ -55,7 +55,7 @@ final class ApplicationInputTest extends TestCase
             ['docbook-cs', '--config=' . self::VALID_CONFIG],
             $this->stdout,
             $this->stderr,
-            stdin: '',
+            unifiedDiff: '',
         );
 
         self::assertSame(0, $app->run());
@@ -69,7 +69,7 @@ final class ApplicationInputTest extends TestCase
             ['docbook-cs', '--config=' . self::VALID_CONFIG, self::SCAN_FILE],
             $this->stdout,
             $this->stderr,
-            stdin: '',
+            unifiedDiff: '',
         );
 
         self::assertSame(2, $app->run());
