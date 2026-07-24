@@ -32,11 +32,8 @@ final class SniffRunner
         $preprocessor = new EntityPreprocessor($plan->entities);
         $processor = new XmlFileProcessor($sniffs, $preprocessor, $report);
 
-        $total = count($plan->targets);
+        $this->progress->start(count($plan->targets));
 
-        $this->progress->start($total);
-
-        $index = 0;
         foreach ($plan->targets as $file => $fileChange) {
             $report->incrementFilesScanned();
 
@@ -56,7 +53,7 @@ final class SniffRunner
                 $report->addFileReport($fileReport);
             }
 
-            $this->progress->advance(++$index, $file, $violationCount);
+            $this->progress->advance($file, $violationCount);
         }
 
         $this->progress->finish();

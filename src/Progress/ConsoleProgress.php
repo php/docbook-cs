@@ -15,6 +15,8 @@ final class ConsoleProgress implements ProgressInterface
 
     private int $totalFiles = 0;
 
+    private int $processedFiles = 0;
+
     /**
      * @param resource $stream
      */
@@ -27,6 +29,7 @@ final class ConsoleProgress implements ProgressInterface
     public function start(int $totalFiles): void
     {
         $this->totalFiles = $totalFiles;
+        $this->processedFiles = 0;
 
         if ($totalFiles === 0) {
             $this->write($this->dim('No files to scan.') . PHP_EOL);
@@ -38,13 +41,13 @@ final class ConsoleProgress implements ProgressInterface
         $this->drawBar(0, '');
     }
 
-    public function advance(int $current, string $filePath, int $violations): void
+    public function advance(string $filePath, int $violations): void
     {
         if ($this->totalFiles === 0) {
             return;
         }
 
-        $this->drawBar($current, $filePath, $violations);
+        $this->drawBar(++$this->processedFiles, $filePath, $violations);
     }
 
     public function finish(): void
