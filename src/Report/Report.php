@@ -10,142 +10,194 @@ final class Report
 {
     public private(set) float $totalTime = 0.0;
 
-    public private(set) float $fixingTime = 0.0;
-
-    /** @var array<string, float> */
-    public private(set) array $sniffTimes = [];
-
-    public private(set) int $filesScanned = 0;
-
-    public private(set) int $filesChanged = 0;
-
-    public private(set) int $fixesApplied = 0;
-
-    public private(set) int $fixesSkipped = 0;
-
-    public private(set) int $fixingPasses = 0;
-
     /** @var array<string, FileReport> */
     public private(set) array $fileReports = [];
+
+    public function __construct(private readonly bool $collectPerformance = false)
+    {
+    }
+
+    /**
+     * @template T
+     * @param callable(): T $operation
+     * @return T
+     */
+    public function measureWallTime(callable $operation): mixed
+    {
+        $start = microtime(true);
+
+        try {
+            return $operation();
+        } finally {
+            $this->totalTime = microtime(true) - $start;
+        }
+    }
+
+    public function newFileReport(string $filePath): FileReport
+    {
+        return $this->fileReports[$filePath] = new FileReport($filePath, $this->collectPerformance);
+    }
 
     public function addFileReport(FileReport $fileReport): void
     {
         $this->fileReports[$fileReport->filePath] = $fileReport;
     }
 
-    public function incrementFilesScanned(): void
+    public function getScannedFilesCount(): int
     {
-        $this->filesScanned++;
+        return count($this->fileReports);
     }
 
-    public function getTotalViolations(): int
+    public function getViolatingFilesCount(): int
     {
-        $total = 0;
-        foreach ($this->fileReports as $fr) {
-            $total += $fr->getViolationCount();
+        return array_filter(
+            $this->fileReports,
+            static fn(FileReport $fileReport): bool => $fileReport->hasFinalViolations(),
+        ) |> count(...);
+    }
+
+    public function getChangedFilesCount(): int
+    {
+        return array_filter(
+            $this->fileReports,
+            static fn(FileReport $fileReport): bool => $fileReport->changed,
+        ) |> count(...);
+    }
+
+    public function getFoundViolationsCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getFoundViolationCount(),
+            $this->fileReports,
+        ));
+    }
+
+    public function getAppliedFixesCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getAppliedFixesCount(),
+            $this->fileReports,
+        ));
+    }
+
+    public function getSkippedFixesCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getSkippedFixesCount(),
+            $this->fileReports,
+        ));
+    }
+
+    public function hasFixingResults(): bool
+    {
+        return array_any($this->fileReports, static fn(FileReport $fileReport): bool => $fileReport->fixingPasses > 0);
+    }
+
+    public function getFixingPassesCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->fixingPasses,
+            $this->fileReports,
+        ));
+    }
+
+    public function getTotalFixingTime(): float
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): float => $fileReport->totalFixingTime,
+            $this->fileReports,
+        ));
+    }
+
+    public function getTotalSniffingTime(): float
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): float => $fileReport->totalSniffingTime,
+            $this->fileReports,
+        ));
+    }
+
+    /** @return array<string, float> */
+    public function getFixingTimes(): array
+    {
+        $fixingTimes = [];
+
+        foreach ($this->fileReports as $fileReport) {
+            foreach ($fileReport->fixingTimes as $sniffCode => $time) {
+                $fixingTimes[$sniffCode] ??= 0.0;
+                $fixingTimes[$sniffCode] += $time;
+            }
         }
 
-        return $total;
+        return $fixingTimes;
     }
 
-    public function getTotalErrors(): int
+    /** @return array<string, float> */
+    public function getSniffingTimes(): array
     {
-        $total = 0;
-        foreach ($this->fileReports as $fr) {
-            $total += $fr->getErrorCount();
+        $sniffingTimes = [];
+
+        foreach ($this->fileReports as $fileReport) {
+            foreach ($fileReport->sniffingTimes as $sniffCode => $time) {
+                $sniffingTimes[$sniffCode] ??= 0.0;
+                $sniffingTimes[$sniffCode] += $time;
+            }
         }
 
-        return $total;
+        return $sniffingTimes;
     }
 
-    public function getTotalWarnings(): int
+    public function getTotalFinalViolationCount(): int
     {
-        $total = 0;
-        foreach ($this->fileReports as $fr) {
-            $total += $fr->getWarningCount();
-        }
-
-        return $total;
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getFinalViolationCount(),
+            $this->fileReports,
+        ));
     }
 
-    public function hasViolations(): bool
+    public function getTotalErrorLevelViolationCount(): int
     {
-        return $this->getTotalViolations() > 0;
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getErrorCount(),
+            $this->fileReports,
+        ));
+    }
+
+    public function getTotalWarningLevelViolationCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getWarningCount(),
+            $this->fileReports,
+        ));
+    }
+
+    /** @api not implemented */
+    public function getTotalInfoLevelViolationCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getInfoCount(),
+            $this->fileReports,
+        ));
+    }
+
+    public function hasFinalViolations(): bool
+    {
+        return $this->getTotalFinalViolationCount() > 0;
     }
 
     /** @return list<Violation> */
     public function getAllViolations(): array
     {
-        $all = [];
+        $violations = [];
+
         foreach ($this->fileReports as $fileReport) {
-            foreach ($fileReport->getViolations() as $violation) {
-                $all[] = $violation;
+            if (!$fileReport->hasFinalViolations()) {
+                continue;
             }
+
+            array_push($violations, ...$fileReport->finalViolations);
         }
 
-        return $all;
-    }
-
-    public function setTotalTime(float $time): void
-    {
-        $this->totalTime = $time;
-    }
-
-    public function addSniffTime(string $sniffCode, float $time): void
-    {
-        if (!isset($this->sniffTimes[$sniffCode])) {
-            $this->sniffTimes[$sniffCode] = 0.0;
-        }
-
-        $this->sniffTimes[$sniffCode] += $time;
-    }
-
-    public function addFixTime(float $time): void
-    {
-        $this->fixingTime += $time;
-    }
-
-    /**
-     * @template T
-     * @param callable(): T $operation
-     * @return T
-     */
-    public function measureFixing(callable $operation): mixed
-    {
-        $start = microtime(true);
-
-        try {
-            return $operation();
-        } finally {
-            $this->addFixTime(microtime(true) - $start);
-        }
-    }
-
-    /**
-     * @template T
-     * @param callable(): T $operation
-     * @return T
-     */
-    public function measureSniffing(string $sniffCode, callable $operation): mixed
-    {
-        $start = microtime(true);
-
-        try {
-            return $operation();
-        } finally {
-            $this->addSniffTime($sniffCode, microtime(true) - $start);
-        }
-    }
-
-    public function recordModifiedFile(): void
-    {
-        $this->filesChanged++;
-    }
-
-    public function recordFixPass(int $applied, int $skipped): void
-    {
-        $this->fixesApplied += $applied;
-        $this->fixesSkipped += $skipped;
-        $this->fixingPasses++;
+        return $violations;
     }
 }

@@ -10,7 +10,6 @@ use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\Fixer\SimparaFixer;
 use DocbookCS\Fix\FixResult;
 use DocbookCS\Runner\EntityExpansionMarker;
-use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\SimparaSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
@@ -25,7 +24,6 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Fix::class),
     CoversClass(FixApplier::class),
     CoversClass(FixResult::class),
-    CoversClass(RunMode::class),
     CoversClass(SimparaFixer::class),
     CoversClass(SimparaSniff::class),
     CoversClass(Violation::class),
@@ -45,7 +43,7 @@ final class SimparaFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
+        $violations = new SimparaSniff()->process($document, $source);
 
         self::assertCount(1, $violations);
         self::assertSame('para', $violations[0]->rangeOne()->content);
@@ -66,7 +64,7 @@ final class SimparaFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
+        $violations = new SimparaSniff()->process($document, $source);
 
         self::assertCount(1, $violations);
         self::assertSame('para', $violations[0]->rangeOne()->content);
@@ -87,7 +85,7 @@ final class SimparaFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
+        $violations = new SimparaSniff()->process($document, $source);
 
         self::assertCount(1, $violations);
         self::assertSame('para', $violations[0]->rangeOne()->content);
@@ -111,7 +109,7 @@ final class SimparaFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new SimparaSniff(RunMode::Fix)->process($document, $source);
+        $violations = new SimparaSniff()->process($document, $source);
 
         self::assertCount(1, $violations);
 

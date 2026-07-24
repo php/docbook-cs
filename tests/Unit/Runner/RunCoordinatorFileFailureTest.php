@@ -9,7 +9,6 @@ use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Progress\ProgressInterface;
 use DocbookCS\Runner\RunCoordinator;
-use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
@@ -55,9 +54,11 @@ final class RunCoordinatorFileFailureTest extends TestCase
             basePath: dirname($xmlFilePath),
         );
 
-        $report = new RunCoordinator($progress)->run($this->planPaths($config));
+        $report = new RunCoordinator($progress)->runWithMetrics(
+            new RunPlanner($config)->planPaths($config->getIncludePaths()),
+        );
 
-        self::assertTrue($report->hasViolations());
+        self::assertTrue($report->hasFinalViolations());
         self::assertSame('DocbookCS.Internal', $report->getAllViolations()[0]->sniffCode);
         self::assertStringContainsString('Could not read file', $report->getAllViolations()[0]->message);
     }
@@ -89,19 +90,11 @@ final class RunCoordinatorFileFailureTest extends TestCase
         );
         $diff = new DiffChangeset([new FileChange($xmlFilePath, [42])]);
 
-        $report = new RunCoordinator($progress)->run($this->planDiff($config, $diff));
+        $report = new RunCoordinator($progress)->runWithMetrics(
+            new RunPlanner($config)->planDiff($diff),
+        );
 
-        self::assertTrue($report->hasViolations());
+        self::assertTrue($report->hasFinalViolations());
         self::assertSame('DocbookCS.Internal', $report->getAllViolations()[0]->sniffCode);
-    }
-
-    private function planPaths(ConfigData $config): RunPlan
-    {
-        return new RunPlanner($config)->planPaths($config->getIncludePaths());
-    }
-
-    private function planDiff(ConfigData $config, DiffChangeset $diff): RunPlan
-    {
-        return new RunPlanner($config)->planDiff($diff);
     }
 }

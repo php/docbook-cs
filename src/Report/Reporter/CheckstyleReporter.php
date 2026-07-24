@@ -24,14 +24,14 @@ final class CheckstyleReporter implements ReporterInterface
         $root->appendChild($comment);
 
         foreach ($report->fileReports as $fileReport) {
-            if (!$fileReport->hasViolations()) {
+            if (!$fileReport->hasFinalViolations()) {
                 continue;
             }
 
             $fileNode = $dom->createElement('file');
             $fileNode->setAttribute('name', RelativePath::fromWorkingDirectory($fileReport->filePath));
 
-            foreach ($fileReport->getViolations() as $violation) {
+            foreach ($fileReport->finalViolations as $violation) {
                 $errorNode = $dom->createElement('error');
                 $errorNode->setAttribute('line', (string) $violation->rangeOne()->line);
                 $errorNode->setAttribute('severity', $violation->severity->value);
