@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\JsonReporter;
-use DocbookCS\Report\Severity;
-use DocbookCS\Report\Violation;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -18,6 +21,9 @@ use PHPUnit\Framework\TestCase;
     CoversClass(JsonReporter::class),
     CoversClass(Report::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(RelativePath::class),
+    UsesClass(SourceRange::class),
 ]
 final class JsonReporterTest extends TestCase
 {
@@ -34,7 +40,7 @@ final class JsonReporterTest extends TestCase
         string $sniffCode = 'DocbookCS.Test',
         Severity $severity = Severity::ERROR,
     ): Violation {
-        return new Violation($sniffCode, 'filepath.xml', $line, $message, $severity);
+        return new Violation($sniffCode, 'filepath.xml', $line, 0, 0, $message, severity: $severity);
     }
 
     #[Test]
@@ -93,6 +99,26 @@ final class JsonReporterTest extends TestCase
         $data = $this->parseOutput($this->reporter->generate($report));
 
         self::assertSame(2, $data['totals']['files_scanned'] ?? null);
+    }
+
+    #[Test]
+    public function itIncludesFixingOutcome(): void
+    {
+        $report = new Report();
+        $report->recordModifiedFile();
+        $report->recordModifiedFile();
+        $report->recordFixPass(applied: 3, skipped: 1);
+        $report->recordFixPass(applied: 2, skipped: 1);
+        $report->recordFixPass(applied: 2, skipped: 0);
+
+        $data = $this->parseOutput($this->reporter->generate($report));
+
+        self::assertSame([
+            'files_changed' => 2,
+            'fixes_applied' => 7,
+            'fixes_skipped' => 2,
+            'fixing_passes' => 3,
+        ], $data['fixing']);
     }
 
     #[Test]
@@ -313,6 +339,20 @@ final class JsonReporterTest extends TestCase
     }
 
     #[Test]
+    public function itRendersAbsoluteFilePathRelativeToWorkingDirectory(): void
+    {
+        $fileReport = new FileReport((getcwd() ?: '') . '/path/to/file.xml');
+        $fileReport->addViolation($this->createViolation());
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        $data = $this->parseOutput($this->reporter->generate($report));
+
+        self::assertArrayHasKey('path/to/file.xml', $data['files']);
+    }
+
+    #[Test]
     public function itUsesPrettyPrintedJson(): void
     {
         $report = new Report();
@@ -338,7 +378,13 @@ final class JsonReporterTest extends TestCase
      *             message: string,
      *             source: string
      *         }>
-     *     }>
+     *     }>,
+     *     fixing: array{
+     *         files_modified: int,
+     *         fixes_applied: int,
+     *         fixes_skipped: int,
+     *         passes: int
+     *     }
      * }
      */
     private function parseOutput(string $json): array

@@ -6,15 +6,23 @@ namespace DocbookCS\Tests\Unit;
 
 use DocbookCS\Application;
 use DocbookCS\Config\ConfigData;
-use DocbookCS\Diff\Diff;
-use DocbookCS\Diff\DiffParser;
-use DocbookCS\Diff\FileChange;
 use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\ConfigParserException;
 use DocbookCS\Config\SniffEntry;
+use DocbookCS\Diff\DiffBaseResolver;
+use DocbookCS\Diff\DiffChangeset;
+use DocbookCS\Diff\DiffParser;
+use DocbookCS\Diff\FileChange;
+use DocbookCS\Diff\GitDiffProvider;
+use DocbookCS\Diff\UpstreamResolver;
+use DocbookCS\Git\GitClient;
+use DocbookCS\Git\GitException;
+use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Process\NativeProcessRunner;
+use DocbookCS\Process\ProcessResult;
 use DocbookCS\Progress\NullProgress;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
@@ -22,9 +30,17 @@ use DocbookCS\Report\Reporter\CheckstyleReporter;
 use DocbookCS\Report\Reporter\ConsoleReporter;
 use DocbookCS\Report\Reporter\JsonReporter;
 use DocbookCS\Runner\EntityPreprocessor;
-use DocbookCS\Runner\SniffRunner;
+use DocbookCS\Runner\RunMode;
+use DocbookCS\Runner\RunCoordinator;
+use DocbookCS\Runner\RunPlan;
+use DocbookCS\Runner\RunPlanner;
+use DocbookCS\Runner\RunScopeResolver;
+use DocbookCS\Runner\SourceScope;
+use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlProcessingResult;
 use DocbookCS\Sniff\ExceptionNameSniff;
+use DocbookCS\Source\File;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -47,11 +63,28 @@ use PHPUnit\Framework\TestCase;
     CoversClass(PathLoader::class),
     CoversClass(PathMatcher::class),
     CoversClass(Report::class),
+    CoversClass(RunCoordinator::class),
+    CoversClass(RunMode::class),
+    CoversClass(RunPlan::class),
+    CoversClass(RunPlanner::class),
     CoversClass(SniffEntry::class),
-    CoversClass(SniffRunner::class),
     CoversClass(XmlFileProcessor::class),
-    UsesClass(Diff::class),
+    //
+    UsesClass(DiffBaseResolver::class),
+    UsesClass(DiffChangeset::class),
+    UsesClass(DiffPathLoader::class),
+    UsesClass(File::class),
     UsesClass(FileChange::class),
+    UsesClass(GitClient::class),
+    UsesClass(GitDiffProvider::class),
+    UsesClass(GitException::class),
+    UsesClass(NativeProcessRunner::class),
+    UsesClass(ProcessResult::class),
+    UsesClass(RunScopeResolver::class),
+    UsesClass(SourceScope::class),
+    UsesClass(UpstreamResolver::class),
+    UsesClass(ViolationScopeFilter::class),
+    UsesClass(XmlProcessingResult::class),
 ]
 final class ApplicationTest extends TestCase
 {
@@ -87,7 +120,7 @@ final class ApplicationTest extends TestCase
         return stream_get_contents($stream) ?: '';
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itPrintsHelpAndExitsWithZero(): void
     {
         $app = new Application(['docbook-cs', '--help'], $this->stdout, $this->stderr);
@@ -99,7 +132,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itPrintsVersionAndExitsWithZero(): void
     {
         $app = new Application(['docbook-cs', '--version'], $this->stdout, $this->stderr);
@@ -111,7 +144,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itReturnsErrorWhenConfigCannotBeLoaded(): void
     {
         $app = new Application(
@@ -126,7 +159,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Error:', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itHandlesSeparateConfigArgument(): void
     {
         $app = new Application(
@@ -141,7 +174,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Error:', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itAcceptsPathsWithoutCrashing(): void
     {
         $app = new Application(
@@ -155,7 +188,7 @@ final class ApplicationTest extends TestCase
         self::assertContains($exitCode, [0, 1, 2]);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsQuietFlag(): void
     {
         $app = new Application(['docbook-cs', '--quiet'], $this->stdout, $this->stderr);
@@ -165,7 +198,7 @@ final class ApplicationTest extends TestCase
         self::assertContains($exitCode, [0, 1, 2]);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsReportFormats(): void
     {
         foreach (['console', 'json', 'checkstyle'] as $format) {
@@ -181,7 +214,7 @@ final class ApplicationTest extends TestCase
         }
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsColorFlags(): void
     {
         foreach (['--colors', '--no-colors'] as $flag) {
@@ -197,7 +230,7 @@ final class ApplicationTest extends TestCase
         }
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function helpShortCircuitsExecution(): void
     {
         $app = new Application(
@@ -213,7 +246,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function versionShortCircuitsExecution(): void
     {
         $app = new Application(
@@ -229,7 +262,7 @@ final class ApplicationTest extends TestCase
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itResolvesRelativeOverridePathsAgainstCwd(): void
     {
         $app = new Application(
@@ -245,11 +278,11 @@ final class ApplicationTest extends TestCase
         self::assertNotSame(2, $exitCode);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itCatchesRuntimeErrorFromRunner(): void
     {
         $app = new Application(
-            ['docbook-cs', '--config=' . self::INVALID_SNIFF_CONFIG],
+            ['docbook-cs', '--config=' . self::INVALID_SNIFF_CONFIG, self::SCAN_FILE],
             $this->stdout,
             $this->stderr,
         );
@@ -260,7 +293,7 @@ final class ApplicationTest extends TestCase
         self::assertStringContainsString('Runtime error:', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSupportsSeparateReportArgument(): void
     {
         $app = new Application(
@@ -274,7 +307,7 @@ final class ApplicationTest extends TestCase
         self::assertContains($exitCode, [0, 1, 2]);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itPassesThroughAbsoluteOverridePaths(): void
     {
         $app = new Application(
@@ -288,115 +321,7 @@ final class ApplicationTest extends TestCase
         self::assertNotSame(2, $exitCode);
     }
 
-    #[Test]
-    public function itSupportsDiffFromFile(): void
-    {
-        $diffFile = tempnam(sys_get_temp_dir(), 'docbookcs_test_');
-        self::assertIsString($diffFile);
-
-        // Diff that references no XML files the config would normally scan.
-        file_put_contents($diffFile, <<<'DIFF'
-diff --git a/nonexistent.xml b/nonexistent.xml
---- a/nonexistent.xml
-+++ b/nonexistent.xml
-@@ -1,1 +1,2 @@
- line1
-+line2
-DIFF);
-
-        try {
-            $app = new Application(
-                ['docbook-cs', '--config=' . self::VALID_CONFIG, "--diff={$diffFile}"],
-                $this->stdout,
-                $this->stderr,
-            );
-
-            $exitCode = $app->run();
-
-            // No matching files → no violations → exit 0.
-            self::assertSame(0, $exitCode);
-            self::assertSame('', $this->readStream($this->stderr));
-        } finally {
-            unlink($diffFile);
-        }
-    }
-
-    #[Test]
-    public function itSupportsDiffFromStdin(): void
-    {
-        $stdin = fopen('php://memory', 'rb+');
-        self::assertIsResource($stdin);
-
-        fwrite($stdin, <<<'DIFF'
-diff --git a/nonexistent.xml b/nonexistent.xml
---- a/nonexistent.xml
-+++ b/nonexistent.xml
-@@ -1,1 +1,2 @@
- line1
-+line2
-DIFF);
-        rewind($stdin);
-
-        $app = new Application(
-            ['docbook-cs', '--config=' . self::VALID_CONFIG, '--diff'],
-            $this->stdout,
-            $this->stderr,
-            $stdin,
-        );
-
-        $exitCode = $app->run();
-
-        self::assertSame(0, $exitCode);
-        self::assertSame('', $this->readStream($this->stderr));
-    }
-
-    #[Test]
-    public function itSupportsDiffFromStdinWithExplicitDash(): void
-    {
-        $stdin = fopen('php://memory', 'rb+');
-        self::assertIsResource($stdin);
-
-        fwrite($stdin, '');
-        rewind($stdin);
-
-        $app = new Application(
-            ['docbook-cs', '--config=' . self::VALID_CONFIG, '--diff=-'],
-            $this->stdout,
-            $this->stderr,
-            $stdin,
-        );
-
-        $exitCode = $app->run();
-
-        self::assertSame(0, $exitCode);
-    }
-
-    #[Test]
-    public function itReturnsErrorWhenDiffFileCannotBeRead(): void
-    {
-        $app = new Application(
-            ['docbook-cs', '--config=' . self::VALID_CONFIG, '--diff=/nonexistent/path.patch'],
-            $this->stdout,
-            $this->stderr,
-        );
-
-        $exitCode = $app->run();
-
-        self::assertSame(2, $exitCode);
-        self::assertStringContainsString('Error reading diff', $this->readStream($this->stderr));
-    }
-
-    #[Test]
-    public function itIncludesDiffOptionInHelp(): void
-    {
-        $app = new Application(['docbook-cs', '--help'], $this->stdout, $this->stderr);
-
-        $app->run();
-
-        self::assertStringContainsString('--diff', $this->readStream($this->stdout));
-    }
-
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSuppressesProgressWhenQuietFlagIsSet(): void
     {
         $app = new Application(
@@ -411,7 +336,7 @@ DIFF);
         self::assertSame('', $this->readStream($this->stderr));
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itSuppressesProgressForStructuredReportFormats(): void
     {
         foreach (['json', 'checkstyle'] as $format) {
@@ -434,7 +359,7 @@ DIFF);
         }
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itShowsPerformanceWhenPerfFlagIsEnabled(): void
     {
         $app = new Application(
@@ -457,7 +382,7 @@ DIFF);
         self::assertStringContainsString('PERFORMANCE', $output);
     }
 
-    #[Test]
+    #[Test] // TODO: should be feature
     public function itDoesNotShowPerformanceByDefault(): void
     {
         $app = new Application(

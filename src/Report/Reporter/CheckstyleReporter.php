@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\Report;
 
 final class CheckstyleReporter implements ReporterInterface
@@ -18,17 +19,17 @@ final class CheckstyleReporter implements ReporterInterface
         $dom->appendChild($root);
 
         $comment = $dom->createComment(
-            sprintf(' total runtime: %.3fs ', $report->getTotalTime())
+            sprintf(' total runtime: %.3fs ', $report->totalTime)
         );
         $root->appendChild($comment);
 
-        foreach ($report->getFileReports() as $fileReport) {
+        foreach ($report->fileReports as $fileReport) {
             if (!$fileReport->hasViolations()) {
                 continue;
             }
 
             $fileNode = $dom->createElement('file');
-            $fileNode->setAttribute('name', $fileReport->filePath);
+            $fileNode->setAttribute('name', RelativePath::fromWorkingDirectory($fileReport->filePath));
 
             foreach ($fileReport->getViolations() as $violation) {
                 $errorNode = $dom->createElement('error');

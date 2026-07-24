@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\Report;
 
 final class JsonReporter implements ReporterInterface
@@ -12,18 +13,24 @@ final class JsonReporter implements ReporterInterface
     {
         $data = [
             'totals' => [
-                'files_scanned' => $report->getFilesScanned(),
+                'files_scanned' => $report->filesScanned,
                 'violations' => $report->getTotalViolations(),
                 'errors' => $report->getTotalErrors(),
                 'warnings' => $report->getTotalWarnings(),
             ],
             'files' => [],
+            'fixing' => [
+                'files_changed' => $report->filesChanged,
+                'fixes_applied' => $report->fixesApplied,
+                'fixes_skipped' => $report->fixesSkipped,
+                'fixing_passes' => $report->fixingPasses,
+            ],
             'performance' => [
-                'total_runtime_seconds' => $report->getTotalTime(),
+                'total_runtime_seconds' => $report->totalTime,
             ],
         ];
 
-        foreach ($report->getFileReports() as $fileReport) {
+        foreach ($report->fileReports as $fileReport) {
             if (!$fileReport->hasViolations()) {
                 continue;
             }
@@ -38,7 +45,7 @@ final class JsonReporter implements ReporterInterface
                 ];
             }
 
-            $data['files'][$fileReport->filePath] = [
+            $data['files'][RelativePath::fromWorkingDirectory($fileReport->filePath)] = [
                 'violations' => count($violations),
                 'messages' => $violations,
             ];
