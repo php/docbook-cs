@@ -14,8 +14,9 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(DiffParser::class),
+    CoversClass(FileChange::class),
+    //
     UsesClass(Diff::class),
-    UsesClass(FileChange::class),
 ]
 final class DiffParserTest extends TestCase
 {
@@ -177,6 +178,26 @@ DIFF;
     }
 
     #[Test]
+    public function itAnchorsRemovedLinesInTheResultingFile(): void
+    {
+        $diff = <<<'DIFF'
+diff --git a/file.xml b/file.xml
+--- a/file.xml
++++ b/file.xml
+@@ -1,4 +1,3 @@
+ line1
+-removed line
+ line2
+ line3
+DIFF;
+
+        $change = $this->parser->parse($diff)->changeFor('file.xml');
+        self::assertNotNull($change);
+
+        self::assertSame([2], $change->deletionAnchors);
+    }
+
+    #[Test]
     public function itIgnoresTheMissingFinalNewlineMarker(): void
     {
         $diff = <<<'DIFF'
@@ -193,6 +214,26 @@ DIFF;
         $result = $this->lineNumbersByFile($this->parser->parse($diff));
 
         self::assertSame([1, 2], $result['file.xml']);
+    }
+
+    #[Test]
+    public function itAnchorsReplacedLinesWhenTheMissingFinalNewlineMarkerIsPresent(): void
+    {
+        $diff = <<<'DIFF'
+diff --git a/file.xml b/file.xml
+--- a/file.xml
++++ b/file.xml
+@@ -1 +1,2 @@
+-old
+\ No newline at end of file
++new
++second
+DIFF;
+
+        $change = $this->parser->parse($diff)->changeFor('file.xml');
+        self::assertNotNull($change);
+
+        self::assertSame([1], $change->deletionAnchors);
     }
 
     #[Test]

@@ -12,12 +12,15 @@ final class DiffParser
     {
         /** @var array<string, list<int>> $changedLinesByFile */
         $changedLinesByFile = [];
+        /** @var array<string, list<int>> $deletionAnchorsByFile */
+        $deletionAnchorsByFile = [];
         $currentFile = null;
         $deleted = false;
         $newLineNumber = 0;
         $oldLinesRemaining = 0;
         $newLinesRemaining = 0;
         $inHunk = false;
+        $previousLineWasDeletion = false;
 
         foreach (explode("\n", $diff) as $line) {
             if (str_starts_with($line, 'diff --git ')) {
@@ -25,6 +28,7 @@ final class DiffParser
                 $deleted = false;
                 $newLineNumber = 0;
                 $inHunk = false;
+                $previousLineWasDeletion = false;
                 continue;
             }
 
@@ -43,6 +47,7 @@ final class DiffParser
                 $inHunk = false;
                 if ($currentFile !== null && !isset($changedLinesByFile[$currentFile])) {
                     $changedLinesByFile[$currentFile] = [];
+                    $deletionAnchorsByFile[$currentFile] = [];
                 }
                 continue;
             }
@@ -58,6 +63,7 @@ final class DiffParser
                     $newLineNumber = (int) $m[2];
                     $newLinesRemaining = isset($m[3]) ? (int) $m[3] : 1;
                     $inHunk = true;
+                    $previousLineWasDeletion = false;
                 }
                 continue;
             }
@@ -70,24 +76,36 @@ final class DiffParser
                 $changedLinesByFile[$currentFile][] = $newLineNumber;
                 $newLineNumber++;
                 $newLinesRemaining--;
+                $previousLineWasDeletion = false;
             } elseif (str_starts_with($line, '-')) {
+                if (!$previousLineWasDeletion) {
+                    $deletionAnchorsByFile[$currentFile][] = max(1, $newLineNumber);
+                }
+
                 $oldLinesRemaining--;
+                $previousLineWasDeletion = true;
             } elseif (str_starts_with($line, ' ')) {
                 // Context line — present in both old and new file.
                 $newLineNumber++;
                 $oldLinesRemaining--;
                 $newLinesRemaining--;
+                $previousLineWasDeletion = false;
             }
 
             if ($oldLinesRemaining === 0 && $newLinesRemaining === 0) {
                 $inHunk = false;
+                $previousLineWasDeletion = false;
             }
         }
 
         $fileChanges = [];
 
         foreach ($changedLinesByFile as $filePath => $lineNumbers) {
-            $fileChanges[] = new FileChange($filePath, $lineNumbers);
+            $fileChanges[] = new FileChange(
+                $filePath,
+                $lineNumbers,
+                $deletionAnchorsByFile[$filePath],
+            );
         }
 
         return new Diff($fileChanges);

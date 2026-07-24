@@ -14,7 +14,7 @@ use DocbookCS\Application;
 
     foreach ($candidates as $file) {
         if (!is_file($file)) {
-          continue;
+            continue;
         }
 
         require $file;
@@ -25,4 +25,4 @@ use DocbookCS\Application;
     exit(2);
 })();
 
-new Application($argv ?? [])->run();
+exit(Application::withArguments($argv ?? [])->run());
