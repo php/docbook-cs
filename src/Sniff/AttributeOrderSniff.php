@@ -13,6 +13,8 @@ namespace DocbookCS\Sniff;
  */
 final class AttributeOrderSniff extends AbstractSniff
 {
+    private const string REPORTING_MESSAGE = 'Element <%s>: xml:id should appear before xmlns attributes.';
+
     public function getCode(): string
     {
         return 'DocbookCS.AttributeOrder';
@@ -84,10 +86,7 @@ final class AttributeOrderSniff extends AbstractSniff
             $violations[] = $this->createViolation(
                 $filePath,
                 $line,
-                sprintf(
-                    'Element <%s>: xml:id should appear before xmlns attributes.',
-                    $tagName,
-                ),
+                sprintf(self::REPORTING_MESSAGE, $tagName),
             );
         }
     }

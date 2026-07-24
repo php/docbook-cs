@@ -14,6 +14,8 @@ namespace DocbookCS\Sniff;
  */
 final class ExceptionNameSniff extends AbstractSniff
 {
+    private const string REPORTING_MESSAGE = '"%s" is wrapped in <classname> but should use <exceptionname>.';
+
     /**
      * Default suffixes that indicate the class is an exception or error.
      */
@@ -56,10 +58,7 @@ final class ExceptionNameSniff extends AbstractSniff
                 $violations[] = $this->createViolation(
                     $filePath,
                     $node->getLineNo(),
-                    sprintf(
-                        '"%s" is wrapped in <classname> but should use <exceptionname>.',
-                        $text,
-                    ),
+                    sprintf(self::REPORTING_MESSAGE, $text),
                 );
             }
         }

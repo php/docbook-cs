@@ -6,6 +6,8 @@ namespace DocbookCS\Sniff;
 
 final class SimparaSniff extends AbstractSniff
 {
+    private const string REPORTING_MESSAGE = '<para> contains only inline content and should be <simpara>.';
+
     private const array SIMPARA_ALLOWED = [
         'abbrev',
         'acronym',
@@ -127,7 +129,7 @@ final class SimparaSniff extends AbstractSniff
                 $violations[] = $this->createViolation(
                     $filePath,
                     $para->getLineNo(),
-                    '<para> contains only inline content and should be <simpara>.',
+                    self::REPORTING_MESSAGE,
                 );
             }
         }
