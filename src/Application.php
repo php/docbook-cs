@@ -23,16 +23,11 @@ final class Application
 
     private const string DEFAULT_CONFIG = 'docbookcs.xml';
 
-    /** @var list<string> */
-    private array $argv;
-
     /** @var resource */
     private $stdout;
 
     /** @var resource */
     private $stderr;
-
-    private ?string $stdin;
 
     /**
      * @param list<string> $argv
@@ -67,15 +62,13 @@ final class Application
      * @param ?resource $stderr
      */
     public function __construct(
-        array $argv,
+        private readonly array $argv,
         mixed $stdout = null,
         mixed $stderr = null,
-        ?string $unifiedDiff = null,
+        private readonly ?string $unifiedDiff = null,
     ) {
-        $this->argv = $argv;
         $this->stdout = $stdout ?? STDOUT;
         $this->stderr = $stderr ?? STDERR;
-        $this->stdin = $unifiedDiff;
     }
 
     /**
@@ -112,7 +105,7 @@ final class Application
         }
 
         try {
-            $runPlan = new RunPlanner($config, $options['wide'])->plan($options['paths'], $this->stdin);
+            $runPlan = new RunPlanner($config, $options['wide'])->plan($options['paths'], $this->unifiedDiff);
         } catch (\Throwable $e) {
             $this->writeError('Error resolving input: ' . $e->getMessage() . PHP_EOL);
 
