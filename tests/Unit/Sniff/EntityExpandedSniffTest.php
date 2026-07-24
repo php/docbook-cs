@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DocbookCS\Tests\Integration\Sniff;
+namespace DocbookCS\Tests\Unit\Sniff;
 
 use DocbookCS\Report\Violation;
 use DocbookCS\Runner\EntityExpansionMarker;

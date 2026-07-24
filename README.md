@@ -63,6 +63,26 @@ Register it in your config:
 <sniff class="Acme\DocbookSniffs\MySniff" />
 ```
 
+## CLI Scope
+
+By default, DocbookCS checks the current Git diff from its upstream branch point
+through the working tree. Alternatively, a unified diff can be piped or file and
+directory paths passed. The inspection scope is limited to the given diff or the
+full contents of the given file paths.
+
+XML references are expanded by default, but reported violations remain limited
+to the given scope. With `--wide`, every file inferred from paths or a diff is
+checked as a whole, and referenced `SYSTEM` XML files are recursively included.
+
+| Input      | `--wide` | Full File(s) | References |
+|------------|---------:|-------------:|-----------:|
+| none       |       no |           no |         no |
+| none       |      yes |          yes |        yes |
+| path       |       no |          yes |         no |
+| path       |      yes |          yes |        yes |
+| piped diff |       no |           no |         no |
+| piped diff |      yes |          yes |        yes |
+
 ## License
 
 Apache 2.0
