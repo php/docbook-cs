@@ -42,11 +42,18 @@ final class EntityPreprocessor
             $content = preg_replace_callback(
                 '/<!--[\s\S]*?-->|<!\[CDATA\[[\s\S]*?\]\]>|<\?[\s\S]*?\?>|' . self::ENTITY_PATTERN . '/',
                 function (array $matches) use (&$changed, $markXmlExpansions): string {
-                    if (
-                        str_starts_with($matches[0], '<!--')
-                        || str_starts_with($matches[0], '<![CDATA[')
-                        || str_starts_with($matches[0], '<?')
-                    ) {
+                    // Entity-like text inside comments is literal.
+                    if (str_starts_with($matches[0], '<!--')) {
+                        return $matches[0];
+                    }
+
+                    // Entity-like text inside CDATA is literal.
+                    if (str_starts_with($matches[0], '<![CDATA[')) {
+                        return $matches[0];
+                    }
+
+                    // Entity-like text inside processing instructions is literal.
+                    if (str_starts_with($matches[0], '<?')) {
                         return $matches[0];
                     }
 

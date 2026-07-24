@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Report\Reporter;
 
+use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\ConsoleReporter;
-use DocbookCS\Report\Severity;
-use DocbookCS\Report\Violation;
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -18,6 +21,9 @@ use PHPUnit\Framework\TestCase;
     CoversClass(FileReport::class),
     CoversClass(Report::class),
     CoversClass(Violation::class),
+    //
+    UsesClass(RelativePath::class),
+    UsesClass(SourceRange::class),
 ]
 final class ConsoleReporterTest extends TestCase
 {
@@ -35,7 +41,7 @@ final class ConsoleReporterTest extends TestCase
         Severity $severity = Severity::ERROR,
         string $filePath = 'filepath.xml',
     ): Violation {
-        return new Violation($sniffCode, $filePath, $line, $message, $severity);
+        return new Violation($sniffCode, $filePath, $line, 0, 0, $message, severity: $severity);
     }
 
     #[Test]
@@ -80,6 +86,20 @@ final class ConsoleReporterTest extends TestCase
     public function itShowsFilePathInHeader(): void
     {
         $fileReport = new FileReport('src/broken.xml');
+        $fileReport->addViolation($this->createViolation());
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        $output = $this->reporter->generate($report);
+
+        self::assertStringContainsString('FILE: src/broken.xml', $output);
+    }
+
+    #[Test]
+    public function itRendersAbsoluteFilePathRelativeToWorkingDirectory(): void
+    {
+        $fileReport = new FileReport((getcwd() ?: '') . '/src/broken.xml');
         $fileReport->addViolation($this->createViolation());
 
         $report = new Report();
