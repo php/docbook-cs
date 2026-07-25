@@ -62,7 +62,7 @@ final class XmlFileProcessorPipelineTest extends TestCase
         );
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itHandlesEntitiesWithoutParseErrors(): void
     {
         $xml = $this->xml(
@@ -88,7 +88,7 @@ final class XmlFileProcessorPipelineTest extends TestCase
         self::assertFalse($fileReport->hasFinalViolations());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itUsesCustomPreprocessor(): void
     {
         $xml = $this->xml('<chapter><simpara>&custom.entity;</simpara></chapter>');

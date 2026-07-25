@@ -92,7 +92,7 @@ final class SniffRunnerTest extends TestCase
         );
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itProcessesFilesWithoutViolations(): void
     {
         $config = $this->createConfig();
@@ -105,7 +105,7 @@ final class SniffRunnerTest extends TestCase
         self::assertCount(2, $report->fileReports);
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itUsesOverridePathsWhenProvided(): void
     {
         $config = $this->createConfig();
@@ -118,7 +118,7 @@ final class SniffRunnerTest extends TestCase
         self::assertSame(1, $report->getScannedFilesCount());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itCallsProgressMethods(): void
     {
         $progress = $this->createMock(ProgressInterface::class);
@@ -139,7 +139,7 @@ final class SniffRunnerTest extends TestCase
         $runner->runWithMetrics(new RunPlanner($config)->planPaths($config->getIncludePaths()));
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itAddsFileReportsForFilesWithViolations(): void
     {
         $sniff = new class implements SniffInterface {
@@ -176,7 +176,7 @@ final class SniffRunnerTest extends TestCase
         self::assertTrue($report->hasFinalViolations());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itStoresAbsolutePathsInFileReports(): void
     {
         $sniff = new class implements SniffInterface {
@@ -216,7 +216,7 @@ final class SniffRunnerTest extends TestCase
         }
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itPassesPropertiesToSniffs(): void
     {
         $sniffClass = new class implements SniffInterface {
@@ -246,7 +246,7 @@ final class SniffRunnerTest extends TestCase
         self::assertSame('someValue', $sniffClass::$captured);
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itThrowsWhenSniffClassDoesNotExist(): void
     {
         $config = $this->createConfig(sniffs: [new SniffEntry('NonExistent\\FakeSniff')]);
@@ -259,7 +259,7 @@ final class SniffRunnerTest extends TestCase
         $runner->runWithMetrics(new RunPlanner($config)->planPaths($config->getIncludePaths()));
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itThrowsWhenClassDoesNotImplementSniffInterface(): void
     {
         $config = $this->createConfig(sniffs: [new SniffEntry(\stdClass::class)]);
@@ -272,7 +272,7 @@ final class SniffRunnerTest extends TestCase
         $runner->runWithMetrics(new RunPlanner($config)->planPaths($config->getIncludePaths()));
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itFiltersFilesToOnlyThoseInTheDiff(): void
     {
         $config = $this->createConfig();
@@ -284,7 +284,7 @@ final class SniffRunnerTest extends TestCase
         self::assertSame(1, $report->getScannedFilesCount());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itScansNoFilesWhenDiffContainsNoMatchingPaths(): void
     {
         $config = $this->createConfig();
@@ -296,7 +296,7 @@ final class SniffRunnerTest extends TestCase
         self::assertSame(0, $report->getScannedFilesCount());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itMatchesWhenDiffPathEqualsDiscoveredPath(): void
     {
         $config = $this->createConfig();
@@ -310,7 +310,7 @@ final class SniffRunnerTest extends TestCase
         self::assertSame(1, $report->getScannedFilesCount());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itScansAllFilesWhenNoDiffIsGiven(): void
     {
         $config = $this->createConfig();
@@ -321,7 +321,7 @@ final class SniffRunnerTest extends TestCase
         self::assertSame(2, $report->getScannedFilesCount());
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itScansLexicallyEquivalentWideTargetsOnlyOnce(): void
     {
         $directory = sys_get_temp_dir() . '/docbook-cs-scan-' . bin2hex(random_bytes(6));
@@ -366,7 +366,7 @@ final class SniffRunnerTest extends TestCase
         }
     }
 
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itReportsNoViolationsForFilesInDiffWithoutAddedLines(): void
     {
         $sniff = new class implements SniffInterface {
