@@ -79,15 +79,7 @@ final class FixApplier
         $previous = null;
 
         foreach ($plan->fixes as $fix) {
-            if (
-                $fix->filePath !== $file->path
-                || $fix->sniffCode !== $first->sniffCode
-                || $fix->beginOffset < 0
-                || $fix->untilOffset < $fix->beginOffset
-                || $fix->untilOffset > $contentLength
-                || ($previous !== null && self::overlaps($previous, $fix))
-                || $this->conflictsWithAcceptedFix($fix, $acceptedFixes)
-            ) {
+            if (!$this->canAcceptFix($file, $contentLength, $first, $previous, $fix, $acceptedFixes)) {
                 return false;
             }
 
@@ -186,5 +178,23 @@ final class FixApplier
         }
 
         return $a->beginOffset < $b->untilOffset && $b->beginOffset < $a->untilOffset;
+    }
+
+    /** @param list<Fix> $acceptedFixes */
+    private function canAcceptFix(
+        File $file,
+        int $contentLength,
+        Fix $first,
+        ?Fix $previous,
+        Fix $fix,
+        array $acceptedFixes
+    ): bool {
+        return $fix->filePath === $file->path
+            && $fix->sniffCode === $first->sniffCode
+            && $fix->beginOffset >= 0
+            && $fix->untilOffset >= $fix->beginOffset
+            && $fix->untilOffset <= $contentLength
+            && ($previous === null || !self::overlaps($previous, $fix))
+            && !$this->conflictsWithAcceptedFix($fix, $acceptedFixes);
     }
 }
