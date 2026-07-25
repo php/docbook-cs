@@ -6,6 +6,7 @@ namespace DocbookCS\Sniff;
 
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Source\File;
+use DocbookCS\Violation\Violation;
 
 /**
  * A sniff receives a DOMDocument (already loaded) and its source file,
@@ -25,7 +26,7 @@ interface SniffInterface
     /**
      * Apply the sniff to the given document.
      *
-     * @return list<\DocbookCS\Violation\Violation>
+     * @return list<Violation>
      */
     public function process(\DOMDocument $document, File $file): array;
 
