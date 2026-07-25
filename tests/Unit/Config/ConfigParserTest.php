@@ -8,8 +8,10 @@ use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\ConfigParserException;
 use DocbookCS\Config\SniffEntry;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
@@ -17,6 +19,8 @@ use PHPUnit\Framework\TestCase;
     CoversClass(ConfigParser::class),
     CoversClass(ConfigParserException::class),
     CoversClass(SniffEntry::class),
+    //
+    UsesClass(XmlParser::class),
 ]
 final class ConfigParserTest extends TestCase
 {

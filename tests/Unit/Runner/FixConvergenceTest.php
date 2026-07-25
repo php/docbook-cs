@@ -33,6 +33,7 @@ use DocbookCS\Tests\Support\Fix\LineBreakFixer;
 use DocbookCS\Tests\Support\Fix\ToggleElementFixer;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -65,6 +66,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(SourceRange::class),
     UsesClass(Violation::class),
     UsesClass(ViolationScopeFilter::class),
+    UsesClass(XmlParser::class),
 ]
 final class FixConvergenceTest extends TestCase
 {

@@ -37,6 +37,7 @@ use DocbookCS\Source\Line;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -74,6 +75,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(UpstreamResolver::class),
     UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlFileProcessor::class),
+    UsesClass(XmlParser::class),
 ]
 final class SniffRunnerTest extends TestCase
 {

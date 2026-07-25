@@ -10,6 +10,7 @@ use DocbookCS\Sniff\Fixable;
 use DocbookCS\Sniff\SniffInterface;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 
 final readonly class XmlSniffRunner
 {
@@ -18,7 +19,8 @@ final readonly class XmlSniffRunner
         private RunMode $mode,
         private array $sniffs,
         private EntityPreprocessor $preprocessor = new EntityPreprocessor(),
-        private ViolationScopeFilter $violationFilter = new ViolationScopeFilter()
+        private XmlParser $xmlParser = new XmlParser(),
+        private ViolationScopeFilter $violationFilter = new ViolationScopeFilter(),
     ) {
     }
 
@@ -94,27 +96,6 @@ final readonly class XmlSniffRunner
     {
         $content = $this->preprocessor->processForParsing($file->content);
 
-        $previousUseErrors = libxml_use_internal_errors(true);
-        libxml_clear_errors();
-
-        try {
-            $document = new \DOMDocument();
-            $document->preserveWhiteSpace = true;
-
-            // LIBXML_NONET prevents network access.
-            // No LIBXML_DTDLOAD needed since we stripped the DOCTYPE.
-            $loaded = $document->loadXML($content, LIBXML_NONET);
-
-            if ($loaded) {
-                return $document;
-            }
-
-            $error = libxml_get_errors()[0];
-        } finally {
-            libxml_clear_errors();
-            libxml_use_internal_errors($previousUseErrors);
-        }
-
-        return $error;
+        return $this->xmlParser->parseDocument($content);
     }
 }
