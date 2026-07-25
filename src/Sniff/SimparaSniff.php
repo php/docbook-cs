@@ -220,7 +220,7 @@ final class SimparaSniff extends AbstractSniff implements Fixable
     {
         preg_match_all(
             self::PARA_TAG_PATTERN,
-            $this->maskNonElementMarkup($file->content),
+            $file->contentWithNonElementMarkupMasked(),
             $matches,
             PREG_OFFSET_CAPTURE,
         );
