@@ -107,6 +107,16 @@ final class FileReport
             : 0;
     }
 
+    public function getFixedErrorCount(): int
+    {
+        return $this->getFixedSeverityCount(Severity::ERROR);
+    }
+
+    public function getFixedWarningCount(): int
+    {
+        return $this->getFixedSeverityCount(Severity::WARNING);
+    }
+
     public function recordFixingPass(): void
     {
         $this->fixingPasses++;
@@ -215,8 +225,26 @@ final class FileReport
             return 0;
         }
 
+        return $this->countViolationSeverity($this->finalViolations, $severity);
+    }
+
+    private function getFixedSeverityCount(Severity $severity): int
+    {
+        if ($this->fixingPasses === 0 || !isset($this->foundViolations, $this->finalViolations)) {
+            return 0;
+        }
+
+        $foundViolations = $this->countViolationSeverity($this->foundViolations, $severity);
+        $finalViolations = $this->countViolationSeverity($this->finalViolations, $severity);
+
+        return max(0, $foundViolations - $finalViolations);
+    }
+
+    /** @param list<Violation> $violations */
+    private function countViolationSeverity(array $violations, Severity $severity): int
+    {
         return array_filter(
-            $this->finalViolations,
+            $violations,
             static fn(Violation $violation): bool => $violation->severity === $severity,
         ) |> count(...);
     }

@@ -37,7 +37,12 @@ final class ConsoleProgress implements ProgressInterface
             return;
         }
 
-        $this->write($this->dim(sprintf('Scanning %d file(s)...', $totalFiles)) . PHP_EOL);
+        $suffix = $totalFiles === 1 ? 'file' : 'files';
+        $formattedTotal = number_format($totalFiles);
+
+        $message = sprintf('Scanning %s %s...', $formattedTotal, $suffix);
+
+        $this->write($this->dim($message) . PHP_EOL);
         $this->drawBar(0, '');
     }
 

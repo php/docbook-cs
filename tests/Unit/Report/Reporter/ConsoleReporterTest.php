@@ -61,7 +61,7 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString('OK -- 1 file(s) scanned, no violations found.', $output);
+        self::assertStringContainsString('OK -- 1 file scanned, no violations found.', $output);
         self::assertStringNotContainsString('FIXING', $output);
     }
 
@@ -74,13 +74,20 @@ final class ConsoleReporterTest extends TestCase
         $violation = $this->createViolation();
         $fileReport->addFoundViolations([$violation]);
         $fileReport->addFinalViolations([]);
+        $fileReport->markChanged();
         $fileReport->recordFixingPass();
 
         $report->addFileReport($fileReport);
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString('OK -- 1 file(s) scanned, no violations remaining.', $output);
+        self::assertStringContainsString(
+            'FIXED 1 violation [1 error, 0 warnings] in 1 file, no violations remaining.',
+            $output,
+        );
+        self::assertStringNotContainsString('REMAINING', $output);
+        self::assertStringNotContainsString('OK --', $output);
+        self::assertStringNotContainsString('passes)', $output);
     }
 
     #[Test]
@@ -96,7 +103,8 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString('REMAINING 1 violation(s) (1 error(s), 0 warning(s)) in 1 file(s).', $output);
+        self::assertStringContainsString('REMAINING 1 violation [1 error, 0 warnings] in 1 file.', $output);
+        self::assertStringNotContainsString('passes)', $output);
     }
 
     #[Test]
@@ -113,7 +121,7 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString('FOUND 2 violation(s) (1 error(s), 1 warning(s)) in 1 file(s).', $output);
+        self::assertStringContainsString('FOUND 2 violations [1 error, 1 warning] in 1 file.', $output);
     }
 
     #[Test]
@@ -130,13 +138,13 @@ final class ConsoleReporterTest extends TestCase
         $output = $this->reporter->generate($report);
 
         self::assertStringContainsString(
-            'REMAINING 1 violation(s) (1 error(s), 0 warning(s)) in 1 file(s).',
+            'REMAINING 1 violation [1 error, 0 warnings] in 1 file.',
             $output,
         );
     }
 
     #[Test]
-    public function itShowsFixingStatistics(): void
+    public function itShowsFixedViolationsAndAdditionalPasses(): void
     {
         $report = new Report();
 
@@ -144,13 +152,20 @@ final class ConsoleReporterTest extends TestCase
         $first->markChanged();
         $first->recordFixingPass();
         $first->recordFixingPass();
-        $first->addFoundViolations(array_fill(0, 4, $this->createViolation()));
-        $first->addFinalViolations([$this->createViolation()]);
+        $first->addFoundViolations([
+            ...array_fill(0, 3, $this->createViolation()),
+            $this->createViolation(severity: Severity::WARNING),
+        ]);
+        $first->addFinalViolations([$this->createViolation(severity: Severity::WARNING)]);
 
         $second = new FileReport('second.xml');
         $second->markChanged();
         $second->recordFixingPass();
-        $second->addFoundViolations(array_fill(0, 3, $this->createViolation()));
+        $second->addFoundViolations([
+            $this->createViolation(),
+            $this->createViolation(severity: Severity::WARNING),
+            $this->createViolation(severity: Severity::WARNING),
+        ]);
         $second->addFinalViolations([$this->createViolation()]);
 
         $report->addFileReport($first);
@@ -158,16 +173,31 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        $expected = implode(PHP_EOL, [
-            'FIXING',
-            str_repeat('-', 40),
-            sprintf(' %-40s %d', 'Files changed', 2),
-            sprintf(' %-40s %d', 'Fixes applied', 5),
-            sprintf(' %-40s %d', 'Fixes skipped', 2),
-            sprintf(' %-40s %d', 'Fixing passes', 3),
-        ]);
+        self::assertStringContainsString(
+            'FIXED 5 violations [3 errors, 2 warnings] in 2 files (3 passes).',
+            $output,
+        );
+        self::assertStringNotContainsString('FIXING', $output);
+    }
 
-        self::assertStringContainsString($expected, $output);
+    #[Test]
+    public function itFormatsLargeSummaryCounts(): void
+    {
+        $fileReport = new FileReport('fixed.xml');
+        $fileReport->markChanged();
+        $fileReport->recordFixingPass();
+        $fileReport->addFoundViolations(array_fill(0, 1_001, $this->createViolation()));
+        $fileReport->addFinalViolations([$this->createViolation()]);
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        $output = $this->reporter->generate($report);
+
+        self::assertStringContainsString(
+            'FIXED 1,000 violations [1,000 errors, 0 warnings] in 1 file.',
+            $output,
+        );
     }
 
     #[Test]
@@ -366,7 +396,7 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString('3 file(s) scanned', $output);
+        self::assertStringContainsString('3 files scanned', $output);
     }
 
     #[Test]
@@ -387,7 +417,7 @@ final class ConsoleReporterTest extends TestCase
 
         $output = $this->reporter->generate($report);
 
-        self::assertStringContainsString('in 2 file(s).', $output);
+        self::assertStringContainsString('in 2 files.', $output);
     }
 
     #[Test]

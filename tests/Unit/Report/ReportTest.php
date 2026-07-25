@@ -355,6 +355,8 @@ final class ReportTest extends TestCase
         self::assertSame(7, $report->getFoundViolationsCount());
         self::assertSame(5, $report->getAppliedFixesCount());
         self::assertSame(2, $report->getSkippedFixesCount());
+        self::assertSame(5, $report->getFixedErrorCount());
+        self::assertSame(0, $report->getFixedWarningCount());
         self::assertSame(3, $report->getFixingPassesCount());
     }
 

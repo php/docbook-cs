@@ -88,6 +88,22 @@ final class Report
         ));
     }
 
+    public function getFixedErrorCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getFixedErrorCount(),
+            $this->fileReports,
+        ));
+    }
+
+    public function getFixedWarningCount(): int
+    {
+        return array_sum(array_map(
+            static fn(FileReport $fileReport): int => $fileReport->getFixedWarningCount(),
+            $this->fileReports,
+        ));
+    }
+
     public function hasFixingResults(): bool
     {
         return array_any($this->fileReports, static fn(FileReport $fileReport): bool => $fileReport->fixingPasses > 0);

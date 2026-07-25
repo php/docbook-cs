@@ -43,9 +43,19 @@ final class ConsoleProgressTest extends TestCase
     {
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
-        $progress->start(42);
+        $progress->start(1_042);
 
-        self::assertStringContainsString('42 file(s)', $this->outputConsole());
+        self::assertStringContainsString('1,042 files', $this->outputConsole());
+    }
+
+    #[Test]
+    public function itUsesTheSingularFileLabel(): void
+    {
+        $progress = new ConsoleProgress($this->stream, useColors: false);
+
+        $progress->start(1);
+
+        self::assertStringContainsString('1 file', $this->outputConsole());
     }
 
     #[Test]
