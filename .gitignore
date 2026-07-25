@@ -1,3 +1,7 @@
+/.phpcs-cache.json
+/.phpstan.cache/
+/.phpunit.cache/
+
 /vendor/
 /composer.lock
 
