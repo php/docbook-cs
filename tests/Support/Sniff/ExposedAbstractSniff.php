@@ -29,4 +29,9 @@ final class ExposedAbstractSniff extends AbstractSniff
     {
         return $this->severity;
     }
+
+    public function exposeMaskNonElementMarkup(string $source): string
+    {
+        return $this->maskNonElementMarkup($source);
+    }
 }
