@@ -8,6 +8,10 @@ use DocbookCS\Fix\Fixer\MixedUnionFixer;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\SourceRange;
 
+/**
+ * @extends AbstractSniff<string>
+ * @implements Fixable<string>
+ */
 final class MixedUnionSniff extends AbstractSniff implements Fixable
 {
     public static function getCode(): string

@@ -36,7 +36,7 @@ final class MixedUnionSniffTest extends TestCase
         self::assertCount(1, $violations);
         self::assertSame('DocbookCS.MixedUnion', $violations[0]->sniffCode);
         self::assertStringContainsString('union containing mixed', $violations[0]->message);
-        self::assertSame('<type>mixed</type>', $violations[0]->replacement);
+        self::assertSame('<type>mixed</type>', $violations[0]->fixerData);
         self::assertSame(
             '<type class="union"><type>mixed</type><type>null</type></type>',
             $violations[0]->rangeOne()->content,

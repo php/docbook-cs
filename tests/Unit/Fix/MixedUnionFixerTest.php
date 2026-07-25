@@ -7,6 +7,7 @@ namespace DocbookCS\Tests\Unit\Fix;
 use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixApplier;
 use DocbookCS\Fix\Fixer\MixedUnionFixer;
+use DocbookCS\Fix\FixerException;
 use DocbookCS\Fix\FixResult;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\MixedUnionDetector;
@@ -60,5 +61,23 @@ final class MixedUnionFixerTest extends TestCase
             $result->file->content,
         );
         self::assertSame(1, $result->applied);
+    }
+
+    #[Test]
+    public function itRejectsUnexpectedFixerData(): void
+    {
+        $content = '<type class="union"><type>mixed</type><type>int</type></type>';
+        $violation = new Violation(
+            'DocbookCS.MixedUnion',
+            'file.xml',
+            'Message',
+            [new SourceRange(1, 0, strlen($content), $content)],
+            fixerData: ['replacement' => '<type>mixed</type>'],
+        );
+
+        $this->expectException(FixerException::class);
+
+        // Bypass the PHPStan generic contract to exercise the runtime boundary.
+        new \ReflectionMethod(MixedUnionFixer::class, 'process')->invoke(new MixedUnionFixer(), $violation);
     }
 }

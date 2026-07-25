@@ -57,6 +57,22 @@ final class AffectedRangesTest extends TestCase
         ]);
     }
 
+    #[Test]
+    public function itTransportsArbitraryFixerData(): void
+    {
+        $fixerData = ['replacement' => 'int', 'attributes' => ['role' => 'return']];
+
+        $violation = new Violation(
+            'Test',
+            'file.xml',
+            'Message',
+            [new SourceRange(1, 0, 1)],
+            fixerData: $fixerData,
+        );
+
+        self::assertSame($fixerData, $violation->fixerData);
+    }
+
     #[Test, DataProvider('invalidSourceRanges')]
     public function itRejectsInvalidSourceRanges(int $line, int $beginOffset, int $untilOffset, ?string $content): void
     {
