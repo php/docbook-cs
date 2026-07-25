@@ -123,16 +123,16 @@ final class EntityResolver
      */
     private function resolveFile(string $filePath, array &$visited, array &$paths, ?string $originEntity = null): array
     {
-        if (isset($visited[$filePath]) || !is_readable($filePath)) {
+        if (isset($visited[$filePath])) {
             return [];
         }
 
         $visited[$filePath] = true;
 
-        $content = file_get_contents($filePath);
+        $content = @file_get_contents($filePath);
 
         if ($content === false) {
-            return []; // @codeCoverageIgnore
+            return [];
         }
 
         $entities = $this->extractEntities($content, $filePath, $visited, $paths);
