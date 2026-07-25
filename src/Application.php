@@ -14,8 +14,9 @@ use DocbookCS\Report\Reporter\CheckstyleReporter;
 use DocbookCS\Report\Reporter\ConsoleReporter;
 use DocbookCS\Report\Reporter\JsonReporter;
 use DocbookCS\Report\Reporter\ReporterInterface;
+use DocbookCS\Runner\RunCoordinator;
+use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunPlanner;
-use DocbookCS\Runner\SniffRunner;
 
 final class Application
 {
@@ -104,7 +105,11 @@ final class Application
         }
 
         try {
-            $runPlan = new RunPlanner($config, $options['wide'])->plan($options['paths'], $this->unifiedDiff);
+            $runPlan = new RunPlanner(
+                config: $config,
+                mode: RunMode::fromFixFlag($options['fix']),
+                wide: $options['wide'],
+            )->plan($options['paths'], $this->unifiedDiff);
         } catch (\Throwable $e) {
             $this->writeError('Error resolving input: ' . $e->getMessage() . PHP_EOL);
 
@@ -114,8 +119,7 @@ final class Application
         $progress = $this->createProgress($options);
 
         try {
-            $runner = new SniffRunner($progress);
-            $report = $runner->run($runPlan);
+            $report = new RunCoordinator($progress)->run($runPlan);
         } catch (\Throwable $e) {
             $this->writeError('Runtime error: ' . $e->getMessage() . PHP_EOL);
 
@@ -140,12 +144,13 @@ final class Application
      *     config: string,
      *     report: string,
      *     colors: bool,
+     *     fix: bool,
+     *     wide: bool,
      *     quiet: bool,
      *     paths: list<string>,
-     *     wide: bool,
      *     perf: bool,
      * }
-     * @throws \InvalidArgumentException for unsupported options.
+     * @throws \InvalidArgumentException for unsupported or removed options.
      */
     private function parseArgv(): array
     {
@@ -155,9 +160,10 @@ final class Application
             'config' => self::DEFAULT_CONFIG,
             'report' => 'console',
             'colors' => $this->detectColorSupport(),
+            'fix' => false,
+            'wide' => false,
             'quiet' => false,
             'paths' => [],
-            'wide' => false,
             'perf' => false,
         ];
 
@@ -224,6 +230,12 @@ final class Application
 
             if ($arg === '--perf') {
                 $result['perf'] = true;
+                $i++;
+                continue;
+            }
+
+            if ($arg === '--fix') {
+                $result['fix'] = true;
                 $i++;
                 continue;
             }
@@ -351,6 +363,8 @@ Options:
   --report=<format>     Output format: console (default), checkstyle, json.
   --colors              Force ANSI color output.
   --no-colors           Disable ANSI color output.
+  --fix                 Automatically fix violations when fixers exist
+                        (experimental).
   --wide                Check whole selected files and recursively include
                         referenced XML files.
 
@@ -362,9 +376,14 @@ Examples:
   docbook-cs
   docbook-cs --config=myconfig.xml reference/
   docbook-cs --report=checkstyle --no-colors > report.xml
+  docbook-cs . --fix
+  docbook-cs reference/
   docbook-cs reference/strings/functions/strlen.xml
+  docbook-cs reference/strings/functions/strlen.xml  --wide
+  docbook-cs reference/strings/functions/strlen.xml  --wide --fix
   git diff HEAD | docbook-cs
-  git diff HEAD | docbook-cs --wide --report=checkstyle
+  git diff HEAD | docbook-cs --wide
+  git diff HEAD | docbook-cs --wide --fix --report=checkstyle
 
 HELP;
 

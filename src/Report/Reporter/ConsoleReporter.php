@@ -6,7 +6,7 @@ namespace DocbookCS\Report\Reporter;
 
 use DocbookCS\RelativePath;
 use DocbookCS\Report\Report;
-use DocbookCS\Report\Severity;
+use DocbookCS\Violation\Severity;
 
 final class ConsoleReporter implements ReporterInterface
 {
@@ -37,7 +37,7 @@ final class ConsoleReporter implements ReporterInterface
             foreach ($fileReport->getViolations() as $violation) {
                 $output .= sprintf(
                     ' %4d | %s | %s | %s',
-                    $violation->line,
+                    $violation->rangeOne()->line,
                     $this->formatSeverity($violation->severity),
                     $this->dim($violation->sniffCode),
                     $violation->message,

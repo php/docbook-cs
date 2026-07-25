@@ -32,7 +32,7 @@ final class JsonReporter implements ReporterInterface
             $violations = [];
             foreach ($fileReport->getViolations() as $violation) {
                 $violations[] = [
-                    'line' => $violation->line,
+                    'line' => $violation->rangeOne()->line,
                     'severity' => $violation->severity,
                     'message' => $violation->message,
                     'source' => $violation->sniffCode,

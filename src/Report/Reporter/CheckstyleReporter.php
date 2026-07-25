@@ -33,7 +33,7 @@ final class CheckstyleReporter implements ReporterInterface
 
             foreach ($fileReport->getViolations() as $violation) {
                 $errorNode = $dom->createElement('error');
-                $errorNode->setAttribute('line', (string) $violation->line);
+                $errorNode->setAttribute('line', (string) $violation->rangeOne()->line);
                 $errorNode->setAttribute('severity', $violation->severity->value);
                 $errorNode->setAttribute('message', $violation->message);
                 $errorNode->setAttribute('source', $violation->sniffCode);

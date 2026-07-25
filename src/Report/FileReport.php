@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace DocbookCS\Report;
 
+use DocbookCS\Violation\Severity;
+use DocbookCS\Violation\Violation;
+
 final class FileReport
 {
     /** @var list<Violation> */
-    private array $violations = [];
+    public private(set) array $violations = [];
 
     public function __construct(
         public readonly string $filePath,
@@ -17,6 +20,14 @@ final class FileReport
     public function addViolation(Violation $violation): void
     {
         $this->violations[] = $violation;
+    }
+
+    /** @param list<Violation> $violations */
+    public function addViolations(array $violations): void
+    {
+        foreach ($violations as $violation) {
+            $this->addViolation($violation);
+        }
     }
 
     /** @return list<Violation> */

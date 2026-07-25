@@ -2,6 +2,9 @@
 <ruleset name="PHP_CodeSniffer" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/refs/heads/master/phpcs.xsd">
 	<description>DocbookCS Coding Standard</description>
     <rule ref="PSR12"/>
+	<rule ref="PSR2.Methods.FunctionCallSignature.SpaceBeforeCloseBracket">
+		<exclude-pattern type="relative">tests/*</exclude-pattern>
+	</rule>
 
 	<arg name="cache" value="var/.phpcs-cache.json"/>
 	<arg name="basepath" value="./"/>

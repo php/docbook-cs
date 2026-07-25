@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Sniff;
 
 use DocbookCS\Sniff\AbstractSniff;
+use DocbookCS\Tests\Support\Sniff\ExposedAbstractSniff;
+use DocbookCS\Violation\Severity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -14,43 +16,41 @@ use PHPUnit\Framework\TestCase;
 ]
 final class AbstractSniffTest extends TestCase
 {
-    private function createSniff(): AbstractSniff
-    {
-        return new class extends AbstractSniff {
-            public function getCode(): string
-            {
-                return 'test.sniff';
-            }
-
-            public function process(\DOMDocument $document, string $content, string $filePath): array
-            {
-                return [];
-            }
-
-            public function exposeGet(string $name, string $default = ''): string
-            {
-                return $this->getProperty($name, $default);
-            }
-        };
-    }
-
     #[Test]
     public function itStoresAndRetrievesProperties(): void
     {
-        $sniff = $this->createSniff();
-
+        $sniff = new ExposedAbstractSniff();
         $sniff->setProperty('foo', 'bar');
 
-        // @phpstan-ignore-next-line
         self::assertSame('bar', $sniff->exposeGet('foo'));
     }
 
     #[Test]
     public function itReturnsDefaultWhenPropertyNotSet(): void
     {
-        $sniff = $this->createSniff();
+        self::assertSame('default', new ExposedAbstractSniff()->exposeGet('missing', 'default'));
+    }
 
-        // @phpstan-ignore-next-line
-        self::assertSame('default', $sniff->exposeGet('missing', 'default'));
+    #[Test]
+    public function itUsesErrorAsTheDefaultSeverity(): void
+    {
+        self::assertSame(Severity::ERROR, new ExposedAbstractSniff()->exposeSeverity());
+    }
+
+    #[Test]
+    public function itOverridesSeverityFromProperties(): void
+    {
+        $sniff = new ExposedAbstractSniff();
+        $sniff->setProperty('severity', 'warning');
+
+        self::assertSame(Severity::WARNING, $sniff->exposeSeverity());
+    }
+
+    #[Test]
+    public function itRejectsInvalidSeverityProperties(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new ExposedAbstractSniff()->setProperty('severity', 'invalid');
     }
 }
