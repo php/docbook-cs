@@ -41,7 +41,8 @@ final class AttributeOrderFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new AttributeOrderSniff()->process($document, $source);
+        $sniffer = new AttributeOrderSniff();
+        $violations = $sniffer->process($document, $source);
 
         $beginOffset = (int)strpos($content, '<root');
         $sourceContent = '<root xmlns="urn:test" xml:id="root"/>';
@@ -52,7 +53,7 @@ final class AttributeOrderFixerTest extends TestCase
         self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->rangeOne()->untilOffset);
         self::assertSame(1, $violations[0]->rangeOne()->line);
 
-        $fix = new AttributeOrderFixer()->process($violations[0]);
+        $fix = new ($sniffer::getFixerClassName())()->process($violations[0]);
 
         $result = new FixApplier()->apply($source, [ $fix ]);
 

@@ -46,19 +46,22 @@ final class WhitespaceConcernFixersTest extends TestCase
         $document->loadXML($content);
         $source = new File('file.xml', $content);
 
-        $trailingViolations = new TrailingWhitespaceSniff()->process($document, $source);
-        $indentationViolations = new MixedIndentationSniff()->process($document, $source);
+        $trailingSniffer = new TrailingWhitespaceSniff();
+        $indentationSniffer = new MixedIndentationSniff();
+
+        $trailingViolations = $trailingSniffer->process($document, $source);
+        $indentationViolations = $indentationSniffer->process($document, $source);
 
         self::assertCount(2, $trailingViolations);
         self::assertCount(1, $indentationViolations);
 
         $fixes = [];
-        $trailingFixer = new TrailingWhitespaceFixer();
+        $trailingFixer = new ($trailingSniffer::getFixerClassName())();
         foreach ($trailingViolations as $violation) {
             $fixes[] = $trailingFixer->process($violation);
         }
 
-        $indentationFixer = new MixedIndentationFixer();
+        $indentationFixer = new ($indentationSniffer::getFixerClassName())();
         foreach ($indentationViolations as $violation) {
             $fixes[] = $indentationFixer->process($violation);
         }
