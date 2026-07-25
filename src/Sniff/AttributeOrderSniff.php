@@ -7,6 +7,7 @@ namespace DocbookCS\Sniff;
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
 
 /**
  * Ensures that when an element has both xml:id and xmlns (or xmlns:*)
@@ -78,7 +79,7 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
     }
 
     /**
-     * @param list<\DocbookCS\Violation\Violation> &$violations
+     * @param list<Violation> &$violations
      * @throws \InvalidArgumentException if the affected ranges are inconsistent
      */
     private function checkAttributes(
