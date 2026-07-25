@@ -84,20 +84,6 @@ final class ApplicationInputTest extends TestCase
     }
 
     #[Test]
-    public function itIgnoresTheLegacyDiffOption(): void
-    {
-        $app = new Application(
-            ['docbook-cs', '--config=' . self::VALID_CONFIG, '--diff'],
-            $this->stdout,
-            $this->stderr,
-            unifiedDiff: '',
-        );
-
-        self::assertSame(0, $app->run());
-        self::assertSame('', $this->readStream($this->stderr));
-    }
-
-    #[Test]
     public function itRejectsUnknownOptions(): void
     {
         $app = new Application(
@@ -151,7 +137,6 @@ final class ApplicationInputTest extends TestCase
         $output = $this->readStream($this->stdout);
 
         self::assertStringContainsString('--wide', $output);
-        self::assertStringNotContainsString('--diff', $output);
     }
 
     #[Test]
