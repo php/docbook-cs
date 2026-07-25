@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Violation;
 
 use DocbookCS\Source\File;
-use DocbookCS\Source\Line;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
@@ -20,7 +19,6 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Violation::class),
     //
     UsesClass(File::class),
-    UsesClass(Line::class),
 ]
 final class AffectedRangesTest extends TestCase
 {
