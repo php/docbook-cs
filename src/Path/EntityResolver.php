@@ -8,6 +8,12 @@ final class EntityResolver
 {
     private string $extension;
 
+    /** @var array<string, string>|null */
+    private ?array $resolvedEntities = null;
+
+    /** @var array<string, string>|null */
+    private ?array $resolvedPaths = null;
+
     /**
      * @param array<string, string> $projectRoots
      * @param list<string> $entityPaths
@@ -26,15 +32,41 @@ final class EntityResolver
      */
     public function resolve(): array
     {
+        $this->resolveAll();
+
+        return $this->resolvedEntities ?? [];
+    }
+
+    /**
+     * @return array<string, string>
+     * @throws \UnexpectedValueException if the directory cannot be read.
+     */
+    public function paths(): array
+    {
+        $this->resolveAll();
+
+        return $this->resolvedPaths ?? [];
+    }
+
+    /** @throws \UnexpectedValueException if the directory cannot be read. */
+    private function resolveAll(): void
+    {
+        if ($this->resolvedEntities !== null && $this->resolvedPaths !== null) {
+            return;
+        }
+
         $entities = [];
+        $paths = [];
 
         foreach ($this->entityPaths as $path) {
             foreach ($this->getEntityFiles($path) as $file) {
-                $entities += $this->resolveFile($file);
+                $visited = [];
+                $entities += $this->resolveFile($file, $visited, $paths);
             }
         }
 
-        return $entities;
+        $this->resolvedEntities = $entities;
+        $this->resolvedPaths = $paths;
     }
 
     /**
@@ -86,11 +118,13 @@ final class EntityResolver
 
     /**
      * @param array<string, bool> $visited
+     * @param array<string, string> $paths
      * @return array<string, string>
      */
     private function resolveFile(
         string $filePath,
-        array &$visited = [],
+        array &$visited,
+        array &$paths,
         ?string $originEntity = null
     ): array {
         if (isset($visited[$filePath]) || !is_readable($filePath)) {
@@ -105,7 +139,7 @@ final class EntityResolver
             return []; // @codeCoverageIgnore
         }
 
-        $entities = $this->extractEntities($content, $filePath, $visited);
+        $entities = $this->extractEntities($content, $filePath, $visited, $paths);
 
         if ($originEntity !== null) {
             $entities[$originEntity] = $this->normalize($content);
@@ -116,26 +150,30 @@ final class EntityResolver
 
     /**
      * @param array<string, bool> $visited
+     * @param array<string, string> $paths
      * @return array<string, string>
      */
     private function extractEntities(
         string $content,
         string $filePath,
-        array &$visited
+        array &$visited,
+        array &$paths,
     ): array {
         return
-            $this->extractDtdEntities($content, $filePath, $visited)
+            $this->extractDtdEntities($content, $filePath, $visited, $paths)
             + $this->extractXmlEntities($content);
     }
 
     /**
      * @param array<string, bool> $visited
+     * @param array<string, string> $paths
      * @return array<string, string>
      */
     private function extractDtdEntities(
         string $content,
         string $filePath,
-        array &$visited
+        array &$visited,
+        array &$paths,
     ): array {
         $result = [];
 
@@ -161,7 +199,12 @@ final class EntityResolver
 
             if ($type === 'SYSTEM') {
                 $resolvedPath = $this->resolvePath($filePath, $value);
-                $result += $this->resolveFile($resolvedPath, $visited, $name);
+
+                if (is_readable($resolvedPath)) {
+                    $paths[$name] ??= $resolvedPath;
+                }
+
+                $result += $this->resolveFile($resolvedPath, $visited, $paths, $name);
 
                 continue;
             }

@@ -20,8 +20,8 @@ final class NullProgressTest extends TestCase
         $progress = new NullProgress();
 
         $progress->start(100);
-        $progress->advance(1, 'file.xml', 0);
-        $progress->advance(2, 'file2.xml', 5);
+        $progress->advance('file.xml', 0);
+        $progress->advance('file2.xml', 5);
         $progress->finish();
 
         $this->addToAssertionCount(1);

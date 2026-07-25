@@ -53,13 +53,13 @@ final class ConsoleProgressTest extends TestCase
     {
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
-        $progress->start(10);
-        $progress->advance(5, '/path/to/file.xml', 0);
+        $progress->start(2);
+        $progress->advance('/path/to/file.xml', 0);
 
         $output = $this->outputConsole();
 
         self::assertStringContainsString('50%', $output);
-        self::assertStringContainsString('(5/10)', $output);
+        self::assertStringContainsString('(1/2)', $output);
     }
 
     #[Test]
@@ -68,8 +68,8 @@ final class ConsoleProgressTest extends TestCase
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
         $progress->start(2);
-        $progress->advance(1, 'a.xml', 0);
-        $progress->advance(2, 'b.xml', 0);
+        $progress->advance('a.xml', 0);
+        $progress->advance('b.xml', 0);
         $progress->finish();
 
         $output = $this->outputConsole();
@@ -94,8 +94,8 @@ final class ConsoleProgressTest extends TestCase
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
         $progress->start(5);
-        $progress->advance(1, 'clean.xml', 0);
-        $progress->advance(2, 'dirty.xml', 3);
+        $progress->advance('clean.xml', 0);
+        $progress->advance('dirty.xml', 3);
 
         $output = $this->outputConsole();
 
@@ -111,7 +111,7 @@ final class ConsoleProgressTest extends TestCase
         $longPath = '/very/deeply/nested/directory/structure/that/goes/on/and/on/file.xml';
 
         $progress->start(1);
-        $progress->advance(1, $longPath, 0);
+        $progress->advance($longPath, 0);
 
         $output = $this->outputConsole();
 
@@ -125,7 +125,7 @@ final class ConsoleProgressTest extends TestCase
         $progress = new ConsoleProgress($this->stream, useColors: true);
 
         $progress->start(1);
-        $progress->advance(1, 'test.xml', 0);
+        $progress->advance('test.xml', 0);
         $progress->finish();
 
         self::assertStringContainsString("\033[", $this->outputConsole());
@@ -137,7 +137,7 @@ final class ConsoleProgressTest extends TestCase
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
         $progress->start(1);
-        $progress->advance(1, 'test.xml', 0);
+        $progress->advance('test.xml', 0);
         $progress->finish();
 
         self::assertStringNotContainsString("\033[", $this->outputConsole());
@@ -149,7 +149,7 @@ final class ConsoleProgressTest extends TestCase
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
         $progress->start(0);
-        $progress->advance(1, 'file.xml', 0);
+        $progress->advance('file.xml', 0);
 
         $output = $this->outputConsole();
 
@@ -175,13 +175,13 @@ final class ConsoleProgressTest extends TestCase
     {
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
-        $progress->start(3);
-        $progress->advance(3, 'done.xml', 0);
+        $progress->start(1);
+        $progress->advance('done.xml', 0);
 
         $output = $this->outputConsole();
 
         self::assertStringContainsString('100%', $output);
-        self::assertStringContainsString('(3/3)', $output);
+        self::assertStringContainsString('(1/1)', $output);
     }
 
     #[Test]
@@ -189,12 +189,25 @@ final class ConsoleProgressTest extends TestCase
     {
         $progress = new ConsoleProgress($this->stream, useColors: false);
 
-        $progress->start(2);
-        $progress->advance(2, 'done.xml', 5);
+        $progress->start(1);
+        $progress->advance('done.xml', 5);
 
         $output = $this->outputConsole();
 
         self::assertStringNotContainsString(' x', $output);
         self::assertStringNotContainsString(' .', $output);
+    }
+
+    #[Test]
+    public function itResetsTheCounterOnStart(): void
+    {
+        $progress = new ConsoleProgress($this->stream, useColors: false);
+
+        $progress->start(2);
+        $progress->advance('first.xml', 0);
+        $progress->start(2);
+        $progress->advance('second.xml', 0);
+
+        self::assertSame(2, substr_count($this->outputConsole(), '(1/2)'));
     }
 }

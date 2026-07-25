@@ -11,7 +11,7 @@ final class NullProgress implements ProgressInterface
         // Intentionally left empty
     }
 
-    public function advance(int $current, string $filePath, int $violations): void
+    public function advance(string $filePath, int $violations): void
     {
         // Intentionally left empty
     }
