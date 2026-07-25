@@ -9,9 +9,7 @@ use DocbookCS\Diff\FileChange;
 
 final readonly class DiffPathLoader
 {
-    /**
-     * @param array<string, string> $projectRoots
-     */
+    /** @param array<string, string> $projectRoots */
     public function __construct(
         private Diff $diff,
         private string $workingDirectory,
