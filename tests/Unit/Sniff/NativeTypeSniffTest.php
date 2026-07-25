@@ -48,7 +48,7 @@ final class NativeTypeSniffTest extends TestCase
         self::assertSame('int', $this->replacementFromMessage($violations[1]->message));
         self::assertSame('bool', $this->replacementFromMessage($violations[2]->message));
         self::assertSame('Array', $violations[0]->rangeOne()->content);
-        self::assertSame('array', $violations[0]->replacement);
+        self::assertSame('array', $violations[0]->fixerData);
     }
 
     #[Test]

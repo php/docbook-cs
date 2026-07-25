@@ -7,6 +7,7 @@ namespace DocbookCS\Tests\Unit\Fix;
 use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixApplier;
 use DocbookCS\Fix\Fixer\NativeTypeFixer;
+use DocbookCS\Fix\FixerException;
 use DocbookCS\Fix\FixResult;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\NativeTypeSniff;
@@ -49,6 +50,39 @@ final class NativeTypeFixerTest extends TestCase
             $result->file->content,
         );
         self::assertSame(2, $result->applied);
+    }
+
+    #[Test]
+    public function itRejectsNonStringFixerData(): void
+    {
+        $violation = new Violation(
+            'DocbookCS.NativeType',
+            'file.xml',
+            'Message',
+            [new SourceRange(1, 0, 5, 'Array')],
+            fixerData: ['replacement' => 'array'],
+        );
+
+        $this->expectException(FixerException::class);
+
+        // Bypass the PHPStan generic contract to exercise the runtime boundary.
+        new \ReflectionMethod(NativeTypeFixer::class, 'process')->invoke(new NativeTypeFixer(), $violation);
+    }
+
+    #[Test]
+    public function itRejectsAnInvalidReplacement(): void
+    {
+        $violation = new Violation(
+            'DocbookCS.NativeType',
+            'file.xml',
+            'Message',
+            [new SourceRange(1, 0, 5, 'Array')],
+            fixerData: '<invalid>',
+        );
+
+        $this->expectException(FixerException::class);
+
+        new NativeTypeFixer()->process($violation);
     }
 
     private function fix(string $content): FixResult

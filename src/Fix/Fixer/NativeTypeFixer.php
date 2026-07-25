@@ -8,9 +8,13 @@ use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixerException;
 use DocbookCS\Violation\Violation;
 
+/** @implements Fixer<string> */
 final class NativeTypeFixer implements Fixer
 {
-    /** @throws FixerException */
+    /**
+     * @param Violation<string> $violation
+     * @throws FixerException
+     */
     public function process(Violation $violation): Fix
     {
         $range = $violation->rangeOne();
@@ -18,10 +22,10 @@ final class NativeTypeFixer implements Fixer
             throw FixerException::cannotFixMissingContent();
         }
 
-        if ($violation->replacement === null || preg_match('/^[a-z]+$/', $violation->replacement) !== 1) {
+        if (!is_string($violation->fixerData) || preg_match('/^[a-z]+$/', $violation->fixerData) !== 1) {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
-        return Fix::fromViolationAndRange($violation, $range, $violation->replacement);
+        return Fix::fromViolationAndRange($violation, $range, $violation->fixerData);
     }
 }

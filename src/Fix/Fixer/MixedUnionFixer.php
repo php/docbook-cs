@@ -8,9 +8,13 @@ use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixerException;
 use DocbookCS\Violation\Violation;
 
+/** @implements Fixer<string> */
 final class MixedUnionFixer implements Fixer
 {
-    /** @throws FixerException */
+    /**
+     * @param Violation<string> $violation
+     * @throws FixerException
+     */
     public function process(Violation $violation): Fix
     {
         $range = $violation->rangeOne();
@@ -19,12 +23,12 @@ final class MixedUnionFixer implements Fixer
         }
 
         if (
-            $violation->replacement !== '<type>mixed</type>'
+            $violation->fixerData !== '<type>mixed</type>'
             || preg_match('/^<type\b[^>]*\bclass\s*=\s*(["\'])union\1[^>]*>.*<\/type>$/is', $range->content) !== 1
         ) {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
-        return Fix::fromViolationAndRange($violation, $range, $violation->replacement);
+        return Fix::fromViolationAndRange($violation, $range, $violation->fixerData);
     }
 }

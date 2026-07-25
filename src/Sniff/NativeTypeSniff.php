@@ -8,6 +8,10 @@ use DocbookCS\Fix\Fixer\NativeTypeFixer;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\SourceRange;
 
+/**
+ * @extends AbstractSniff<string>
+ * @implements Fixable<string>
+ */
 final class NativeTypeSniff extends AbstractSniff implements Fixable
 {
     private const array NATIVE_TYPES = [

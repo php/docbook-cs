@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Violation;
 
+/** @template TFixerData = mixed */
 final readonly class Violation
 {
     /**
@@ -16,7 +17,12 @@ final readonly class Violation
         public string $message,
         public array $affectedRanges,
         public Severity $severity = Severity::WARNING,
-        public ?string $replacement = null,
+        /**
+         * Data passed from the sniff to its fixer. Fixers are responsible for validating its shape.
+         *
+         * @var TFixerData
+         */
+        public mixed $fixerData = null,
     ) {
         if ($affectedRanges === []) {
             throw new \InvalidArgumentException('A violation must affect at least one source range.');
