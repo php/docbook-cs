@@ -13,6 +13,7 @@ final class ExceptionNameFixer implements Fixer
 {
     private const string SOURCE_ELEMENT = 'classname';
     private const string TARGET_ELEMENT = 'exceptionname';
+
     /** @throws FixerException */
     public function process(Violation $violation): FixPlan
     {
