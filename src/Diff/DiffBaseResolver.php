@@ -50,7 +50,7 @@ final readonly class DiffBaseResolver
     private function localBaseReference(string $repoRoot): string
     {
         if ($this->git->currentBranchName($repoRoot) === self::DEFAULT_BRANCH) {
-            return $this->git->configuredUpstreamReference($repoRoot, self::DEFAULT_BRANCH) ?? 'HEAD';
+            return $this->git->upstreamReferenceFromLocalConfiguration($repoRoot, self::DEFAULT_BRANCH) ?? 'HEAD';
         }
 
         if ($this->git->resolveCommitHash($repoRoot, self::DEFAULT_BRANCH_REFERENCE) !== null) {
@@ -65,7 +65,7 @@ final readonly class DiffBaseResolver
     {
         $repoNames = [];
 
-        foreach ($this->git->configuredRemoteUrls($repoRoot) as $url) {
+        foreach ($this->git->remoteUrlsFromLocalConfiguration($repoRoot) as $url) {
             $repoName = $this->repositoryNameFrom($url);
 
             if ($repoName !== null) {

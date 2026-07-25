@@ -27,12 +27,10 @@ final readonly class GitClient
     }
 
     /**
-     * Reads configured remote URLs without contacting any remote.
-     *
      * @return list<string>
      * @throws GitException
      */
-    public function configuredRemoteUrls(string $repoRoot): array
+    public function remoteUrlsFromLocalConfiguration(string $repoRoot): array
     {
         $result = $this->execute(
             ['git', 'config', '--get-regexp', '^remote\\..*\\.url$'],
@@ -56,11 +54,7 @@ final readonly class GitClient
         return $urls;
     }
 
-    /**
-     * Returns the branch name, or null for a detached HEAD.
-     *
-     * @throws GitException
-     */
+    /** @throws GitException */
     public function currentBranchName(string $repoRoot): ?string
     {
         $result = $this->execute(
@@ -68,15 +62,12 @@ final readonly class GitClient
             $repoRoot,
         );
 
+        // null only when HEAD is detached
         return $result->exitCode === 0 ? trim($result->stdout) : null;
     }
 
-    /**
-     * Returns the tracking reference selected by Git configuration.
-     *
-     * @throws GitException
-     */
-    public function configuredUpstreamReference(string $repoRoot, string $branch): ?string
+    /** @throws GitException */
+    public function upstreamReferenceFromLocalConfiguration(string $repoRoot, string $branch): ?string
     {
         $result = $this->execute(
             ['git', 'rev-parse', '--abbrev-ref', '--symbolic-full-name', $branch . '@{upstream}'],
@@ -86,11 +77,7 @@ final readonly class GitClient
         return $result->exitCode === 0 ? trim($result->stdout) : null;
     }
 
-    /**
-     * Resolves a reference to its commit hash.
-     *
-     * @throws GitException
-     */
+    /** @throws GitException */
     public function resolveCommitHash(string $repoRoot, string $reference): ?string
     {
         $result = $this->execute(
@@ -101,11 +88,7 @@ final readonly class GitClient
         return $result->exitCode === 0 ? trim($result->stdout) : null;
     }
 
-    /**
-     * Finds a merge base using an optional external object directory.
-     *
-     * @throws GitException
-     */
+    /** @throws GitException */
     public function findMergeBase(
         string $repoRoot,
         string $firstReference,
@@ -116,6 +99,7 @@ final readonly class GitClient
             ? ['GIT_ALTERNATE_OBJECT_DIRECTORIES' => $alternateObjectDirectory]
             : [];
 
+        // finds merge base using optional external object directory
         $result = $this->execute(
             ['git', 'merge-base', $firstReference, $secondReference],
             $repoRoot,
@@ -135,11 +119,7 @@ final readonly class GitClient
         );
     }
 
-    /**
-     * Checks whether a path contains a bare Git repository.
-     *
-     * @throws GitException
-     */
+    /** @throws GitException */
     public function isBareRepo(string $repoPath): bool
     {
         $result = $this->execute(
@@ -150,12 +130,8 @@ final readonly class GitClient
         return $result->exitCode === 0 && trim($result->stdout) === 'true';
     }
 
-    /**
-     * Creates a bare repository for cached upstream history.
-     *
-     * @throws GitException
-     */
-    public function initialiseBareRepo(string $repoPath): bool
+    /** @throws GitException */
+    public function initialiseBareRepoForCache(string $repoPath): bool
     {
         return $this->execute(
             ['git', 'init', '--bare', '--quiet', $repoPath],
@@ -163,13 +139,8 @@ final readonly class GitClient
         )->exitCode === 0;
     }
 
-    /**
-     * Fetches a branch into one private reference.
-     * Leaves the actual repository unchanged.
-     *
-     * @throws GitException
-     */
-    public function fetchBranchIntoRepo(string $repoPath, string $url, string $branch, string $reference): ProcessResult
+    /** @throws GitException */
+    public function fetchToCacheRepo(string $repoPath, string $url, string $branch, string $reference): ProcessResult
     {
         return $this->execute(
             [

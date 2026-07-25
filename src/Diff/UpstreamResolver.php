@@ -70,7 +70,7 @@ final readonly class UpstreamResolver
             return null;
         }
 
-        $this->git->fetchBranchIntoRepo(
+        $this->git->fetchToCacheRepo(
             $cacheRepository,
             sprintf(self::OFFICIAL_REPOSITORY_URL, $repoName),
             self::OFFICIAL_BRANCH,
@@ -105,7 +105,7 @@ final readonly class UpstreamResolver
     private function prepareCacheRepository(string $cacheRepository): bool
     {
         if (!is_dir($cacheRepository)) {
-            return $this->git->initialiseBareRepo($cacheRepository);
+            return $this->git->initialiseBareRepoForCache($cacheRepository);
         }
 
         if ($this->git->isBareRepo($cacheRepository)) {
@@ -116,7 +116,7 @@ final readonly class UpstreamResolver
         $invalidRepository = sprintf(self::INVALID_CACHE_REPOSITORY_PATH, $cacheRepository, date('YmdHis'));
 
         return @rename($cacheRepository, $invalidRepository)
-            && $this->git->initialiseBareRepo($cacheRepository);
+            && $this->git->initialiseBareRepoForCache($cacheRepository);
     }
 
     private function cacheRepositoryPath(string $repoName): string
