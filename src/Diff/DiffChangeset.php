@@ -18,10 +18,8 @@ final readonly class DiffChangeset
         foreach ($this->fileChanges as $fileChange) {
             $normalisedDiffPath = str_replace('\\', '/', $fileChange->filePath);
 
-            if (
-                $normalisedPath === $normalisedDiffPath
-                || str_ends_with($normalisedPath, '/' . ltrim($normalisedDiffPath, '/'))
-            ) {
+            $needle = '/' . ltrim($normalisedDiffPath, '/');
+            if ($normalisedPath === $normalisedDiffPath || str_ends_with($normalisedPath, $needle)) {
                 return $fileChange;
             }
         }
