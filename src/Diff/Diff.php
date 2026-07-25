@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Diff;
 
-final readonly class DiffChangeset
+final readonly class Diff
 {
     /** @param list<FileChange> $fileChanges */
     public function __construct(public array $fileChanges)

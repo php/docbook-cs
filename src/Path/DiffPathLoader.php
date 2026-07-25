@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace DocbookCS\Path;
 
-use DocbookCS\Diff\DiffChangeset;
+use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\FileChange;
 
 final readonly class DiffPathLoader
 {
     /** @param array<string, string> $projectRoots */
     public function __construct(
-        private DiffChangeset $diff,
+        private Diff $diff,
         private string $workingDirectory,
         private string $basePath,
         private array $projectRoots,
@@ -19,7 +19,7 @@ final readonly class DiffPathLoader
     ) {
     }
 
-    public function load(): DiffChangeset
+    public function load(): Diff
     {
         $changes = [];
 
@@ -42,7 +42,7 @@ final readonly class DiffPathLoader
 
         ksort($changes);
 
-        return new DiffChangeset(array_values($changes));
+        return new Diff(array_values($changes));
     }
 
     /** @return list<string> */
