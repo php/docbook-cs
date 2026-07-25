@@ -67,13 +67,14 @@ final class ConsoleProgress implements ProgressInterface
 
     private function drawBar(int $current, string $filePath, int $violations = 0): void
     {
-        $percent = $this->totalFiles > 0
-            ? (int)floor(($current / $this->totalFiles) * 100)
-            : 0; // @codeCoverageIgnore
+        if ($this->totalFiles === 0) {
+            // prevented by public methods
+            return; // @codeCoverageIgnore
+        }
 
-        $filled = $this->totalFiles > 0
-            ? (int)floor(($current / $this->totalFiles) * self::BAR_WIDTH)
-            : 0; // @codeCoverageIgnore
+        $ratio = $current / $this->totalFiles;
+        $percent = (int)floor($ratio * 100);
+        $filled = (int)floor($ratio * self::BAR_WIDTH);
 
         $empty = self::BAR_WIDTH - $filled;
 
