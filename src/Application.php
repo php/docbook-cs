@@ -32,7 +32,6 @@ final class Application
     /**
      * @param list<string> $argv
      * @throws \RuntimeException if redirected stdin cannot be read.
-     * @api
      */
     public static function withArguments(array $argv): self
     {
