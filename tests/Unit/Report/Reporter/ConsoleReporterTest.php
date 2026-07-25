@@ -330,6 +330,18 @@ final class ConsoleReporterTest extends TestCase
     }
 
     #[Test]
+    public function itShowsInfoSeverityLabel(): void
+    {
+        $fileReport = new FileReport('file.xml');
+        $fileReport->addFoundViolations([$this->createViolation(severity: Severity::INFO)]);
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        self::assertStringContainsString('INFO', $this->reporter->generate($report));
+    }
+
+    #[Test]
     public function itShowsMultipleViolationsForOneFile(): void
     {
         $fileReport = new FileReport('multi.xml');
