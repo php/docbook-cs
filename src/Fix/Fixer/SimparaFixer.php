@@ -31,13 +31,10 @@ final class SimparaFixer implements Fixer
                 throw FixerException::cannotFixInvalidContent($violation);
             }
 
-            $fixes[] = new Fix(
-                $violation->filePath,
-                $range->beginOffset,
-                $range->untilOffset,
+            $fixes[] = Fix::fromViolationAndRange(
+                $violation,
+                $range,
                 self::TARGET_ELEMENT,
-                $violation->sniffCode,
-                $range->content,
             );
         }
 

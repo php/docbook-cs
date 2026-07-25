@@ -33,13 +33,10 @@ final class AttributeOrderFixer implements Fixer
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
-        return new Fix(
-            $violation->filePath,
-            $affectedRange->beginOffset,
-            $affectedRange->untilOffset,
+        return Fix::fromViolationAndRange(
+            $violation,
+            $affectedRange,
             sprintf(self::OPENING_TAG_FORMAT, $matches[1], $fixedAttributeString),
-            $violation->sniffCode,
-            $affectedRange->content,
         );
     }
 

@@ -29,13 +29,10 @@ final class MixedIndentationFixer implements Fixer
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
-        return new Fix(
-            filePath: $violation->filePath,
-            beginOffset: $affectedRange->beginOffset,
-            untilOffset: $affectedRange->untilOffset,
-            replacement: str_replace("\t", ' ', $affectedRange->content),
-            sniffCode: $violation->sniffCode,
-            expectedContent: $affectedRange->content,
+        return Fix::fromViolationAndRange(
+            $violation,
+            $affectedRange,
+            str_replace("\t", ' ', $affectedRange->content),
         );
     }
 }

@@ -24,13 +24,6 @@ final class ToggleElementFixer implements Fixer
             default => throw FixerException::cannotFixInvalidContent($violation),
         };
 
-        return new Fix(
-            filePath: $violation->filePath,
-            beginOffset: $affectedRange->beginOffset,
-            untilOffset: $affectedRange->untilOffset,
-            replacement: $replacement,
-            sniffCode: $violation->sniffCode,
-            expectedContent: $affectedRange->content,
-        );
+        return Fix::fromViolationAndRange($violation, $affectedRange, $replacement);
     }
 }

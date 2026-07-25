@@ -25,13 +25,6 @@ final class TrailingWhitespaceFixer implements Fixer
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
-        return new Fix(
-            filePath: $violation->filePath,
-            beginOffset: $affectedRange->beginOffset,
-            untilOffset: $affectedRange->untilOffset,
-            replacement: '',
-            sniffCode: $violation->sniffCode,
-            expectedContent: $affectedRange->content,
-        );
+        return Fix::fromViolationAndRange($violation, $affectedRange, '');
     }
 }

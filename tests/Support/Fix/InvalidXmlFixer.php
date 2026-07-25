@@ -18,13 +18,6 @@ final class InvalidXmlFixer implements Fixer
             throw FixerException::cannotFixInvalidContent($violation);
         }
 
-        return new Fix(
-            filePath: $violation->filePath,
-            beginOffset: $affectedRange->beginOffset,
-            untilOffset: $affectedRange->untilOffset,
-            replacement: '<invalid>',
-            sniffCode: $violation->sniffCode,
-            expectedContent: $affectedRange->content,
-        );
+        return Fix::fromViolationAndRange($violation, $affectedRange, '<invalid>');
     }
 }
