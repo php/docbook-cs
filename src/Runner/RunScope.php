@@ -102,24 +102,20 @@ final readonly class RunScope
             return true;
         }
 
-        $firstAffectedRange = $violation->rangeOne();
-        $lastAffectedRange = $violation->affectedRanges[array_key_last($violation->affectedRanges)];
+        return array_any($this->ranges, static function (array $range) use ($violation): bool {
 
-        /** @noinspection PhpLoopCanBeConvertedToArrayAnyInspection */
-        foreach ($this->ranges as [$beginOffset, $untilOffset]) {
-            if (
-                self::overlaps(
-                    $beginOffset,
-                    $untilOffset,
-                    $firstAffectedRange->beginOffset,
-                    $lastAffectedRange->untilOffset,
-                )
-            ) {
-                return true;
-            }
-        }
+            $firstAffectedRange = $violation->rangeOne();
+            $lastAffectedRange = $violation->affectedRanges[array_key_last($violation->affectedRanges)];
 
-        return false;
+            [$beginOffset, $untilOffset] = $range;
+
+            return self::overlaps(
+                $beginOffset,
+                $untilOffset,
+                $firstAffectedRange->beginOffset,
+                $lastAffectedRange->untilOffset,
+            );
+        });
     }
 
     /** @param list<Fix> $fixes */
