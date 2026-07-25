@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Sniff;
 
 use DocbookCS\Sniff\NativeTypeSniff;
+use DocbookCS\Sniff\MixedUnionDetector;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(File::class),
     UsesClass(Line::class),
     UsesClass(SourceRange::class),
+    UsesClass(MixedUnionDetector::class),
 ]
 final class NativeTypeSniffTest extends TestCase
 {
@@ -46,22 +48,16 @@ final class NativeTypeSniffTest extends TestCase
         self::assertSame('int', $this->replacementFromMessage($violations[1]->message));
         self::assertSame('bool', $this->replacementFromMessage($violations[2]->message));
         self::assertSame('Array', $violations[0]->rangeOne()->content);
+        self::assertSame('array', $violations[0]->replacement);
     }
 
     #[Test]
-    public function itReportsMixedCombinedWithAnotherUnionMember(): void
+    public function itDefersMembersOfRedundantMixedUnionsToTheMixedUnionSniff(): void
     {
-        $content = '<methodsynopsis><type class="union"><type>mixed</type><type>null</type></type>'
+        $content = '<methodsynopsis><type class="union"><type>mixed</type><type>Array</type></type>'
             . '<methodname>example</methodname></methodsynopsis>';
 
-        $violations = $this->process($content);
-
-        self::assertCount(1, $violations);
-        self::assertStringContainsString('union containing mixed', $violations[0]->message);
-        self::assertSame(
-            '<type class="union"><type>mixed</type><type>null</type></type>',
-            $violations[0]->rangeOne()->content,
-        );
+        self::assertSame([], $this->process($content));
     }
 
     #[Test]

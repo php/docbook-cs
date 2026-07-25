@@ -53,6 +53,10 @@ final class NativeTypeSniff extends AbstractSniff implements Fixable
     {
         $source = $this->maskNonElementMarkup($file->content);
         $synopsisRanges = $this->synopsisRanges($source);
+        $redundantMixedUnions = array_values(array_filter(
+            MixedUnionDetector::matches($source),
+            fn(array $union): bool => $this->isInsideSynopsis($union['beginOffset'], $synopsisRanges),
+        ));
         $violations = [];
 
         preg_match_all('/<type\b[^>]*>([^<]*)<\/type>/i', $source, $matches, PREG_OFFSET_CAPTURE);
@@ -69,35 +73,18 @@ final class NativeTypeSniff extends AbstractSniff implements Fixable
 
             $leadingWhitespace = strlen($typeName) - strlen(ltrim($typeName));
             $beginOffset = $offset + $leadingWhitespace;
+            $untilOffset = $beginOffset + strlen(trim($typeName));
+            if ($this->isInsideUnion($beginOffset, $untilOffset, $redundantMixedUnions)) {
+                continue;
+            }
+
             $violations[] = $this->createViolation(
                 $file->path,
                 sprintf('Native type "%s" should be written as "%s".', trim($typeName), $canonical),
-                [SourceRange::fromFile($file, $beginOffset, $beginOffset + strlen(trim($typeName)))],
+                [SourceRange::fromFile($file, $beginOffset, $untilOffset)],
+                $canonical,
             );
         }
-
-        foreach ($this->unionMatches($source) as $union) {
-            if (!$this->isInsideSynopsis($union['beginOffset'], $synopsisRanges)) {
-                continue;
-            }
-
-            $members = array_map('strtolower', $union['members']);
-            if (count($members) < 2 || !in_array('mixed', $members, true)) {
-                continue;
-            }
-
-            $violations[] = $this->createViolation(
-                $file->path,
-                'A union containing mixed is redundant and should be mixed.',
-                [SourceRange::fromFile($file, $union['beginOffset'], $union['untilOffset'])],
-            );
-        }
-
-        usort(
-            $violations,
-            static fn(\DocbookCS\Violation\Violation $a, \DocbookCS\Violation\Violation $b): int =>
-                $a->rangeOne()->beginOffset <=> $b->rangeOne()->beginOffset,
-        );
 
         return $violations;
     }
@@ -140,51 +127,15 @@ final class NativeTypeSniff extends AbstractSniff implements Fixable
         return false;
     }
 
-    /**
-     * @return list<array{beginOffset: int, untilOffset: int, members: list<string>}>
-     */
-    private function unionMatches(string $source): array
+    /** @param list<array{beginOffset: int, untilOffset: int}> $unions */
+    private function isInsideUnion(int $beginOffset, int $untilOffset, array $unions): bool
     {
-        preg_match_all('/<\/?type\b[^>]*>/i', $source, $matches, PREG_OFFSET_CAPTURE);
-        /** @var list<array{beginOffset: int, contentOffset: int, union: bool, members: list<string>}> $stack */
-        $stack = [];
-        $unions = [];
-
-        foreach ($matches[0] as [$tag, $offset]) {
-            $offset = (int) $offset;
-            if (!str_starts_with($tag, '</')) {
-                if (str_ends_with(rtrim($tag), '/>')) {
-                    if ($stack !== [] && $stack[array_key_last($stack)]['union']) {
-                        $stack[array_key_last($stack)]['members'][] = '';
-                    }
-                    continue;
-                }
-
-                $stack[] = [
-                    'beginOffset' => $offset,
-                    'contentOffset' => $offset + strlen($tag),
-                    'union' => preg_match('/\bclass\s*=\s*(["\'])union\1/i', $tag) === 1,
-                    'members' => [],
-                ];
-                continue;
-            }
-
-            if (null === $type = array_pop($stack)) {
-                continue;
-            }
-
-            $content = trim(substr($source, $type['contentOffset'], $offset - $type['contentOffset']));
-            if ($type['union']) {
-                $unions[] = [
-                    'beginOffset' => $type['beginOffset'],
-                    'untilOffset' => $offset + strlen($tag),
-                    'members' => $type['members'],
-                ];
-            } elseif ($stack !== [] && $stack[array_key_last($stack)]['union']) {
-                $stack[array_key_last($stack)]['members'][] = $content;
+        foreach ($unions as $union) {
+            if ($beginOffset >= $union['beginOffset'] && $untilOffset <= $union['untilOffset']) {
+                return true;
             }
         }
 
-        return $unions;
+        return false;
     }
 }

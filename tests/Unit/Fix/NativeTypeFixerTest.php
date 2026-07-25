@@ -10,6 +10,7 @@ use DocbookCS\Fix\Fixer\NativeTypeFixer;
 use DocbookCS\Fix\FixResult;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\NativeTypeSniff;
+use DocbookCS\Sniff\MixedUnionDetector;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
@@ -30,6 +31,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(RunMode::class),
     UsesClass(SourceRange::class),
     UsesClass(Violation::class),
+    UsesClass(MixedUnionDetector::class),
 ]
 final class NativeTypeFixerTest extends TestCase
 {
@@ -47,21 +49,6 @@ final class NativeTypeFixerTest extends TestCase
             $result->file->content,
         );
         self::assertSame(2, $result->applied);
-    }
-
-    #[Test]
-    public function itCollapsesAUnionContainingMixed(): void
-    {
-        $content = '<methodsynopsis><type class="union"><type>mixed</type><type>null</type></type>'
-            . '<methodname>example</methodname></methodsynopsis>';
-
-        $result = $this->fix($content);
-
-        self::assertSame(
-            '<methodsynopsis><type>mixed</type><methodname>example</methodname></methodsynopsis>',
-            $result->file->content,
-        );
-        self::assertSame(1, $result->applied);
     }
 
     private function fix(string $content): FixResult

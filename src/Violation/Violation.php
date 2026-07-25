@@ -16,6 +16,7 @@ final readonly class Violation
         public string $message,
         public array $affectedRanges,
         public Severity $severity = Severity::WARNING,
+        public ?string $replacement = null,
     ) {
         if ($affectedRanges === []) {
             throw new \InvalidArgumentException('A violation must affect at least one source range.');
