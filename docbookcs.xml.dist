@@ -16,6 +16,8 @@
         </sniff>
 
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
+
+        <sniff class="DocbookCS\Sniff\NativeTypeSniff" />
     </sniffs>
 
     <paths>
