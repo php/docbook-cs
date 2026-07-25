@@ -18,7 +18,7 @@ final class MixedIndentationSniff extends AbstractSniff implements Fixable
         return 'DocbookCS.MixedIndentation';
     }
 
-    public static function fixerClassName(): string
+    public static function getFixerClassName(): string
     {
         return MixedIndentationFixer::class;
     }

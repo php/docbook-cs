@@ -105,7 +105,7 @@ final class FixConvergenceTest extends TestCase
                     return 'Test.LineBreak';
                 }
 
-                public static function fixerClassName(): string
+                public static function getFixerClassName(): string
                 {
                     return LineBreakFixer::class;
                 }
@@ -182,7 +182,7 @@ final class FixConvergenceTest extends TestCase
                     return 'Test.ScopedLineBreak';
                 }
 
-                public static function fixerClassName(): string
+                public static function getFixerClassName(): string
                 {
                     return LineBreakFixer::class;
                 }
@@ -253,7 +253,7 @@ final class FixConvergenceTest extends TestCase
                     return 'Test.ToggleElement';
                 }
 
-                public static function fixerClassName(): string
+                public static function getFixerClassName(): string
                 {
                     return ToggleElementFixer::class;
                 }
@@ -303,7 +303,7 @@ final class FixConvergenceTest extends TestCase
                     return 'Test.InvalidXml';
                 }
 
-                public static function fixerClassName(): string
+                public static function getFixerClassName(): string
                 {
                     return InvalidXmlFixer::class;
                 }

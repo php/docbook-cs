@@ -399,7 +399,7 @@ final class XmlFileProcessorTest extends TestCase
                 return 'Test.BrokenFixable';
             }
 
-            public static function fixerClassName(): string
+            public static function getFixerClassName(): string
             {
                 return AttributeOrderFixer::class;
             }

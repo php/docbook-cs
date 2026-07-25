@@ -125,7 +125,7 @@ final readonly class XmlFileProcessor
                 continue;
             }
 
-            $fixer = new ($sniff::fixerClassName());
+            $fixer = new ($sniff::getFixerClassName());
 
             foreach ($relevantViolations as $violation) {
                 $fixes[] = $fixer->process($violation);

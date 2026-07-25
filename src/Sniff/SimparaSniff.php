@@ -108,7 +108,7 @@ final class SimparaSniff extends AbstractSniff implements Fixable
         return 'DocbookCS.Simpara';
     }
 
-    public static function fixerClassName(): string
+    public static function getFixerClassName(): string
     {
         return SimparaFixer::class;
     }

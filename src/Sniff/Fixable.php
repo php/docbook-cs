@@ -9,5 +9,5 @@ use DocbookCS\Fix\Fixer\Fixer;
 interface Fixable extends SniffInterface
 {
     /** @return class-string<Fixer> */
-    public static function fixerClassName(): string;
+    public static function getFixerClassName(): string;
 }

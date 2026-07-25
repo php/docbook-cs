@@ -24,7 +24,7 @@ final class WhitespaceSniff extends AbstractSniff implements Fixable
         return 'DocbookCS.Whitespace';
     }
 
-    public static function fixerClassName(): string
+    public static function getFixerClassName(): string
     {
         return WhitespaceFixer::class;
     }

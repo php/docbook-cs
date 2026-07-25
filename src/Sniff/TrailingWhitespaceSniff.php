@@ -18,7 +18,7 @@ final class TrailingWhitespaceSniff extends AbstractSniff implements Fixable
         return 'DocbookCS.TrailingWhitespace';
     }
 
-    public static function fixerClassName(): string
+    public static function getFixerClassName(): string
     {
         return TrailingWhitespaceFixer::class;
     }

@@ -26,7 +26,7 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
         return 'DocbookCS.AttributeOrder';
     }
 
-    public static function fixerClassName(): string
+    public static function getFixerClassName(): string
     {
         return AttributeOrderFixer::class;
     }

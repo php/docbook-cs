@@ -37,7 +37,7 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
         return 'DocbookCS.ExceptionName';
     }
 
-    public static function fixerClassName(): string
+    public static function getFixerClassName(): string
     {
         return ExceptionNameFixer::class;
     }
