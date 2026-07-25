@@ -79,6 +79,17 @@ final class ReportTest extends TestCase
     }
 
     #[Test]
+    public function itRejectsAddingASecondFileFailure(): void
+    {
+        $fileReport = new FileReport('file.xml');
+        $fileReport->addFailedViolation($this->createViolation());
+
+        $this->expectException(ReportException::class);
+
+        $fileReport->addFailedViolation($this->createViolation());
+    }
+
+    #[Test]
     public function itRejectsAddingFinalViolationsBeforeFoundViolations(): void
     {
         $fileReport = new FileReport('file.xml');
@@ -224,6 +235,28 @@ final class ReportTest extends TestCase
     }
 
     #[Test]
+    public function itReturnsTotalInfoViolationsAcrossAllFiles(): void
+    {
+        $file1 = new FileReport('a.xml');
+        $file1->addFoundViolations([
+            $this->createViolation(severity: Severity::INFO),
+            $this->createViolation(severity: Severity::ERROR),
+        ]);
+
+        $file2 = new FileReport('b.xml');
+        $file2->addFoundViolations([
+            $this->createViolation(severity: Severity::INFO),
+            $this->createViolation(severity: Severity::INFO),
+        ]);
+
+        $report = new Report();
+        $report->addFileReport($file1);
+        $report->addFileReport($file2);
+
+        self::assertSame(3, $report->getTotalInfoLevelViolationCount());
+    }
+
+    #[Test]
     public function itHasFinalViolationsWhenFinalViolationsExist(): void
     {
         $fileReport = new FileReport('file.xml');
@@ -268,6 +301,7 @@ final class ReportTest extends TestCase
         $report = new Report();
         $report->addFileReport($file1);
         $report->addFileReport($file2);
+        $report->addFileReport(new FileReport('clean.xml'));
 
         $all = $report->getAllViolations();
 
@@ -401,7 +435,9 @@ final class ReportTest extends TestCase
     #[Test]
     public function itMeasuresSniffingAndReturnsTheOperationResult(): void
     {
+        $report = new Report();
         $fileReport = new FileReport('file.xml', collectPerformance: true);
+        $report->addFileReport($fileReport);
 
         $result = $fileReport->measureSniffing(static function (): string {
             usleep(1_000);
@@ -411,6 +447,7 @@ final class ReportTest extends TestCase
 
         self::assertSame('result', $result);
         self::assertGreaterThan(0.0, $fileReport->totalSniffingTime);
+        self::assertSame($fileReport->totalSniffingTime, $report->getTotalSniffingTime());
     }
 
     #[Test]
