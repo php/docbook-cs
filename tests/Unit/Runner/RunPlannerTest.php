@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Runner;
 
 use DocbookCS\Config\ConfigData;
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\DiffProviderInterface;
@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(RunPlanner::class),
     //
     UsesClass(ConfigData::class),
-    UsesClass(Diff::class),
+    UsesClass(DiffChangeset::class),
     UsesClass(DiffParser::class),
     UsesClass(DiffPathLoader::class),
     UsesClass(EntityResolver::class),

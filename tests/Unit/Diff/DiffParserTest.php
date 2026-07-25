@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Diff;
 
-use DocbookCS\Diff\Diff;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\FileChange;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(DiffParser::class),
     CoversClass(FileChange::class),
     //
-    UsesClass(Diff::class),
+    UsesClass(DiffChangeset::class),
 ]
 final class DiffParserTest extends TestCase
 {
@@ -278,7 +278,7 @@ DIFF;
 
     // TODO: avoids test diff churn; remove when fixers merged
     /** @return array<string, list<int>> */
-    private function lineNumbersByFile(Diff $diff): array
+    private function lineNumbersByFile(DiffChangeset $diff): array
     {
         $lineNumbersByFile = [];
 

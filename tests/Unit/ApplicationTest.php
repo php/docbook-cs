@@ -9,8 +9,8 @@ use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\ConfigParserException;
 use DocbookCS\Config\SniffEntry;
-use DocbookCS\Diff\Diff;
 use DocbookCS\Diff\DiffBaseResolver;
+use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Diff\GitDiffProvider;
@@ -69,8 +69,9 @@ use PHPUnit\Framework\TestCase;
     CoversClass(RunPlanner::class),
     CoversClass(SniffEntry::class),
     CoversClass(XmlFileProcessor::class),
-    UsesClass(Diff::class),
+    //
     UsesClass(DiffBaseResolver::class),
+    UsesClass(DiffChangeset::class),
     UsesClass(DiffPathLoader::class),
     UsesClass(File::class),
     UsesClass(FileChange::class),
