@@ -18,6 +18,8 @@
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
 
         <sniff class="DocbookCS\Sniff\NativeTypeSniff" />
+
+        <sniff class="DocbookCS\Sniff\MixedUnionSniff" />
     </sniffs>
 
     <paths>

@@ -8,7 +8,7 @@ use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixerException;
 use DocbookCS\Violation\Violation;
 
-final class NativeTypeFixer implements Fixer
+final class MixedUnionFixer implements Fixer
 {
     /** @throws FixerException */
     public function process(Violation $violation): Fix
@@ -18,7 +18,10 @@ final class NativeTypeFixer implements Fixer
             throw FixerException::cannotFixMissingContent();
         }
 
-        if ($violation->replacement === null || preg_match('/^[a-z]+$/', $violation->replacement) !== 1) {
+        if (
+            $violation->replacement !== '<type>mixed</type>'
+            || preg_match('/^<type\b[^>]*\bclass\s*=\s*(["\'])union\1[^>]*>.*<\/type>$/is', $range->content) !== 1
+        ) {
             throw FixerException::cannotFixInvalidContent($violation);
         }
 

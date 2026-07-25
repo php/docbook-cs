@@ -87,14 +87,19 @@ abstract class AbstractSniff implements SniffInterface
      *
      * @throws \InvalidArgumentException if the affected ranges are inconsistent
      */
-    protected function createViolation(string $filePath, string $message, array $affectedRanges): Violation
-    {
+    protected function createViolation(
+        string $filePath,
+        string $message,
+        array $affectedRanges,
+        ?string $replacement = null,
+    ): Violation {
         return new Violation(
             sniffCode: static::getCode(),
             filePath: $filePath,
             message: $message,
             affectedRanges: $affectedRanges,
             severity: $this->severity,
+            replacement: $replacement,
         );
     }
 
