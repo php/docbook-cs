@@ -43,13 +43,14 @@ final class SimparaFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new SimparaSniff()->process($document, $source);
+        $sniffer = new SimparaSniff();
+        $violations = $sniffer->process($document, $source);
 
         self::assertCount(1, $violations);
         self::assertSame('para', $violations[0]->rangeOne()->content);
         self::assertSame('para', $violations[0]->rangeTwo()->content);
 
-        $fix = new SimparaFixer()->process($violations[0]);
+        $fix = new ($sniffer::getFixerClassName())()->process($violations[0]);
 
         $result = new FixApplier()->apply($source, [$fix]);
 

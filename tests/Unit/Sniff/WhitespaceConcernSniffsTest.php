@@ -81,6 +81,22 @@ final class WhitespaceConcernSniffsTest extends TestCase
         );
     }
 
+    #[Test]
+    public function itAllowsIndentationUsingOnlySpacesOrOnlyTabs(): void
+    {
+        foreach (["  <tag/>", "\t\t<tag/>"] as $line) {
+            $content = "<root>\n{$line}\n</root>";
+
+            self::assertSame(
+                [],
+                new MixedIndentationSniff()->process(
+                    $this->createDocument($content),
+                    new File('file.xml', $content),
+                ),
+            );
+        }
+    }
+
     private function createDocument(string $xml): \DOMDocument
     {
         $document = new \DOMDocument();

@@ -214,4 +214,15 @@ final class SimparaSniffTest extends TestCase
 
         self::assertSame([], new SimparaSniff()->process($doc, new File('file.xml', $content)));
     }
+
+    #[Test]
+    public function itRejectsSourceThatDoesNotMatchTheParsedDocument(): void
+    {
+        $document = $this->createDocument('<root><para>Text</para></root>');
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessageIs('Could not map simpara violation to source content.');
+
+        new SimparaSniff()->process($document, new File('file.xml', '<root></para></root>'));
+    }
 }

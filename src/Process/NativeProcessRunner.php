@@ -8,7 +8,7 @@ final class NativeProcessRunner implements ProcessRunnerInterface
 {
     public function run(array $command, string $workingDirectory, array $environment = []): ProcessResult
     {
-        $process = proc_open(
+        $process = @proc_open(
             $command,
             [
                 ['pipe', 'r'],

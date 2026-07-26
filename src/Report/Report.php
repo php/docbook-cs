@@ -187,7 +187,7 @@ final class Report
         ));
     }
 
-    /** @api not implemented */
+    // not implemented
     public function getTotalInfoLevelViolationCount(): int
     {
         return array_sum(array_map(

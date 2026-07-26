@@ -221,4 +221,18 @@ final class ExceptionNameSniffTest extends TestCase
         self::assertSame('classname', $violations[0]->rangeOne()->content);
         self::assertSame('classname', $violations[0]->rangeTwo()->content);
     }
+
+    #[Test]
+    public function itRejectsSourceThatDoesNotMatchTheParsedDocument(): void
+    {
+        $document = $this->createDocument('<root><classname>RuntimeException</classname></root>');
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessageIs('Could not map classname violation to source content.');
+
+        new ExceptionNameSniff()->process(
+            $document,
+            new File('file.xml', '<root><classname>OtherException</classname></root>'),
+        );
+    }
 }

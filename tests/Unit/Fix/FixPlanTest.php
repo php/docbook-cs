@@ -25,6 +25,73 @@ use PHPUnit\Framework\TestCase;
 final class FixPlanTest extends TestCase
 {
     #[Test]
+    public function itLeavesTheSourceUntouchedWithoutFixes(): void
+    {
+        $source = new File('file.xml', '<root/>');
+
+        $result = new FixApplier()->apply($source, []);
+
+        self::assertSame($source, $result->file);
+        self::assertSame(0, $result->applied);
+        self::assertSame(0, $result->skipped);
+    }
+
+    #[Test]
+    public function itSkipsFixesThatAlreadyHaveTheDesiredContent(): void
+    {
+        $source = new File('file.xml', '<root/>');
+        $fix = new Fix('file.xml', 1, 5, 'root', 'Sniff', 'root');
+
+        $result = new FixApplier()->apply($source, [$fix]);
+
+        self::assertSame($source->content, $result->file->content);
+        self::assertSame(0, $result->applied);
+        self::assertSame(1, $result->skipped);
+    }
+
+    #[Test]
+    public function itSkipsCompetingInsertionsAtTheSameOffset(): void
+    {
+        $source = new File('file.xml', 'abc');
+        $first = new Fix('file.xml', 1, 1, 'X', 'FirstSniff');
+        $second = new Fix('file.xml', 1, 1, 'X', 'SecondSniff');
+
+        $result = new FixApplier()->apply($source, [$first, $second]);
+
+        self::assertSame('aXbc', $result->file->content);
+        self::assertSame(1, $result->applied);
+        self::assertSame(1, $result->skipped);
+    }
+
+    #[Test]
+    public function itAllowsAnInsertionAtTheStartOfAReplacement(): void
+    {
+        $source = new File('file.xml', 'abc');
+        $insertion = new Fix('file.xml', 1, 1, 'X', 'InsertionSniff');
+        $replacement = new Fix('file.xml', 1, 2, 'B', 'ReplacementSniff', 'b');
+
+        $result = new FixApplier()->apply($source, [$insertion, $replacement]);
+
+        self::assertSame('aXBc', $result->file->content);
+        self::assertSame(2, $result->applied);
+        self::assertSame(0, $result->skipped);
+    }
+
+    #[Test]
+    public function itSkipsAnInsertionInsideAReplacement(): void
+    {
+        $source = new File('file.xml', 'abc');
+        $replacement = new Fix('file.xml', 0, 3, 'ABC', 'ReplacementSniff', 'abc');
+        $insertion = new Fix('file.xml', 1, 1, 'X', 'InsertionSniff');
+
+        $result = new FixApplier()->apply($source, [$replacement, $insertion]);
+
+        self::assertSame('ABC', $result->file->content);
+        self::assertSame(1, $result->applied);
+        self::assertSame(1, $result->skipped);
+    }
+
+    #[Test]
     public function itAppliesEveryFixInAPlanAtomically(): void
     {
         $content = '<para>x</para>';

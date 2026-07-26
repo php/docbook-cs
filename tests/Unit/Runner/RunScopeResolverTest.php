@@ -162,6 +162,31 @@ final class RunScopeResolverTest extends TestCase
     }
 
     #[Test]
+    public function wideScopeSkipsExpansionForUnreadableFiles(): void
+    {
+        if (DIRECTORY_SEPARATOR === '\\') {
+            self::markTestSkipped('Windows does not support Unix file permissions.');
+        }
+
+        chmod($this->sourceFile, 0000);
+        clearstatcache(true, $this->sourceFile);
+
+        if (is_readable($this->sourceFile)) {
+            chmod($this->sourceFile, 0600);
+            self::markTestSkipped('The current user can read files without permissions.');
+        }
+
+        try {
+            self::assertSame(
+                [$this->sourceFile => null],
+                $this->resolver(wide: true)->resolvePaths([$this->sourceFile]),
+            );
+        } finally {
+            chmod($this->sourceFile, 0600);
+        }
+    }
+
+    #[Test]
     public function wideScopeNormalisesParentDirectorySegmentsInEntityPaths(): void
     {
         $resolver = new RunScopeResolver(

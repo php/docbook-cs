@@ -43,7 +43,8 @@ final class ExceptionNameFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new ExceptionNameSniff()->process($document, $source);
+        $sniffer = new ExceptionNameSniff();
+        $violations = $sniffer->process($document, $source);
 
         $beginOffset = (int) strpos($content, '<classname>');
         $untilOffset = (int) strpos($content, '</classname>');
@@ -56,7 +57,7 @@ final class ExceptionNameFixerTest extends TestCase
             new SourceRange(1, $untilOffset + 2, $untilOffset + 11, 'classname'),
         ], $violations[0]->affectedRanges);
 
-        $fix = new ExceptionNameFixer()->process($violations[0]);
+        $fix = new ($sniffer::getFixerClassName())()->process($violations[0]);
 
         $result = new FixApplier()->apply($source, [$fix]);
 

@@ -39,6 +39,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
+    CoversClass(FixerException::class),
     CoversClass(XmlFileProcessor::class),
     CoversClass(XmlFixRunner::class),
     CoversClass(XmlSniffRunner::class),
@@ -53,7 +54,6 @@ use PHPUnit\Framework\TestCase;
     UsesClass(FileReport::class),
     UsesClass(Fix::class),
     UsesClass(FixApplier::class),
-    UsesClass(FixerException::class),
     UsesClass(FixPlan::class),
     UsesClass(FixResult::class),
     UsesClass(Line::class),

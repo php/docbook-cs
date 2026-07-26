@@ -144,7 +144,8 @@ final class SimparaSniff extends AbstractSniff implements Fixable
                 throw new \LogicException('Could not map simpara violation to source content.');
             }
 
-            if ($match['selfClosing']) {
+            $closingOffset = $match['closingOffset'];
+            if (null === $closingOffset) {
                 continue;
             }
 
@@ -158,11 +159,6 @@ final class SimparaSniff extends AbstractSniff implements Fixable
 
             if (!$this->isSimple($para, $allowed)) {
                 continue;
-            }
-
-            $closingOffset = $match['closingOffset'];
-            if ($closingOffset === null) {
-                throw new \LogicException('Could not map simpara violation to source content.');
             }
 
             $affectedRanges = $this->elementNameRanges(
@@ -219,13 +215,7 @@ final class SimparaSniff extends AbstractSniff implements Fixable
                 |> array_values(...);
     }
 
-    /**
-     * @return list<array{
-     *     beginOffset: int,
-     *     selfClosing: bool,
-     *     closingOffset: int|null
-     * }>
-     */
+    /**  @return list<array{beginOffset: int, closingOffset: int|null}> */
     private function sourceMatches(File $file): array
     {
         preg_match_all(
@@ -245,7 +235,6 @@ final class SimparaSniff extends AbstractSniff implements Fixable
             if (str_ends_with(rtrim($tag), '/>')) {
                 $sourceMatches[] = [
                     'beginOffset' => $offset,
-                    'selfClosing' => true,
                     'closingOffset' => null,
                 ];
                 continue;
@@ -262,7 +251,6 @@ final class SimparaSniff extends AbstractSniff implements Fixable
 
             $sourceMatches[] = [
                 'beginOffset' => $opening,
-                'selfClosing' => false,
                 'closingOffset' => $offset,
             ];
         }

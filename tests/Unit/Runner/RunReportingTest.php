@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversNothing]
 final class RunReportingTest extends TestCase
 {
-    #[Test] // TODO: should be integration
+    #[Test]
     public function itReportsFixingOutcomeAndPerformance(): void
     {
         $filePath = tempnam(sys_get_temp_dir(), 'docbook-cs-reporting-');

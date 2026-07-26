@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Process;
 
 use DocbookCS\Process\NativeProcessRunner;
+use DocbookCS\Process\ProcessException;
 use DocbookCS\Process\ProcessResult;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -12,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(NativeProcessRunner::class),
+    CoversClass(ProcessException::class),
     CoversClass(ProcessResult::class),
 ]
 final class NativeProcessRunnerTest extends TestCase
@@ -45,5 +47,17 @@ final class NativeProcessRunnerTest extends TestCase
 
         self::assertSame(0, $result->exitCode);
         self::assertSame('value', $result->stdout);
+    }
+
+    #[Test]
+    public function itRejectsAnInvalidWorkingDirectory(): void
+    {
+        $this->expectException(ProcessException::class);
+        $this->expectExceptionMessageIs('Could not start process.');
+
+        new NativeProcessRunner()->run(
+            [PHP_BINARY, '-r', ''],
+            sys_get_temp_dir() . '/missing-' . bin2hex(random_bytes(6)),
+        );
     }
 }

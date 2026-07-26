@@ -105,17 +105,10 @@ final readonly class RunScopeResolver
     private function expandReferencedTargets(array &$targets): void
     {
         $pending = array_keys($targets);
-        $visitedFiles = [];
         $visitedEntityPaths = [];
 
         for ($i = 0; isset($pending[$i]); $i++) {
             $file = $pending[$i];
-
-            if (isset($visitedFiles[$file])) {
-                continue;
-            }
-
-            $visitedFiles[$file] = true;
             $content = @file_get_contents($file);
 
             if ($content === false) {
