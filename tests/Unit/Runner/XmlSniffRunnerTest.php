@@ -22,6 +22,8 @@ use DocbookCS\Source\Line;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
+use DocbookCS\Tests\Support\XmlHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -44,9 +46,12 @@ use PHPUnit\Framework\TestCase;
     UsesClass(SourceRange::class),
     UsesClass(XmlFileProcessor::class),
     UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
 ]
 final class XmlSniffRunnerTest extends TestCase
 {
+    use XmlHelper;
+
     #[Test]
     public function itReportsParseErrors(): void
     {
@@ -444,14 +449,6 @@ final class XmlSniffRunnerTest extends TestCase
         RunMode $mode = RunMode::Sniff,
     ): XmlSniffRunner {
         return new XmlSniffRunner($mode, $sniffs);
-    }
-
-    private function xml(string $body): string
-    {
-        return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-$body
-XML;
     }
 
     private function assertInternalError(FileReport $report, string $messagePart): void

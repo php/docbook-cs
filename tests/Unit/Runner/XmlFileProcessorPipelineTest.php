@@ -24,6 +24,8 @@ use DocbookCS\Sniff\Fixable;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
+use DocbookCS\Tests\Support\XmlHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -49,10 +51,13 @@ use PHPUnit\Framework\TestCase;
     UsesClass(Violation::class),
     UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
     UsesClass(XmlSniffRunner::class),
 ]
 final class XmlFileProcessorPipelineTest extends TestCase
 {
+    use XmlHelper;
+
     #[Test]
     public function itReportsXmlParseErrors(): void
     {
@@ -196,13 +201,5 @@ final class XmlFileProcessorPipelineTest extends TestCase
         );
 
         self::assertFalse($fileReport->hasFinalViolations());
-    }
-
-    private function xml(string $body): string
-    {
-        return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-$body
-XML;
     }
 }

@@ -42,6 +42,7 @@ use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -86,6 +87,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlFileProcessor::class),
     UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
     UsesClass(XmlSniffRunner::class),
 ]
 final class RunScopeTest extends TestCase

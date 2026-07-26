@@ -41,6 +41,7 @@ use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\ExceptionNameSniff;
 use DocbookCS\Source\File;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -85,6 +86,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(UpstreamResolver::class),
     UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlFileProcessor::class),
+    UsesClass(XmlParser::class),
 ]
 final class ApplicationTest extends TestCase
 {
