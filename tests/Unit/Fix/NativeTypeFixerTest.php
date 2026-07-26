@@ -6,6 +6,7 @@ namespace DocbookCS\Tests\Unit\Fix;
 
 use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixApplier;
+use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\Fixer\NativeTypeFixer;
 use DocbookCS\Fix\FixerException;
 use DocbookCS\Fix\FixResult;
@@ -27,6 +28,8 @@ use PHPUnit\Framework\TestCase;
     UsesClass(File::class),
     UsesClass(Fix::class),
     UsesClass(FixApplier::class),
+    UsesClass(FixPlan::class),
+    UsesClass(FixerException::class),
     UsesClass(FixResult::class),
     UsesClass(Line::class),
     UsesClass(RunMode::class),

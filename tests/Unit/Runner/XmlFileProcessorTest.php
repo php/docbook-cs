@@ -307,7 +307,7 @@ final class XmlFileProcessorTest extends TestCase
     #[Test]
     public function itDoesNotFixViolationsFromNonFixableSniffs(): void
     {
-        $sniff = new class (RunMode::Sniff) implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
             public function __construct(public RunMode $mode)
             {
             }
@@ -343,7 +343,7 @@ final class XmlFileProcessorTest extends TestCase
     #[Test]
     public function itThrowsWhenFixableSniffReportsViolationWithoutContentInFixMode(): void
     {
-        $sniff = new class (RunMode::Fix) implements Fixable {
+        $sniff = new /** @implements Fixable<null> */ class (RunMode::Fix) implements Fixable {
             public function __construct(public RunMode $mode)
             {
             }
@@ -385,7 +385,7 @@ final class XmlFileProcessorTest extends TestCase
     /** @param list<int> $lines */
     private function sniff(array $lines): SniffInterface
     {
-        $sniff = new class (RunMode::Sniff) implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
             /** @var list<int> */
             public array $lines = [];
 
