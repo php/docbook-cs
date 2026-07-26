@@ -121,7 +121,7 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
     {
         preg_match_all(
             self::CLASSNAME_PATTERN,
-            $this->maskNonElementMarkup($file->content),
+            $file->contentWithNonElementMarkupMasked(),
             $matches,
             PREG_OFFSET_CAPTURE,
         );

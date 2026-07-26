@@ -53,13 +53,4 @@ final class AbstractSniffTest extends TestCase
 
         new ExposedAbstractSniff()->setProperty('severity', 'invalid');
     }
-
-    #[Test]
-    public function itMasksAnUnterminatedDeclarationThroughTheEndOfTheSource(): void
-    {
-        $source = '<!DOCTYPE root [';
-        $masked =  new ExposedAbstractSniff()->exposeMaskNonElementMarkup($source);
-
-        self::assertSame(str_repeat(' ', strlen($source)), $masked);
-    }
 }
