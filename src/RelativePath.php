@@ -8,11 +8,7 @@ final class RelativePath
 {
     public static function fromWorkingDirectory(string $filePath): string
     {
-        $workingDirectory = getcwd();
-        if ($workingDirectory === false) {
-            return $filePath; // @codeCoverageIgnore
-        }
-
+        $workingDirectory = getcwd() ?: '.';
         $prefix = rtrim(str_replace('\\', '/', $workingDirectory), '/') . '/';
         $normalisedPath = str_replace('\\', '/', $filePath);
 

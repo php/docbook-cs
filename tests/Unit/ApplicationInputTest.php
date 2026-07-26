@@ -13,22 +13,39 @@ use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\DiffParser;
 use DocbookCS\Diff\GitDiffProvider;
 use DocbookCS\Diff\UpstreamResolver;
+use DocbookCS\Fix\Fix;
+use DocbookCS\Fix\FixApplier;
+use DocbookCS\Fix\FixPlan;
+use DocbookCS\Fix\FixResult;
+use DocbookCS\Fix\Fixer\ExceptionNameFixer;
 use DocbookCS\Git\GitClient;
 use DocbookCS\Git\GitException;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
+use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
 use DocbookCS\Progress\NullProgress;
+use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Report\Reporter\ConsoleReporter;
+use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\EntityPreprocessor;
 use DocbookCS\Runner\RunCoordinator;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
+use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\RunScopeResolver;
+use DocbookCS\Runner\ViolationScopeFilter;
 use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlFixRunner;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\AbstractSniff;
+use DocbookCS\Sniff\ExceptionNameSniff;
+use DocbookCS\Source\File;
+use DocbookCS\Violation\SourceRange;
+use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -45,22 +62,39 @@ use PHPUnit\Framework\TestCase;
     UsesClass(DiffChangeset::class),
     UsesClass(DiffParser::class),
     UsesClass(DiffPathLoader::class),
+    UsesClass(EntityExpansionMarker::class),
     UsesClass(EntityPreprocessor::class),
     UsesClass(EntityResolver::class),
+    UsesClass(ExceptionNameFixer::class),
+    UsesClass(ExceptionNameSniff::class),
+    UsesClass(File::class),
+    UsesClass(FileReport::class),
+    UsesClass(Fix::class),
+    UsesClass(FixApplier::class),
+    UsesClass(FixPlan::class),
+    UsesClass(FixResult::class),
     UsesClass(GitClient::class),
     UsesClass(GitDiffProvider::class),
     UsesClass(GitException::class),
     UsesClass(NullProgress::class),
+    UsesClass(PathLoader::class),
     UsesClass(PathMatcher::class),
     UsesClass(Report::class),
     UsesClass(RunCoordinator::class),
     UsesClass(RunMode::class),
     UsesClass(RunPlan::class),
     UsesClass(RunPlanner::class),
+    UsesClass(RunScope::class),
     UsesClass(RunScopeResolver::class),
     UsesClass(SniffEntry::class),
+    UsesClass(SourceRange::class),
     UsesClass(UpstreamResolver::class),
+    UsesClass(Violation::class),
+    UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlFileProcessor::class),
+    UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
+    UsesClass(XmlSniffRunner::class),
 ]
 final class ApplicationInputTest extends TestCase
 {
@@ -118,6 +152,36 @@ final class ApplicationInputTest extends TestCase
     }
 
     #[Test]
+    public function itDetectsPipedDiffThroughCliEntryPoint(): void
+    {
+        $process = proc_open(
+            [PHP_BINARY, __DIR__ . '/../../bin/docbook-cs', '--config=' . self::VALID_CONFIG, self::SCAN_FILE],
+            [
+                ['pipe', 'r'],
+                ['pipe', 'w'],
+                ['pipe', 'w'],
+            ],
+            $pipes,
+            getcwd() ?: '.',
+        );
+        self::assertIsResource($process);
+        self::assertCount(3, $pipes);
+        self::assertIsResource($pipes[0]);
+        self::assertIsResource($pipes[1]);
+        self::assertIsResource($pipes[2]);
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        self::assertSame(2, proc_close($process), $stdout ?: '');
+        self::assertIsString($stderr);
+        self::assertStringContainsString('Paths cannot be combined with diff input', $stderr);
+    }
+
+    #[Test]
     public function itRejectsPathsCombinedWithAPipedDiff(): void
     {
         $app = new Application(
@@ -156,6 +220,32 @@ final class ApplicationInputTest extends TestCase
 
         self::assertSame(0, $app->run());
         self::assertSame('', $this->readStream($this->stderr));
+    }
+
+    #[Test]
+    public function itAppliesFixesInFixMode(): void
+    {
+        $temporaryPath = tempnam(sys_get_temp_dir(), 'docbook-cs-');
+        self::assertIsString($temporaryPath);
+        $filePath = $temporaryPath . '.xml';
+        rename($temporaryPath, $filePath);
+        file_put_contents($filePath, '<root><classname>RuntimeException</classname></root>');
+
+        try {
+            $app = new Application(
+                ['docbook-cs', '--config=' . self::VALID_CONFIG, '--fix', $filePath],
+                $this->stdout,
+                $this->stderr,
+            );
+
+            self::assertSame(0, $app->run());
+            self::assertSame(
+                '<root><exceptionname>RuntimeException</exceptionname></root>',
+                file_get_contents($filePath),
+            );
+        } finally {
+            @unlink($filePath);
+        }
     }
 
     /** @param resource $stream */

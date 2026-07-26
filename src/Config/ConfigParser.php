@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace DocbookCS\Config;
 
+use DocbookCS\Xml\XmlParser;
+
 final class ConfigParser
 {
     private const string NAMESPACE_URI = 'https://php.github.io/docbook-cs/config';
+
+    public function __construct(private readonly XmlParser $xmlParser = new XmlParser())
+    {
+    }
 
     /**
      * @throws ConfigParserException if the file cannot be read or contains invalid XML.
@@ -19,21 +25,13 @@ final class ConfigParser
         }
 
         $basePath = dirname(realpath($filePath) ?: '');
+        $xml = $this->xmlParser->parseElement(file_get_contents($filePath) ?: '');
 
-        $previousUseErrors = libxml_use_internal_errors(true);
-        $xml = simplexml_load_string(file_get_contents($filePath) ?: '');
-        $errors = libxml_get_errors();
-        libxml_clear_errors();
-        libxml_use_internal_errors($previousUseErrors);
-
-        if ($xml === false) {
-            $message = $errors !== []
-                ? $errors[0]->message
-                : 'Unknown parse error'; // @codeCoverageIgnore
-            throw ConfigParserException::invalidXml($filePath, trim($message));
+        if ($xml instanceof \LibXMLError) {
+            throw ConfigParserException::invalidXml($filePath, trim($xml->message));
         }
 
-        return $this->parse($xml, $basePath);
+        return $this->createConfigData($xml, $basePath);
     }
 
     /**
@@ -42,27 +40,20 @@ final class ConfigParser
      */
     public function parseString(string $xmlContent, string $basePath): ConfigData
     {
-        $previousUseErrors = libxml_use_internal_errors(true);
-        $xml = simplexml_load_string($xmlContent);
-        $errors = libxml_get_errors();
-        libxml_clear_errors();
-        libxml_use_internal_errors($previousUseErrors);
+        $xml = $this->xmlParser->parseElement($xmlContent);
 
-        if ($xml === false) {
-            $message = $errors !== []
-                ? $errors[0]->message
-                : 'Unknown parse error'; // @codeCoverageIgnore
-            throw ConfigParserException::invalidXml('(string)', trim($message));
+        if ($xml instanceof \LibXMLError) {
+            throw ConfigParserException::invalidXml('(string)', trim($xml->message));
         }
 
-        return $this->parse($xml, $basePath);
+        return $this->createConfigData($xml, $basePath);
     }
 
     /**
      * @throws ConfigParserException if the XML is invalid or required elements/attributes are missing.
      * @throws \InvalidArgumentException if a SniffEntry is constructed with an invalid class name.
      */
-    private function parse(\SimpleXMLElement $root, string $basePath): ConfigData
+    private function createConfigData(\SimpleXMLElement $root, string $basePath): ConfigData
     {
         // Register the namespace for xpath queries.
         $root->registerXPathNamespace('d', self::NAMESPACE_URI);

@@ -19,19 +19,19 @@ final class CheckstyleReporter implements ReporterInterface
         $dom->appendChild($root);
 
         $comment = $dom->createComment(
-            sprintf(' total runtime: %.3fs ', $report->getTotalTime())
+            sprintf(' total runtime: %.3fs ', $report->totalTime)
         );
         $root->appendChild($comment);
 
-        foreach ($report->getFileReports() as $fileReport) {
-            if (!$fileReport->hasViolations()) {
+        foreach ($report->fileReports as $fileReport) {
+            if (!$fileReport->hasFinalViolations()) {
                 continue;
             }
 
             $fileNode = $dom->createElement('file');
             $fileNode->setAttribute('name', RelativePath::fromWorkingDirectory($fileReport->filePath));
 
-            foreach ($fileReport->getViolations() as $violation) {
+            foreach ($fileReport->finalViolations as $violation) {
                 $errorNode = $dom->createElement('error');
                 $errorNode->setAttribute('line', (string) $violation->rangeOne()->line);
                 $errorNode->setAttribute('severity', $violation->severity->value);

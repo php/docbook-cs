@@ -48,8 +48,9 @@ final readonly class UpstreamResolver
         }
 
         try {
+            // filesystem or OS edge cases
             if (!flock($lock, LOCK_EX)) {
-                return null;
+                return null; // @codeCoverageIgnore
             }
 
             return $this->refreshAndResolve($repoRoot, $repoName);

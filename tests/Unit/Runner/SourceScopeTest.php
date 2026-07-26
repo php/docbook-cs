@@ -36,6 +36,7 @@ final class SourceScopeTest extends TestCase
 
         self::assertFalse($scope->isWholeFile());
         self::assertSame([2], $scope->lineNumbers($file));
+        self::assertTrue($scope->includes($this->violation(5, 5, 2)));
         self::assertTrue($scope->includes($this->violation(4, 7, 2)));
         self::assertFalse($scope->includes($this->violation(8, 13, 3)));
     }
@@ -48,6 +49,10 @@ final class SourceScopeTest extends TestCase
 
         self::assertTrue($scope->isWholeFile());
         self::assertSame([1, 2, 3], $scope->lineNumbers($file));
+        self::assertTrue($scope->includes($this->violation(8, 13, 3)));
+        self::assertSame($scope, $scope->after([
+            new Fix('file.xml', 0, 0, "zero\n", 'Test'),
+        ]));
     }
 
     #[Test]
@@ -57,6 +62,31 @@ final class SourceScopeTest extends TestCase
         $scope = RunScope::fromFileAndFileChange($file, new FileChange('file.xml', []));
 
         self::assertSame([], $scope->lineNumbers($file));
+        self::assertSame($scope, $scope->after([
+            new Fix('file.xml', 0, 0, "zero\n", 'Test'),
+        ]));
+    }
+
+    #[Test]
+    public function itIgnoresDeletionAnchorsOutsideTheSource(): void
+    {
+        $file = new File('file.xml', "one\ntwo\nthree");
+        $scope = RunScope::fromFileAndFileChange(
+            $file,
+            new FileChange('file.xml', [], deletionAnchors: [10]),
+        );
+
+        self::assertSame([], $scope->lineNumbers($file));
+    }
+
+    #[Test]
+    public function itCombinesAdjacentChangedLines(): void
+    {
+        $file = new File('file.xml', "one\ntwo\nthree");
+        $scope = RunScope::fromFileAndFileChange($file, new FileChange('file.xml', [2, 3]));
+
+        self::assertSame([2, 3], $scope->lineNumbers($file));
+        self::assertTrue($scope->includes($this->violation(7, 9, 2)));
     }
 
     #[Test]
@@ -85,6 +115,19 @@ final class SourceScopeTest extends TestCase
         ]);
 
         self::assertTrue($scope->includes($this->violation(5, 10, 2)));
+    }
+
+    #[Test]
+    public function itKeepsScopeAlignedWhenAReplacementSpansItsBeginning(): void
+    {
+        $file = new File('file.xml', "one\ntwo\nthree");
+        $scope = RunScope::fromFileAndFileChange($file, new FileChange('file.xml', [2]))->after([
+            new Fix('file.xml', 2, 6, 'X', 'Test'),
+        ]);
+
+        self::assertSame([1], $scope->lineNumbers($file->withContent("onXo\nthree")));
+        self::assertTrue($scope->includes($this->violation(2, 5, 1)));
+        self::assertFalse($scope->includes($this->violation(5, 10, 2)));
     }
 
     #[Test]
@@ -123,7 +166,10 @@ final class SourceScopeTest extends TestCase
             new FileChange('file.xml', [], deletionAnchors: [2]),
         );
 
-        self::assertTrue($scope->includes($this->violation(0, strlen($file->content) + 1, 1)));
+        $untilOffset = strlen($file->content);
+
+        self::assertTrue($scope->includes($this->violation(0, $untilOffset + 1, 1)));
+        self::assertTrue($scope->includes($this->violation($untilOffset, $untilOffset, 2)));
     }
 
     private function violation(int $beginOffset, int $untilOffset, int $line): Violation

@@ -7,32 +7,35 @@ namespace DocbookCS\Tests\Unit\Runner;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixApplier;
+use DocbookCS\Fix\Fixer\SimparaFixer;
 use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\FixResult;
-use DocbookCS\Fix\Fixer\SimparaFixer;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlFixRunner;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\ViolationScopeFilter;
-use DocbookCS\Runner\XmlFileProcessor;
-use DocbookCS\Runner\XmlProcessingResult;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\SimparaSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
-    CoversClass(SimparaSniff::class),
     CoversClass(RunScope::class),
+    CoversClass(SimparaSniff::class),
     CoversClass(XmlFileProcessor::class),
+    CoversClass(XmlSniffRunner::class),
     //
     UsesClass(EntityExpansionMarker::class),
     UsesClass(EntityPreprocessor::class),
@@ -50,7 +53,8 @@ use PHPUnit\Framework\TestCase;
     UsesClass(SourceRange::class),
     UsesClass(Violation::class),
     UsesClass(ViolationScopeFilter::class),
-    UsesClass(XmlProcessingResult::class),
+    UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
 ]
 final class SourceRangeScopeTest extends TestCase
 {
@@ -76,19 +80,20 @@ XML;
         file_put_contents($filePath, $source);
 
         try {
-            $processor = new XmlFileProcessor([
-                new SimparaSniff(RunMode::Fix),
-            ]);
+            $processor = new XmlFileProcessor(new XmlSniffRunner(RunMode::Fix, [
+                new SimparaSniff(),
+            ]));
 
-            $result = $processor->process(
-                new File($filePath, $source),
-                new FileChange($filePath, [3]),
+            $fixedFile = $processor->process(
+                $file = new File($filePath, $source),
+                $fileReport = new FileReport($filePath),
+                RunScope::fromFileAndFileChange($file, new FileChange($filePath, [3])),
             );
-            file_put_contents($filePath, $result->fixedContent());
-            $report = $result->fileReport;
+            self::assertNotNull($fixedFile);
+            file_put_contents($filePath, $fixedFile->content);
 
             self::assertSame($expected, file_get_contents($filePath));
-            self::assertFalse($report->hasViolations());
+            self::assertFalse($fileReport->hasFinalViolations());
         } finally {
             @unlink($filePath);
         }
@@ -111,16 +116,18 @@ Text
 </simpara>
 </root>
 XML;
-        $processor = new XmlFileProcessor([
-            new SimparaSniff(RunMode::Fix),
-        ]);
+        $processor = new XmlFileProcessor(new XmlSniffRunner(RunMode::Fix, [
+            new SimparaSniff(),
+        ]));
 
-        $result = $processor->process(
-            new File('file.xml', $source),
-            new FileChange('file.xml', [], deletionAnchors: [3]),
+        $fixedFile = $processor->process(
+            $file = new File('file.xml', $source),
+            $fileReport = new FileReport('file.xml'),
+            RunScope::fromFileAndFileChange($file, new FileChange('file.xml', [], deletionAnchors: [3])),
         );
 
-        self::assertSame($expected, $result->fixedContent());
-        self::assertFalse($result->fileReport->hasViolations());
+        self::assertNotNull($fixedFile);
+        self::assertSame($expected, $fixedFile->content);
+        self::assertFalse($fileReport->hasFinalViolations());
     }
 }

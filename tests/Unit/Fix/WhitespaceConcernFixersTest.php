@@ -10,7 +10,6 @@ use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\Fixer\MixedIndentationFixer;
 use DocbookCS\Fix\Fixer\TrailingWhitespaceFixer;
 use DocbookCS\Fix\FixResult;
-use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\MixedIndentationSniff;
 use DocbookCS\Sniff\TrailingWhitespaceSniff;
 use DocbookCS\Source\File;
@@ -47,19 +46,22 @@ final class WhitespaceConcernFixersTest extends TestCase
         $document->loadXML($content);
         $source = new File('file.xml', $content);
 
-        $trailingViolations = new TrailingWhitespaceSniff(RunMode::Fix)->process($document, $source);
-        $indentationViolations = new MixedIndentationSniff(RunMode::Fix)->process($document, $source);
+        $trailingSniffer = new TrailingWhitespaceSniff();
+        $indentationSniffer = new MixedIndentationSniff();
+
+        $trailingViolations = $trailingSniffer->process($document, $source);
+        $indentationViolations = $indentationSniffer->process($document, $source);
 
         self::assertCount(2, $trailingViolations);
         self::assertCount(1, $indentationViolations);
 
         $fixes = [];
-        $trailingFixer = new TrailingWhitespaceFixer();
+        $trailingFixer = new ($trailingSniffer::getFixerClassName())();
         foreach ($trailingViolations as $violation) {
             $fixes[] = $trailingFixer->process($violation);
         }
 
-        $indentationFixer = new MixedIndentationFixer();
+        $indentationFixer = new ($indentationSniffer::getFixerClassName())();
         foreach ($indentationViolations as $violation) {
             $fixes[] = $indentationFixer->process($violation);
         }

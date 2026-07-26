@@ -37,7 +37,12 @@ final class ConsoleProgress implements ProgressInterface
             return;
         }
 
-        $this->write($this->dim(sprintf('Scanning %d file(s)...', $totalFiles)) . PHP_EOL);
+        $suffix = $totalFiles === 1 ? 'file' : 'files';
+        $formattedTotal = number_format($totalFiles);
+
+        $message = sprintf('Scanning %s %s...', $formattedTotal, $suffix);
+
+        $this->write($this->dim($message) . PHP_EOL);
         $this->drawBar(0, '');
     }
 
@@ -62,13 +67,14 @@ final class ConsoleProgress implements ProgressInterface
 
     private function drawBar(int $current, string $filePath, int $violations = 0): void
     {
-        $percent = $this->totalFiles > 0
-            ? (int)floor(($current / $this->totalFiles) * 100)
-            : 0; // @codeCoverageIgnore
+        if ($this->totalFiles === 0) {
+            // prevented by public methods
+            return; // @codeCoverageIgnore
+        }
 
-        $filled = $this->totalFiles > 0
-            ? (int)floor(($current / $this->totalFiles) * self::BAR_WIDTH)
-            : 0; // @codeCoverageIgnore
+        $ratio = $current / $this->totalFiles;
+        $percent = (int)floor($ratio * 100);
+        $filled = (int)floor($ratio * self::BAR_WIDTH);
 
         $empty = self::BAR_WIDTH - $filled;
 

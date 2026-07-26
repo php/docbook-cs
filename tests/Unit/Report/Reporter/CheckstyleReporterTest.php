@@ -93,6 +93,24 @@ final class CheckstyleReporterTest extends TestCase
     }
 
     #[Test]
+    public function itExcludesFixingOutcome(): void
+    {
+        $fileReport = new FileReport('fixed.xml');
+        $fileReport->markChanged();
+        $fileReport->recordFixingPass();
+
+        $report = new Report();
+        $report->addFileReport($fileReport);
+
+        $output = $this->reporter->generate($report);
+        $dom = $this->parseOutput($output);
+
+        self::assertSame(0, $dom->getElementsByTagName('file')->length);
+        self::assertStringContainsString('total runtime:', $output);
+        self::assertStringNotContainsString('fix', $output);
+    }
+
+    #[Test]
     public function itSkipsFilesWithNoViolations(): void
     {
         $report = new Report();
@@ -107,7 +125,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itIncludesFileNodeWithNameAttribute(): void
     {
         $fileReport = new FileReport('src/broken.xml');
-        $fileReport->addViolation($this->createViolation());
+        $fileReport->addFoundViolations([$this->createViolation()]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -123,7 +141,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itRendersAbsoluteFilePathRelativeToWorkingDirectory(): void
     {
         $fileReport = new FileReport((getcwd() ?: '') . '/src/broken.xml');
-        $fileReport->addViolation($this->createViolation());
+        $fileReport->addFoundViolations([$this->createViolation()]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -140,7 +158,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itSetsLineAttribute(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation(line: 42));
+        $fileReport->addFoundViolations([$this->createViolation(line: 42)]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -155,7 +173,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itSetsSeverityAttribute(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation(severity: Severity::WARNING));
+        $fileReport->addFoundViolations([$this->createViolation(severity: Severity::WARNING)]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -170,7 +188,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itSetsMessageAttribute(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation(message: 'Use <simpara> instead'));
+        $fileReport->addFoundViolations([$this->createViolation(message: 'Use <simpara> instead')]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -185,7 +203,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itSetsSourceAttribute(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation(sniffCode: 'DocbookCS.ExceptionName'));
+        $fileReport->addFoundViolations([$this->createViolation(sniffCode: 'DocbookCS.ExceptionName')]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -200,9 +218,11 @@ final class CheckstyleReporterTest extends TestCase
     public function itOutputsMultipleViolationsForOneFile(): void
     {
         $fileReport = new FileReport('multi.xml');
-        $fileReport->addViolation($this->createViolation(message: 'First', line: 5));
-        $fileReport->addViolation($this->createViolation(message: 'Second', line: 10));
-        $fileReport->addViolation($this->createViolation(message: 'Third', line: 20));
+        $fileReport->addFoundViolations([
+            $this->createViolation(message: 'First', line: 5),
+            $this->createViolation(message: 'Second', line: 10),
+            $this->createViolation(message: 'Third', line: 20),
+        ]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
@@ -216,10 +236,10 @@ final class CheckstyleReporterTest extends TestCase
     public function itOutputsMultipleFilesWithViolations(): void
     {
         $file1 = new FileReport('first.xml');
-        $file1->addViolation($this->createViolation(message: 'Issue A'));
+        $file1->addFoundViolations([$this->createViolation(message: 'Issue A')]);
 
         $file2 = new FileReport('second.xml');
-        $file2->addViolation($this->createViolation(message: 'Issue B'));
+        $file2->addFoundViolations([$this->createViolation(message: 'Issue B')]);
 
         $report = new Report();
         $report->addFileReport($file1);
@@ -239,7 +259,7 @@ final class CheckstyleReporterTest extends TestCase
         $cleanFile = new FileReport('clean.xml');
 
         $dirtyFile = new FileReport('dirty.xml');
-        $dirtyFile->addViolation($this->createViolation());
+        $dirtyFile->addFoundViolations([$this->createViolation()]);
 
         $report = new Report();
         $report->addFileReport($cleanFile);
@@ -256,7 +276,7 @@ final class CheckstyleReporterTest extends TestCase
     public function itEscapesSpecialCharactersInMessage(): void
     {
         $fileReport = new FileReport('escape.xml');
-        $fileReport->addViolation($this->createViolation(message: 'Use "quotes" & <tags>'));
+        $fileReport->addFoundViolations([$this->createViolation(message: 'Use "quotes" & <tags>')]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
