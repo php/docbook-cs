@@ -143,7 +143,7 @@ final class SniffRunnerTest extends TestCase
     #[Test] // TODO: should be integration
     public function itAddsFileReportsForFilesWithViolations(): void
     {
-        $sniff = new class (RunMode::Sniff) implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
             public function __construct(public RunMode $mode)
             {
             }
@@ -184,7 +184,7 @@ final class SniffRunnerTest extends TestCase
     #[Test] // TODO: should be integration
     public function itStoresAbsolutePathsInFileReports(): void
     {
-        $sniff = new class (RunMode::Sniff) implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
             public function __construct(public RunMode $mode)
             {
             }
@@ -385,7 +385,7 @@ final class SniffRunnerTest extends TestCase
     #[Test] // TODO: should be integration
     public function itReportsNoViolationsForFilesInDiffWithoutAddedLines(): void
     {
-        $sniff = new class (RunMode::Sniff) implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
             public function __construct(public RunMode $mode)
             {
             }
