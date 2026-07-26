@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Runner;
 
-use DocbookCS\Runner\EntityPreprocessor;
-use DocbookCS\Runner\RunMode;
-use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Report\FileReport;
+use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\RunMode;
+use DocbookCS\Runner\RunScope;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\AttributeOrderSniff;
-use DocbookCS\Sniff\SniffInterface;
 use DocbookCS\Source\File;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
@@ -21,55 +22,44 @@ final class XmlFileProcessorPipelineTest extends TestCase
     #[Test]
     public function itKeepsTheActualSourcePathInViolations(): void
     {
-        $workingDirectory = getcwd();
-        self::assertIsString($workingDirectory);
+        $file = new File(
+            '/project/reference/file.xml',
+            '<root xmlns="urn:test" xml:id="root"/>',
+        );
+        $fileReport = new FileReport($file->path);
 
-        $filePath = tempnam($workingDirectory, 'docbook-cs-');
-        self::assertIsString($filePath);
+        new XmlFileProcessor(
+            new XmlSniffRunner(RunMode::Sniff, [new AttributeOrderSniff()]),
+        )->process($file, $fileReport, RunScope::fromFileAndFileChange($file, null));
 
-        try {
-            file_put_contents($filePath, '<root xmlns="urn:test" xml:id="root"/>');
-
-            $report = $this->process(
-                $this->processor([new AttributeOrderSniff()]),
-                '<root xmlns="urn:test" xml:id="root"/>',
-                $filePath,
-            );
-
-            self::assertCount(1, $report->getViolations());
-            self::assertSame($filePath, $report->getViolations()[0]->filePath);
-            self::assertSame($filePath, $report->filePath);
-        } finally {
-            @unlink($filePath);
-        }
+        self::assertSame(1, $fileReport->getFinalViolationCount());
+        self::assertSame($file->path, $fileReport->finalViolations[0]->filePath);
+        self::assertSame($file->path, $fileReport->filePath);
     }
 
     #[Test]
     public function itAppliesFixesToTheOriginalSourceWhenEntitiesExpandBeforeTheViolation(): void
     {
-        $filePath = tempnam(sys_get_temp_dir(), 'docbook-cs-');
-        self::assertIsString($filePath);
-        $source = '<root>&prefix;<tag xmlns="urn:test" xml:id="id"/></root>';
-
-        try {
-            file_put_contents($filePath, $source);
-
-            $processor = $this->processor(
-                [new AttributeOrderSniff(RunMode::Fix)],
+        $file = new File(
+            'input.xml',
+            '<root>&prefix;<tag xmlns="urn:test" xml:id="id"/></root>',
+        );
+        $fileReport = new FileReport($file->path);
+        $fixedFile = new XmlFileProcessor(
+            new XmlSniffRunner(
+                RunMode::Fix,
+                [new AttributeOrderSniff()],
                 new EntityPreprocessor([
                     'prefix' => 'expanded-content-before-tag',
                 ]),
-            );
+            ),
+        )->process($file, $fileReport, RunScope::fromFileAndFileChange($file, null));
 
-            $this->processFile($processor, $filePath);
-
-            self::assertSame(
-                '<root>&prefix;<tag xml:id="id" xmlns="urn:test"/></root>',
-                file_get_contents($filePath),
-            );
-        } finally {
-            @unlink($filePath);
-        }
+        self::assertNotNull($fixedFile);
+        self::assertSame(
+            '<root>&prefix;<tag xml:id="id" xmlns="urn:test"/></root>',
+            $fixedFile->content,
+        );
     }
 
     #[Test] // TODO: should be integration
@@ -82,58 +72,41 @@ final class XmlFileProcessorPipelineTest extends TestCase
         </chapter>'
         );
 
-        $processor = $this->processor([], new EntityPreprocessor([
-            'link.superglobals' => '',
-            'php.ini' => '',
-        ]));
-
-        $report = $this->process($processor, $xml);
-
-        self::assertCount(
-            0,
-            array_filter(
-                $report->getViolations(),
-                fn($v) => $v->sniffCode === 'DocbookCS.Internal'
-            )
+        $file = new File('input.xml', $xml);
+        $fileReport = new FileReport($file->path);
+        new XmlFileProcessor(
+            new XmlSniffRunner(RunMode::Sniff, [], new EntityPreprocessor([
+                'link.superglobals' => '',
+                'php.ini' => '',
+            ])),
+        )->process(
+            $file,
+            $fileReport,
+            RunScope::fromFileAndFileChange($file, null),
         );
+
+        self::assertFalse($fileReport->hasFinalViolations());
     }
 
     #[Test] // TODO: should be integration
     public function itUsesCustomPreprocessor(): void
     {
-        $processor = $this->processor([], new EntityPreprocessor([
-            'custom.entity' => '[X]',
-        ]));
-
         $xml = $this->xml('<chapter><simpara>&custom.entity;</simpara></chapter>');
-
-        $report = $this->process($processor, $xml);
-
-        self::assertCount(
-            0,
-            array_filter(
-                $report->getViolations(),
-                fn($v) => $v->sniffCode === 'DocbookCS.Internal'
-            )
+        $file = new File('input.xml', $xml);
+        $fileReport = new FileReport($file->path);
+        new XmlFileProcessor(
+            new XmlSniffRunner(
+                RunMode::Sniff,
+                [],
+                new EntityPreprocessor(['custom.entity' => '[X]']),
+            ),
+        )->process(
+            $file,
+            $fileReport,
+            RunScope::fromFileAndFileChange($file, null),
         );
-    }
 
-    private function process(XmlFileProcessor $processor, string $content, string $path = 'input.xml'): FileReport
-    {
-        return $processor->process(new File($path, $content))->fileReport;
-    }
-
-    private function processFile(XmlFileProcessor $processor, string $path): FileReport
-    {
-        $content = file_get_contents($path);
-        self::assertIsString($content);
-
-        $result = $processor->process(new File($path, $content));
-        if ($result->isModified()) {
-            file_put_contents($path, $result->fixedContent());
-        }
-
-        return $result->fileReport;
+        self::assertFalse($fileReport->hasFinalViolations());
     }
 
     private function xml(string $body): string
@@ -142,14 +115,5 @@ final class XmlFileProcessorPipelineTest extends TestCase
 <?xml version="1.0" encoding="UTF-8"?>
 $body
 XML;
-    }
-
-    /** @param list<SniffInterface> $sniffs */
-    private function processor(array $sniffs = [], ?EntityPreprocessor $pre = null): XmlFileProcessor
-    {
-        return new XmlFileProcessor(
-            $sniffs,
-            $pre ?? new EntityPreprocessor([]) // always pass array
-        );
     }
 }

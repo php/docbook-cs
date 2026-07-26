@@ -16,11 +16,12 @@ use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlFixRunner;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\ViolationScopeFilter;
-use DocbookCS\Runner\XmlFileProcessor;
-use DocbookCS\Runner\XmlProcessingResult;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\AbstractSniff;
 use DocbookCS\Sniff\ExceptionNameSniff;
 use DocbookCS\Sniff\Fixable;
@@ -39,6 +40,8 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(XmlFileProcessor::class),
+    CoversClass(XmlFixRunner::class),
+    CoversClass(XmlSniffRunner::class),
     //
     UsesClass(AbstractSniff::class),
     UsesClass(EntityExpansionMarker::class),
@@ -56,13 +59,12 @@ use PHPUnit\Framework\TestCase;
     UsesClass(Line::class),
     UsesClass(Report::class),
     UsesClass(RunMode::class),
+    UsesClass(RunScope::class),
     UsesClass(SimparaFixer::class),
     UsesClass(SimparaSniff::class),
     UsesClass(SourceRange::class),
-    UsesClass(RunScope::class),
     UsesClass(Violation::class),
     UsesClass(ViolationScopeFilter::class),
-    UsesClass(XmlProcessingResult::class),
 ]
 final class FixConvergenceTest extends TestCase
 {
@@ -73,10 +75,10 @@ final class FixConvergenceTest extends TestCase
         $filePath = $this->temporaryFile($source);
 
         try {
-            $processor = new XmlFileProcessor([
-                new SimparaSniff(RunMode::Fix),
-                new ExceptionNameSniff(RunMode::Fix),
-            ]);
+            $processor = new XmlFileProcessor(new XmlSniffRunner(RunMode::Fix, [
+                new SimparaSniff(),
+                new ExceptionNameSniff(),
+            ]));
 
             $report = $this->processFile($processor, $filePath);
 
@@ -84,7 +86,8 @@ final class FixConvergenceTest extends TestCase
                 '<root><simpara>A</simpara><simpara><exceptionname>RuntimeException</exceptionname></simpara></root>',
                 file_get_contents($filePath),
             );
-            self::assertFalse($report->hasViolations());
+            self::assertFalse($report->hasFinalViolations());
+            self::assertSame(1, $report->fixingPasses);
         } finally {
             @unlink($filePath);
         }
@@ -97,7 +100,7 @@ final class FixConvergenceTest extends TestCase
         $filePath = $this->temporaryFile($source);
 
         try {
-            $lineBreakSniff = new class (RunMode::Fix) extends AbstractSniff implements Fixable {
+            $lineBreakSniff = new class extends AbstractSniff implements Fixable {
                 private const string ELEMENT = '<line-break/>';
 
                 public static function getCode(): string
@@ -129,7 +132,7 @@ final class FixConvergenceTest extends TestCase
                     )];
                 }
             };
-            $badElementSniff = new class (RunMode::Fix) extends AbstractSniff {
+            $badElementSniff = new class extends AbstractSniff {
                 public static function getCode(): string
                 {
                     return 'Test.BadElement';
@@ -154,16 +157,16 @@ final class FixConvergenceTest extends TestCase
                     )];
                 }
             };
-            $processor = new XmlFileProcessor([
+            $processor = new XmlFileProcessor(new XmlSniffRunner(RunMode::Fix, [
                 $lineBreakSniff,
                 $badElementSniff,
-            ]);
+            ]));
 
             $report = $this->processFile($processor, $filePath);
 
             self::assertSame("<root>\n<bad/></root>", file_get_contents($filePath));
-            self::assertSame(1, $report->getViolationCount());
-            self::assertSame(2, $report->violations[0]->rangeOne()->line);
+            self::assertSame(1, $report->getFinalViolationCount());
+            self::assertSame(2, $report->finalViolations[0]->rangeOne()->line);
         } finally {
             @unlink($filePath);
         }
@@ -176,7 +179,7 @@ final class FixConvergenceTest extends TestCase
         $filePath = $this->temporaryFile($source);
 
         try {
-            $lineBreakSniff = new class (RunMode::Fix) extends AbstractSniff implements Fixable {
+            $lineBreakSniff = new class extends AbstractSniff implements Fixable {
                 public static function getCode(): string
                 {
                     return 'Test.ScopedLineBreak';
@@ -202,7 +205,7 @@ final class FixConvergenceTest extends TestCase
                     )];
                 }
             };
-            $badElementSniff = new class (RunMode::Fix) extends AbstractSniff {
+            $badElementSniff = new class extends AbstractSniff {
                 public static function getCode(): string
                 {
                     return 'Test.ScopedBadElement';
@@ -224,7 +227,9 @@ final class FixConvergenceTest extends TestCase
                     )];
                 }
             };
-            $processor = new XmlFileProcessor([$lineBreakSniff, $badElementSniff]);
+            $processor = new XmlFileProcessor(
+                new XmlSniffRunner(RunMode::Fix, [$lineBreakSniff, $badElementSniff])
+            );
 
             $report = $this->processFile(
                 $processor,
@@ -233,8 +238,8 @@ final class FixConvergenceTest extends TestCase
             );
 
             self::assertSame("<root>\n\n<bad/>\n</root>", file_get_contents($filePath));
-            self::assertSame(1, $report->getViolationCount());
-            self::assertSame(3, $report->violations[0]->rangeOne()->line);
+            self::assertSame(1, $report->getFinalViolationCount());
+            self::assertSame(3, $report->finalViolations[0]->rangeOne()->line);
         } finally {
             @unlink($filePath);
         }
@@ -247,7 +252,7 @@ final class FixConvergenceTest extends TestCase
         $filePath = $this->temporaryFile($source);
 
         try {
-            $toggleElementSniff = new class (RunMode::Fix) extends AbstractSniff implements Fixable {
+            $toggleElementSniff = new class extends AbstractSniff implements Fixable {
                 public static function getCode(): string
                 {
                     return 'Test.ToggleElement';
@@ -273,9 +278,9 @@ final class FixConvergenceTest extends TestCase
                     )];
                 }
             };
-            $processor = new XmlFileProcessor([
+            $processor = new XmlFileProcessor(new XmlSniffRunner(RunMode::Fix, [
                 $toggleElementSniff,
-            ]);
+            ]));
 
             try {
                 $this->processFile($processor, $filePath);
@@ -297,7 +302,7 @@ final class FixConvergenceTest extends TestCase
         $filePath = $this->temporaryFile($source);
 
         try {
-            $invalidXmlSniff = new class (RunMode::Fix) extends AbstractSniff implements Fixable {
+            $invalidXmlSniff = new class extends AbstractSniff implements Fixable {
                 public static function getCode(): string
                 {
                     return 'Test.InvalidXml';
@@ -322,7 +327,7 @@ final class FixConvergenceTest extends TestCase
                     )];
                 }
             };
-            $processor = new XmlFileProcessor([$invalidXmlSniff]);
+            $processor = new XmlFileProcessor(new XmlSniffRunner(RunMode::Fix, [$invalidXmlSniff]));
 
             try {
                 $this->processFile($processor, $filePath);
@@ -342,12 +347,17 @@ final class FixConvergenceTest extends TestCase
         $content = file_get_contents($path);
         self::assertIsString($content);
 
-        $result = $processor->process(new File($path, $content), $fileChange);
-        if ($result->isModified()) {
-            file_put_contents($path, $result->fixedContent());
+        $fixedFile = $processor->process(
+            $file = new File($path, $content),
+            $fileReport = new FileReport($path),
+            RunScope::fromFileAndFileChange($file, $fileChange)
+        );
+
+        if ($fixedFile !== null) {
+            file_put_contents($path, $fixedFile->content);
         }
 
-        return $result->fileReport;
+        return $fileReport;
     }
 
     private function temporaryFile(string $content): string

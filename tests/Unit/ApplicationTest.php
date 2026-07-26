@@ -30,15 +30,15 @@ use DocbookCS\Report\Reporter\CheckstyleReporter;
 use DocbookCS\Report\Reporter\ConsoleReporter;
 use DocbookCS\Report\Reporter\JsonReporter;
 use DocbookCS\Runner\EntityPreprocessor;
-use DocbookCS\Runner\RunMode;
+use DocbookCS\Runner\XmlFileProcessor;
 use DocbookCS\Runner\RunCoordinator;
+use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
 use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\RunScopeResolver;
 use DocbookCS\Runner\ViolationScopeFilter;
-use DocbookCS\Runner\XmlFileProcessor;
-use DocbookCS\Runner\XmlProcessingResult;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\ExceptionNameSniff;
 use DocbookCS\Source\File;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -68,7 +68,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(RunPlan::class),
     CoversClass(RunPlanner::class),
     CoversClass(SniffEntry::class),
-    CoversClass(XmlFileProcessor::class),
+    CoversClass(XmlSniffRunner::class),
     //
     UsesClass(DiffBaseResolver::class),
     UsesClass(DiffChangeset::class),
@@ -84,7 +84,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(RunScopeResolver::class),
     UsesClass(UpstreamResolver::class),
     UsesClass(ViolationScopeFilter::class),
-    UsesClass(XmlProcessingResult::class),
+    UsesClass(XmlFileProcessor::class),
 ]
 final class ApplicationTest extends TestCase
 {

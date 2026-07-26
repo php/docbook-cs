@@ -7,6 +7,7 @@ namespace DocbookCS\Tests\Unit\Report;
 use DocbookCS\RelativePath;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
+use DocbookCS\Report\ReportException;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
@@ -19,6 +20,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(FileReport::class),
     CoversClass(RelativePath::class),
     CoversClass(Report::class),
+    CoversClass(ReportException::class),
     CoversClass(Violation::class),
     //
     UsesClass(SourceRange::class),
@@ -27,12 +29,15 @@ final class ReportTest extends TestCase
 {
     private function createViolation(
         string $message = 'Some problem',
-        int $line = 1,
-        string $sniffCode = 'DocbookCS.Test',
         Severity $severity = Severity::ERROR,
-        string $filePath = 'file.xml',
     ): Violation {
-        return new Violation($sniffCode, $filePath, $message, [new SourceRange($line, 0, 0)], severity: $severity);
+        return new Violation(
+            'DocbookCS.Test',
+            'file.xml',
+            $message,
+            [new SourceRange(1, 0, 0)],
+            severity: $severity,
+        );
     }
 
     #[Test]
@@ -40,18 +45,18 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame(0, $report->getFilesScanned());
+        self::assertSame(0, $report->getScannedFilesCount());
     }
 
     #[Test]
-    public function itIncrementsFilesScanned(): void
+    public function itCountsFileReportsAsScannedFiles(): void
     {
         $report = new Report();
-        $report->incrementFilesScanned();
-        $report->incrementFilesScanned();
-        $report->incrementFilesScanned();
+        $report->addFileReport(new FileReport('a.xml'));
+        $report->addFileReport(new FileReport('b.xml'));
+        $report->addFileReport(new FileReport('c.xml'));
 
-        self::assertSame(3, $report->getFilesScanned());
+        self::assertSame(3, $report->getScannedFilesCount());
     }
 
     #[Test]
@@ -59,7 +64,28 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame([], $report->getFileReports());
+        self::assertSame([], $report->fileReports);
+    }
+
+    #[Test]
+    public function itRejectsAddingFoundViolationsTwice(): void
+    {
+        $fileReport = new FileReport('file.xml');
+        $fileReport->addFoundViolations([]);
+
+        $this->expectException(ReportException::class);
+
+        $fileReport->addFoundViolations([]);
+    }
+
+    #[Test]
+    public function itRejectsAddingFinalViolationsBeforeFoundViolations(): void
+    {
+        $fileReport = new FileReport('file.xml');
+
+        $this->expectException(ReportException::class);
+
+        $fileReport->addFinalViolations([]);
     }
 
     #[Test]
@@ -70,8 +96,8 @@ final class ReportTest extends TestCase
 
         $report->addFileReport($fileReport);
 
-        self::assertCount(1, $report->getFileReports());
-        self::assertSame($fileReport, $report->getFileReports()['src/chapter.xml']);
+        self::assertCount(1, $report->fileReports);
+        self::assertSame($fileReport, $report->fileReports['src/chapter.xml']);
     }
 
     #[Test]
@@ -91,7 +117,7 @@ final class ReportTest extends TestCase
         $report->addFileReport(new FileReport('a.xml'));
         $report->addFileReport(new FileReport('b.xml'));
 
-        $keys = array_keys($report->getFileReports());
+        $keys = array_keys($report->fileReports);
 
         self::assertSame(['a.xml', 'b.xml'], $keys);
     }
@@ -106,25 +132,27 @@ final class ReportTest extends TestCase
         $report->addFileReport($first);
         $report->addFileReport($second);
 
-        self::assertCount(1, $report->getFileReports());
-        self::assertSame($second, $report->getFileReports()['file.xml']);
+        self::assertCount(1, $report->fileReports);
+        self::assertSame($second, $report->fileReports['file.xml']);
     }
 
     #[Test]
     public function itReturnsTotalViolationsAcrossAllFiles(): void
     {
         $file1 = new FileReport('a.xml');
-        $file1->addViolation($this->createViolation(severity: Severity::ERROR));
-        $file1->addViolation($this->createViolation(severity: Severity::WARNING));
+        $file1->addFoundViolations([
+            $this->createViolation(),
+            $this->createViolation(severity: Severity::WARNING),
+        ]);
 
         $file2 = new FileReport('b.xml');
-        $file2->addViolation($this->createViolation(severity: Severity::ERROR));
+        $file2->addFoundViolations([$this->createViolation()]);
 
         $report = new Report();
         $report->addFileReport($file1);
         $report->addFileReport($file2);
 
-        self::assertSame(3, $report->getTotalViolations());
+        self::assertSame(3, $report->getTotalFinalViolationCount());
     }
 
     #[Test]
@@ -132,25 +160,29 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame(0, $report->getTotalViolations());
+        self::assertSame(0, $report->getTotalFinalViolationCount());
     }
 
     #[Test]
     public function itReturnsTotalErrorsAcrossAllFiles(): void
     {
         $file1 = new FileReport('a.xml');
-        $file1->addViolation($this->createViolation(severity: Severity::ERROR));
-        $file1->addViolation($this->createViolation(severity: Severity::WARNING));
+        $file1->addFoundViolations([
+            $this->createViolation(),
+            $this->createViolation(severity: Severity::WARNING),
+        ]);
 
         $file2 = new FileReport('b.xml');
-        $file2->addViolation($this->createViolation(severity: Severity::ERROR));
-        $file2->addViolation($this->createViolation(severity: Severity::ERROR));
+        $file2->addFoundViolations([
+            $this->createViolation(),
+            $this->createViolation(),
+        ]);
 
         $report = new Report();
         $report->addFileReport($file1);
         $report->addFileReport($file2);
 
-        self::assertSame(3, $report->getTotalErrors());
+        self::assertSame(3, $report->getTotalErrorLevelViolationCount());
     }
 
     #[Test]
@@ -158,25 +190,29 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame(0, $report->getTotalErrors());
+        self::assertSame(0, $report->getTotalErrorLevelViolationCount());
     }
 
     #[Test]
     public function itReturnsTotalWarningsAcrossAllFiles(): void
     {
         $file1 = new FileReport('a.xml');
-        $file1->addViolation($this->createViolation(severity: Severity::WARNING));
-        $file1->addViolation($this->createViolation(severity: Severity::ERROR));
+        $file1->addFoundViolations([
+            $this->createViolation(severity: Severity::WARNING),
+            $this->createViolation(severity: Severity::ERROR),
+        ]);
 
         $file2 = new FileReport('b.xml');
-        $file2->addViolation($this->createViolation(severity: Severity::WARNING));
-        $file2->addViolation($this->createViolation(severity: Severity::WARNING));
+        $file2->addFoundViolations([
+            $this->createViolation(severity: Severity::WARNING),
+            $this->createViolation(severity: Severity::WARNING),
+        ]);
 
         $report = new Report();
         $report->addFileReport($file1);
         $report->addFileReport($file2);
 
-        self::assertSame(3, $report->getTotalWarnings());
+        self::assertSame(3, $report->getTotalWarningLevelViolationCount());
     }
 
     #[Test]
@@ -184,36 +220,36 @@ final class ReportTest extends TestCase
     {
         $report = new Report();
 
-        self::assertSame(0, $report->getTotalWarnings());
+        self::assertSame(0, $report->getTotalWarningLevelViolationCount());
     }
 
     #[Test]
-    public function itHasViolationsWhenViolationsExist(): void
+    public function itHasFinalViolationsWhenFinalViolationsExist(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation());
+        $fileReport->addFoundViolations([$this->createViolation()]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
 
-        self::assertTrue($report->hasViolations());
+        self::assertTrue($report->hasFinalViolations());
     }
 
     #[Test]
-    public function itHasNoViolationsWhenEmpty(): void
+    public function itHasNoFinalViolationsWhenEmpty(): void
     {
         $report = new Report();
 
-        self::assertFalse($report->hasViolations());
+        self::assertFalse($report->hasFinalViolations());
     }
 
     #[Test]
-    public function itHasNoViolationsWhenFilesAreClean(): void
+    public function itHasNoFinalViolationsWhenFilesAreClean(): void
     {
         $report = new Report();
         $report->addFileReport(new FileReport('clean.xml'));
 
-        self::assertFalse($report->hasViolations());
+        self::assertFalse($report->hasFinalViolations());
     }
 
     #[Test]
@@ -224,11 +260,10 @@ final class ReportTest extends TestCase
         $v3 = $this->createViolation(message: 'Third');
 
         $file1 = new FileReport('a.xml');
-        $file1->addViolation($v1);
-        $file1->addViolation($v2);
+        $file1->addFoundViolations([$v1, $v2]);
 
         $file2 = new FileReport('b.xml');
-        $file2->addViolation($v3);
+        $file2->addFoundViolations([$v3]);
 
         $report = new Report();
         $report->addFileReport($file1);
@@ -254,41 +289,168 @@ final class ReportTest extends TestCase
     public function itDoesNotCountWarningsAsErrors(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation(severity: Severity::WARNING));
-        $fileReport->addViolation($this->createViolation(severity: Severity::WARNING));
+        $fileReport->addFoundViolations([
+            $this->createViolation(severity: Severity::WARNING),
+            $this->createViolation(severity: Severity::WARNING),
+        ]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
 
-        self::assertSame(0, $report->getTotalErrors());
-        self::assertSame(2, $report->getTotalWarnings());
-        self::assertSame(2, $report->getTotalViolations());
+        self::assertSame(0, $report->getTotalErrorLevelViolationCount());
+        self::assertSame(2, $report->getTotalWarningLevelViolationCount());
+        self::assertSame(2, $report->getTotalFinalViolationCount());
     }
 
     #[Test]
     public function itDoesNotCountErrorsAsWarnings(): void
     {
         $fileReport = new FileReport('file.xml');
-        $fileReport->addViolation($this->createViolation(severity: Severity::ERROR));
-        $fileReport->addViolation($this->createViolation(severity: Severity::ERROR));
+        $fileReport->addFoundViolations([
+            $this->createViolation(),
+            $this->createViolation(),
+        ]);
 
         $report = new Report();
         $report->addFileReport($fileReport);
 
-        self::assertSame(2, $report->getTotalErrors());
-        self::assertSame(0, $report->getTotalWarnings());
-        self::assertSame(2, $report->getTotalViolations());
+        self::assertSame(2, $report->getTotalErrorLevelViolationCount());
+        self::assertSame(0, $report->getTotalWarningLevelViolationCount());
+        self::assertSame(2, $report->getTotalFinalViolationCount());
     }
 
     #[Test]
-    public function filesScannedIsIndependentOfFileReports(): void
+    public function itCountsCleanFileReportsAsScannedFiles(): void
     {
         $report = new Report();
-        $report->incrementFilesScanned();
-        $report->incrementFilesScanned();
-        $report->incrementFilesScanned();
+        $report->addFileReport(new FileReport('clean1.xml'));
+        $report->addFileReport(new FileReport('clean2.xml'));
+        $report->addFileReport(new FileReport('clean3.xml'));
 
-        self::assertSame(3, $report->getFilesScanned());
-        self::assertCount(0, $report->getFileReports());
+        self::assertSame(3, $report->getScannedFilesCount());
+        self::assertCount(3, $report->fileReports);
+    }
+
+    #[Test]
+    public function itAggregatesFixingOutcome(): void
+    {
+        $first = new FileReport('first.xml');
+        $first->markChanged();
+        $first->recordFixingPass();
+        $first->recordFixingPass();
+        $first->addFoundViolations(array_fill(0, 4, $this->createViolation()));
+        $first->addFinalViolations([$this->createViolation()]);
+
+        $second = new FileReport('second.xml');
+        $second->markChanged();
+        $second->recordFixingPass();
+        $second->addFoundViolations(array_fill(0, 3, $this->createViolation()));
+        $second->addFinalViolations([$this->createViolation()]);
+
+        $report = new Report();
+        $report->addFileReport($first);
+        $report->addFileReport($second);
+
+        self::assertSame(2, $report->getChangedFilesCount());
+        self::assertSame(7, $report->getFoundViolationsCount());
+        self::assertSame(5, $report->getAppliedFixesCount());
+        self::assertSame(2, $report->getSkippedFixesCount());
+        self::assertSame(5, $report->getFixedErrorCount());
+        self::assertSame(0, $report->getFixedWarningCount());
+        self::assertSame(3, $report->getFixingPassesCount());
+    }
+
+    #[Test]
+    public function itAggregatesSniffTimes(): void
+    {
+        $first = new FileReport('first.xml', collectPerformance: true);
+        $first->measureSniffer('Test.Sniff', static fn() => null);
+
+        $second = new FileReport('second.xml', collectPerformance: true);
+        $second->measureSniffer('Test.Sniff', static fn() => null);
+
+        $report = new Report();
+        $report->addFileReport($first);
+        $report->addFileReport($second);
+
+        self::assertSame(
+            $first->sniffingTimes['Test.Sniff'] + $second->sniffingTimes['Test.Sniff'],
+            $report->getSniffingTimes()['Test.Sniff'],
+        );
+    }
+
+    #[Test]
+    public function itAggregatesFixerTimes(): void
+    {
+        $first = new FileReport('first.xml', collectPerformance: true);
+        $first->measureFixer('Test.Sniff', static fn() => null);
+
+        $second = new FileReport('second.xml', collectPerformance: true);
+        $second->measureFixer('Test.Sniff', static fn() => null);
+
+        $report = new Report();
+        $report->addFileReport($first);
+        $report->addFileReport($second);
+
+        self::assertSame(
+            $first->fixingTimes['Test.Sniff'] + $second->fixingTimes['Test.Sniff'],
+            $report->getFixingTimes()['Test.Sniff'],
+        );
+    }
+
+    #[Test]
+    public function itMeasuresSniffingAndReturnsTheOperationResult(): void
+    {
+        $fileReport = new FileReport('file.xml', collectPerformance: true);
+
+        $result = $fileReport->measureSniffing(static function (): string {
+            usleep(1_000);
+
+            return 'result';
+        });
+
+        self::assertSame('result', $result);
+        self::assertGreaterThan(0.0, $fileReport->totalSniffingTime);
+    }
+
+    #[Test]
+    public function itMeasuresFixingAndReturnsTheOperationResult(): void
+    {
+        $report = new Report();
+
+
+        $fileReport = new FileReport('file.xml', collectPerformance: true);
+        $report->addFileReport($fileReport);
+
+        $result = $fileReport->measureFixing(static function (): string {
+            usleep(1_000);
+
+            return 'result';
+        });
+
+        self::assertSame('result', $result);
+        self::assertGreaterThan(0.0, $report->getTotalFixingTime());
+    }
+
+    #[Test]
+    public function itRunsOperationsWithoutCollectingPerformanceByDefault(): void
+    {
+        $fileReport = new FileReport('file.xml');
+
+        $result = $fileReport->measureSniffer('Test.Sniff', static fn(): string => 'result');
+
+        self::assertSame('result', $result);
+        self::assertSame([], $fileReport->sniffingTimes);
+    }
+
+    #[Test]
+    public function itRecordsFixingPasses(): void
+    {
+        $fileReport = new FileReport('file.xml');
+
+        $fileReport->recordFixingPass();
+        $fileReport->recordFixingPass();
+
+        self::assertSame(2, $fileReport->fixingPasses);
     }
 }

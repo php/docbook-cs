@@ -13,24 +13,30 @@ final class JsonReporter implements ReporterInterface
     {
         $data = [
             'totals' => [
-                'files_scanned' => $report->getFilesScanned(),
-                'violations' => $report->getTotalViolations(),
-                'errors' => $report->getTotalErrors(),
-                'warnings' => $report->getTotalWarnings(),
+                'files_scanned' => $report->getScannedFilesCount(),
+                'violations' => $report->getTotalFinalViolationCount(),
+                'errors' => $report->getTotalErrorLevelViolationCount(),
+                'warnings' => $report->getTotalWarningLevelViolationCount(),
             ],
             'files' => [],
+            'fixing' => [
+                'files_changed' => $report->getChangedFilesCount(),
+                'fixes_applied' => $report->getAppliedFixesCount(),
+                'fixes_skipped' => $report->getSkippedFixesCount(),
+                'fixing_passes' => $report->getFixingPassesCount(),
+            ],
             'performance' => [
-                'total_runtime_seconds' => $report->getTotalTime(),
+                'total_runtime_seconds' => $report->totalTime,
             ],
         ];
 
-        foreach ($report->getFileReports() as $fileReport) {
-            if (!$fileReport->hasViolations()) {
+        foreach ($report->fileReports as $fileReport) {
+            if (!$fileReport->hasFinalViolations()) {
                 continue;
             }
 
             $violations = [];
-            foreach ($fileReport->getViolations() as $violation) {
+            foreach ($fileReport->finalViolations as $violation) {
                 $violations[] = [
                     'line' => $violation->rangeOne()->line,
                     'severity' => $violation->severity,

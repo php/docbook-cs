@@ -28,6 +28,7 @@ use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
 use DocbookCS\Runner\RunScopeResolver;
 use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\AbstractSniff;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -61,6 +62,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(SniffEntry::class),
     UsesClass(UpstreamResolver::class),
     UsesClass(XmlFileProcessor::class),
+    UsesClass(XmlSniffRunner::class),
 ]
 final class ApplicationInputTest extends TestCase
 {

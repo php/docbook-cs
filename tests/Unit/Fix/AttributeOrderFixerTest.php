@@ -9,7 +9,6 @@ use DocbookCS\Fix\FixApplier;
 use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Fix\FixResult;
-use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\AttributeOrderSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
@@ -26,7 +25,6 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Fix::class),
     CoversClass(FixApplier::class),
     CoversClass(FixResult::class),
-    CoversClass(RunMode::class),
     CoversClass(Violation::class),
     //
     UsesClass(File::class),
@@ -43,7 +41,7 @@ final class AttributeOrderFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new AttributeOrderSniff(RunMode::Fix)->process($document, $source);
+        $violations = new AttributeOrderSniff()->process($document, $source);
 
         $beginOffset = (int)strpos($content, '<root');
         $sourceContent = '<root xmlns="urn:test" xml:id="root"/>';
@@ -70,7 +68,7 @@ final class AttributeOrderFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new AttributeOrderSniff(RunMode::Fix)->process($document, $source);
+        $violations = new AttributeOrderSniff()->process($document, $source);
 
         self::assertCount(1, $violations);
 

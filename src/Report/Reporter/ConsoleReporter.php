@@ -23,8 +23,8 @@ final class ConsoleReporter implements ReporterInterface
     {
         $output = '';
 
-        foreach ($report->getFileReports() as $fileReport) {
-            if (!$fileReport->hasViolations()) {
+        foreach ($report->fileReports as $fileReport) {
+            if (!$fileReport->hasFinalViolations()) {
                 continue;
             }
 
@@ -34,7 +34,7 @@ final class ConsoleReporter implements ReporterInterface
             $output .= $this->bold('FILE: ' . $filePath) . PHP_EOL;
             $output .= str_repeat('-', min(80, 6 + strlen($filePath))) . PHP_EOL;
 
-            foreach ($fileReport->getViolations() as $violation) {
+            foreach ($fileReport->finalViolations as $violation) {
                 $output .= sprintf(
                     ' %4d | %s | %s | %s',
                     $violation->rangeOne()->line,
@@ -60,66 +60,94 @@ final class ConsoleReporter implements ReporterInterface
 
     private function buildSummary(Report $report): string
     {
-        $files = $report->getFilesScanned();
-        $errors = $report->getTotalErrors();
-        $warnings = $report->getTotalWarnings();
-        $total = $report->getTotalViolations();
-        $time = $report->getTotalTime();
+        $lines = $report->hasFixingResults()
+            ? $this->buildFixingOutcome($report)
+            : [$this->buildSniffingOutcome($report)];
 
-        $timeLine = sprintf('Total runtime: %.3fs', $time);
+        $lines[] = $this->dim(sprintf('Total runtime: %.3fs', $report->totalTime));
 
-        if ($total === 0) {
-            return $this->green(
-                sprintf(
-                    'OK -- %d file(s) scanned, no violations found.',
-                    $files,
-                )
-            ) . PHP_EOL . $this->dim($timeLine);
+        return implode(PHP_EOL, $lines);
+    }
+
+    /** @return non-empty-list<string> */
+    private function buildFixingOutcome(Report $report): array
+    {
+        $lines = [
+            $this->green($this->formatFixedSummary($report)),
+        ];
+
+        if ($report->hasFinalViolations()) {
+            $lines[] = $this->red($this->formatFinalSummary($report, 'REMAINING'));
         }
 
-        return $this->red(
-            sprintf(
-                'FOUND %d violation(s) (%d error(s), %d warning(s)) in %d file(s).',
-                $total,
-                $errors,
-                $warnings,
-                count($report->getFileReports()),
-            )
-        ) . PHP_EOL . $this->dim($timeLine);
+        return $lines;
+    }
+
+    private function buildSniffingOutcome(Report $report): string
+    {
+        if ($report->hasFinalViolations()) {
+            return $this->red($this->formatFinalSummary($report, 'FOUND'));
+        }
+
+        return $this->green(sprintf(
+            'OK -- %s scanned, no violations found.',
+            $this->formatCount('file', $report->getScannedFilesCount()),
+        ));
     }
 
     private function buildPerformance(Report $report): string
     {
-        $totalTime = $report->getTotalTime();
-        $sniffTimes = $report->getSniffTimes();
+        $totalTime = $report->totalTime;
+        $rows = $this->collectPerformanceRows($report);
 
-        if ($totalTime <= 0.0 || $sniffTimes === []) {
+        if ($totalTime <= 0.0 || $rows === []) {
             return $this->dim('No performance data available.');
         }
 
-        // Sort slowest first
-        arsort($sniffTimes);
-
-        $output = $this->bold('PERFORMANCE') . PHP_EOL;
-        $output .= str_repeat('-', 40) . PHP_EOL;
-
-        $output .= sprintf(
-            ' Total runtime: %.3fs',
-            $totalTime
-        ) . PHP_EOL . PHP_EOL;
-
-        foreach ($sniffTimes as $sniff => $time) {
-            $percent = ($time / $totalTime) * 100;
-
-            $output .= sprintf(
-                ' %-40s %6.3fs (%5.1f%%)',
-                $sniff,
-                $time,
-                $percent,
-            ) . PHP_EOL;
+        $nameWidth = 40;
+        foreach (array_keys($rows) as $sniffCode) {
+            $nameWidth = max($nameWidth, strlen($sniffCode));
         }
 
-        return $output;
+        $header = sprintf(' %-*s  %16s  %16s', $nameWidth, '', 'Sniffing', 'Fixing');
+        $lines = [$this->bold('PERFORMANCE'), str_repeat('-', strlen($header)), $this->bold($header)];
+
+        foreach ($rows as $sniffCode => $times) {
+            $lines[] = sprintf(
+                ' %-*s  %16s  %16s',
+                $nameWidth,
+                $sniffCode,
+                $this->formatPerformanceCell($times['sniffing'], $totalTime),
+                $this->formatPerformanceCell($times['fixing'], $totalTime),
+            );
+        }
+
+        return implode(PHP_EOL, $lines);
+    }
+
+    /** @return array<string, array{sniffing: ?float, fixing: ?float}> */
+    private function collectPerformanceRows(Report $report): array
+    {
+        $sniffingTimes = $report->getSniffingTimes();
+        $fixingTimes = $report->getFixingTimes();
+        $rows = [];
+
+        foreach ($sniffingTimes + $fixingTimes as $sniffCode => $_) {
+            $rows[$sniffCode] = [
+                'sniffing' => $sniffingTimes[$sniffCode] ?? null,
+                'fixing' => $fixingTimes[$sniffCode] ?? null,
+            ];
+        }
+
+        // Sort slowest first.
+        uasort(
+            $rows,
+            static fn(array $left, array $right): int =>
+                (($right['sniffing'] ?? 0.0) + ($right['fixing'] ?? 0.0))
+                <=> (($left['sniffing'] ?? 0.0) + ($left['fixing'] ?? 0.0)),
+        );
+
+        return $rows;
     }
 
     private function formatSeverity(Severity $severity): string
@@ -129,6 +157,54 @@ final class ConsoleReporter implements ReporterInterface
             Severity::WARNING => $this->yellow(str_pad(Severity::WARNING->name, 7)),
             default => $this->dim(str_pad(strtoupper($severity->name), 7)),
         }; // @codeCoverageIgnore
+    }
+
+    private function formatPerformanceCell(?float $time, float $totalTime): string
+    {
+        return $time === null
+            ? ''
+            : sprintf('%6.3fs (%5.1f%%)', $time, ($time / $totalTime) * 100);
+    }
+
+    private function formatFixedSummary(Report $report): string
+    {
+        $files = $report->getChangedFilesCount();
+        $passes = $report->getFixingPassesCount();
+        $ending = $report->hasFinalViolations()
+            ? '.'
+            : ', no violations remaining.';
+
+        return sprintf(
+            'FIXED %s [%s, %s] in %s%s%s',
+            $this->formatCount('violation', $report->getAppliedFixesCount()),
+            $this->formatCount('error', $report->getFixedErrorCount()),
+            $this->formatCount('warning', $report->getFixedWarningCount()),
+            $this->formatCount('file', $files),
+            $files > 0 && $passes > $files
+                ? sprintf(' (%s passes)', number_format($passes))
+                : '',
+            $ending,
+        );
+    }
+
+    private function formatFinalSummary(Report $report, string $label): string
+    {
+        // todo: how about info level?
+        return sprintf(
+            '%s %s [%s, %s] in %s.',
+            $label,
+            $this->formatCount('violation', $report->getTotalFinalViolationCount()),
+            $this->formatCount('error', $report->getTotalErrorLevelViolationCount()),
+            $this->formatCount('warning', $report->getTotalWarningLevelViolationCount()),
+            $this->formatCount('file', $report->getViolatingFilesCount()),
+        );
+    }
+
+    private function formatCount(string $singular, int $count): string
+    {
+        $suffix = $count === 1 ? $singular : $singular . 's';
+
+        return sprintf('%s %s', number_format($count), $suffix);
     }
 
     private function bold(string $text): string

@@ -28,11 +28,6 @@ final class FixerException extends \RuntimeException
         ));
     }
 
-    public static function cannotReadFixedContent(): self
-    {
-        return new self('Cannot read fixed content when no fix application was attempted.');
-    }
-
     public static function invalidFixedXml(string $filePath): self
     {
         return new self(

@@ -26,6 +26,8 @@ use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityExpansionMarker;
 use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlFixRunner;
 use DocbookCS\Runner\RunCoordinator;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunPlan;
@@ -33,8 +35,7 @@ use DocbookCS\Runner\RunPlanner;
 use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\RunScopeResolver;
 use DocbookCS\Runner\ViolationScopeFilter;
-use DocbookCS\Runner\XmlFileProcessor;
-use DocbookCS\Runner\XmlProcessingResult;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\AbstractSniff;
 use DocbookCS\Sniff\SimparaSniff;
 use DocbookCS\Source\File;
@@ -84,7 +85,8 @@ use PHPUnit\Framework\TestCase;
     UsesClass(Violation::class),
     UsesClass(ViolationScopeFilter::class),
     UsesClass(XmlFileProcessor::class),
-    UsesClass(XmlProcessingResult::class),
+    UsesClass(XmlFixRunner::class),
+    UsesClass(XmlSniffRunner::class),
 ]
 final class RunScopeTest extends TestCase
 {
@@ -120,14 +122,14 @@ final class RunScopeTest extends TestCase
     {
         $config = $this->config();
 
-        self::assertSame(1, $this->executePaths($config, [$this->sourceFile])->getFilesScanned());
+        self::assertSame(1, $this->executePaths($config, [$this->sourceFile])->getScannedFilesCount());
         self::assertSame(
             2,
             $this->executePaths(
                 $config,
                 [$this->sourceFile],
                 wide: true,
-            )->getFilesScanned(),
+            )->getScannedFilesCount(),
         );
     }
 
@@ -148,7 +150,7 @@ final class RunScopeTest extends TestCase
 
         self::assertSame('<root>&target;</root>', file_get_contents($this->sourceFile));
         self::assertSame('<simpara>Text</simpara>', file_get_contents($this->targetFile));
-        self::assertFalse($report->hasViolations());
+        self::assertFalse($report->hasFinalViolations());
     }
 
     #[Test]
@@ -163,14 +165,13 @@ final class RunScopeTest extends TestCase
             basePath: $this->directory,
         );
 
-        $report = $this->executeDiff(
-            $config,
-            new DiffChangeset([
+        $report = new RunCoordinator()->runWithMetrics(
+            new RunPlanner($config)->planDiff(new DiffChangeset([
                 new FileChange($this->sourceFile, [1]),
-            ]),
+            ])),
         );
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->getScannedFilesCount());
     }
 
     #[Test]
@@ -185,14 +186,13 @@ final class RunScopeTest extends TestCase
             basePath: $this->directory,
         );
 
-        $report = $this->executeDiff(
-            $config,
-            new DiffChangeset([
+        $report = new RunCoordinator()->runWithMetrics(
+            new RunPlanner($config)->planDiff(new DiffChangeset([
                 new FileChange('docs/source.xml', [1]),
-            ]),
+            ])),
         );
 
-        self::assertSame(1, $report->getFilesScanned());
+        self::assertSame(1, $report->getScannedFilesCount());
     }
 
     /** @param list<SniffEntry> $sniffs */
@@ -215,19 +215,8 @@ final class RunScopeTest extends TestCase
         RunMode $mode = RunMode::Sniff,
         bool $wide = false,
     ): Report {
-        return new RunCoordinator()->run(
+        return new RunCoordinator()->runWithMetrics(
             new RunPlanner($config, $mode, $wide)->planPaths($paths),
-        );
-    }
-
-    private function executeDiff(
-        ConfigData $config,
-        DiffChangeset $diff,
-        RunMode $mode = RunMode::Sniff,
-        bool $wide = false,
-    ): Report {
-        return new RunCoordinator()->run(
-            new RunPlanner($config, $mode, $wide)->planDiff($diff),
         );
     }
 }

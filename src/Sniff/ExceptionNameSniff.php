@@ -17,8 +17,8 @@ use DocbookCS\Source\File;
  */
 final class ExceptionNameSniff extends AbstractSniff implements Fixable
 {
-    private const string REPORTING_MESSAGE = '"%s" is wrapped in <classname> but should use <exceptionname>.';
     private const string ELEMENT_NAME = 'classname';
+    private const string REPORTING_MESSAGE = '"%s" is wrapped in <classname> but should use <exceptionname>.';
 
     /**
      * Default suffixes that indicate the class is an exception or error.
