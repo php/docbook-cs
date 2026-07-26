@@ -5,8 +5,9 @@ slug: /sniffs
 
 # Built-in sniffs
 
-DocbookCS ships with four sniffs. Each can be enabled, disabled, or configured
-via `<property>` elements in `docbookcs.xml`.
+DocbookCS ships with five sniffs. Each can be enabled, disabled, or configured
+via `<property>` elements in `docbookcs.xml`, and each comes with an
+auto-fixer — run with [`--fix`](/fixing) to correct violations automatically.
 
 <div className="row" style={{marginTop: '1.5rem'}}>
   <div className="col col--6" style={{marginBottom: '1rem'}}>
@@ -38,11 +39,20 @@ via `<property>` elements in `docbookcs.xml`.
   </div>
   <div className="col col--6" style={{marginBottom: '1rem'}}>
     <SniffCard
-      name="Whitespace"
-      className="DocbookCS\Sniff\WhitespaceSniff"
-      description="Detects trailing whitespace and mixed tabs and spaces in indentation."
+      name="TrailingWhitespace"
+      className="DocbookCS\Sniff\TrailingWhitespaceSniff"
+      description="Detects trailing whitespace at the end of a line."
       category="style"
-      href="/sniffs/whitespace"
+      href="/sniffs/trailing-whitespace"
+    />
+  </div>
+  <div className="col col--6" style={{marginBottom: '1rem'}}>
+    <SniffCard
+      name="MixedIndentation"
+      className="DocbookCS\Sniff\MixedIndentationSniff"
+      description="Detects mixed tabs and spaces in indentation."
+      category="style"
+      href="/sniffs/mixed-indentation"
     />
   </div>
 </div>

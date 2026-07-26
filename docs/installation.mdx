@@ -21,8 +21,17 @@ sidebar_position: 2
 ```bash
 # Copy the dist config and run from the cloned repo
 cp docbookcs.xml.dist docbookcs.xml
+
+# Check only your current changes (diff against the branch point)
 bin/docbook-cs
+
+# Scan the whole tree
+bin/docbook-cs .
 ```
+
+Without arguments, DocbookCS checks the Git diff from the upstream branch
+point through the working tree. Pass a path (such as `.`) to scan full files
+or directories instead.
 
   </TabItem>
   <TabItem value="ci" label="GitHub Actions">
@@ -35,20 +44,41 @@ bin/docbook-cs
 - uses: shivammathur/setup-php@v2
   with:
     php-version: '8.5'
-- run: docbook-cs/bin/docbook-cs --report=checkstyle --no-colors
+# Scan the whole tree; drop the "." to check only the current diff
+- run: docbook-cs/bin/docbook-cs . --report=checkstyle --no-colors
 ```
 
   </TabItem>
   <TabItem value="diff" label="Changed files only">
 
-Scan only the files touched by a pull request:
+Checking only changed lines is the default: with no arguments, DocbookCS
+diffs against the upstream branch point. A unified diff can also be piped
+and is detected automatically — no flag needed:
 
 ```bash
-git diff origin/master...HEAD | bin/docbook-cs --diff --report=checkstyle
+git diff origin/master...HEAD | bin/docbook-cs --report=checkstyle
 ```
 
   </TabItem>
 </Tabs>
+
+## Scope
+
+The inspection scope is derived from the input. By default, only the given
+diff or the full contents of the given paths are checked. With `--wide`,
+every selected file is checked as a whole and referenced `SYSTEM` XML files
+are recursively included.
+
+| Input | `--wide` | Full file(s) | References | Meaning |
+|-------|---------:|-------------:|-----------:|---------|
+| none | no | no | no | diff against branch point |
+| none | yes | yes | yes | changed files and all referenced XML |
+| `<path>` | no | yes | no | full file or directory |
+| `<path>` | yes | yes | yes | full file or directory plus referenced XML |
+| piped diff | no | no | no | piped diff scope |
+| piped diff | yes | yes | yes | piped diff files and referenced XML |
+
+Paths cannot be combined with piped diff input.
 
 ## Options
 
@@ -56,11 +86,17 @@ git diff origin/master...HEAD | bin/docbook-cs --diff --report=checkstyle
 |--------|-------------|
 | `--config=<file>` | Path to configuration file (default: `docbookcs.xml`) |
 | `--report=<format>` | Output format: `console` (default), `checkstyle`, `json` |
-| `--diff[=<file>]` | Restrict analysis to lines changed in a unified diff. Pass `-` or omit the value to read from stdin. |
+| `--fix` | Automatically [fix violations](/fixing) when fixers exist (experimental) |
+| `--wide` | Check whole selected files and recursively include referenced XML files |
+| `--perf` | Collect and report per-sniff timing |
 | `--colors` | Force ANSI color output |
 | `--no-colors` | Disable ANSI color output |
 | `-q`, `--quiet` | Suppress progress output |
 | `-v`, `--version` | Show version and exit |
+| `-h`, `--help` | Show help and exit |
+
+The `--diff` flag from earlier versions was removed: diff mode is now the
+default, and piped diffs are detected automatically.
 
 ## Exit codes
 
@@ -69,3 +105,6 @@ git diff origin/master...HEAD | bin/docbook-cs --diff --report=checkstyle
 | `0` | No violations found |
 | `1` | One or more violations found |
 | `2` | Runtime error (bad config, unreadable file, etc.) |
+
+With `--fix`, the exit code reflects the violations *remaining* after
+fixing: a run that fixes everything exits `0`.

@@ -15,23 +15,31 @@ provides property handling and a `createViolation()` helper.
 namespace Acme\Sniff;
 
 use DocbookCS\Sniff\AbstractSniff;
+use DocbookCS\Source\File;
+use DocbookCS\Violation\SourceRange;
 
 final class DeprecatedUlinkSniff extends AbstractSniff
 {
-    public function getCode(): string
+    public static function getCode(): string
     {
         return 'Acme.DeprecatedUlink';
     }
 
-    public function process(\DOMDocument $document, string $content, string $filePath): array
+    public function process(\DOMDocument $document, File $file): array
     {
+        if ($document->getElementsByTagName('ulink')->length === 0) {
+            return [];
+        }
+
         $violations = [];
 
-        foreach ($document->getElementsByTagName('ulink') as $node) {
+        preg_match_all('/<ulink\b/', $file->content, $matches, PREG_OFFSET_CAPTURE);
+
+        foreach ($matches[0] as [$match, $offset]) {
             $violations[] = $this->createViolation(
-                $filePath,
-                $node->getLineNo(),
+                $file->path,
                 '<ulink> is deprecated; use <link xlink:href="..."> instead.',
+                [SourceRange::fromFile($file, $offset, $offset + strlen($match))],
             );
         }
 
@@ -44,10 +52,11 @@ final class DeprecatedUlinkSniff extends AbstractSniff
 
 ### `getCode()`
 
-Return a unique dot-notation string used in reports and configuration:
+A static method returning a unique dot-notation string used in reports and
+configuration:
 
 ```php
-public function getCode(): string
+public static function getCode(): string
 {
     return 'Vendor.SniffName';
 }
@@ -55,25 +64,50 @@ public function getCode(): string
 
 ### `process()`
 
-Receives the parsed `DOMDocument`, the raw file content as a string, and the
-file path. Returns a list of `Violation` objects (or an empty array).
+Receives the parsed `DOMDocument` and a `DocbookCS\Source\File` value object
+exposing the file path (`$file->path`) and the raw source (`$file->content`).
+Returns a list of `Violation` objects (or an empty array).
 
-Use the DOM for structural checks, and the raw `$content` string when you need
-line/offset information that the DOM does not preserve.
+Use the DOM for structural checks, and the raw `$file->content` string when
+you need offset information that the DOM does not preserve.
+
+### Source ranges
+
+Every violation carries one or more `SourceRange` objects pointing at the
+affected source. Build them from byte offsets into the file content:
+
+```php
+SourceRange::fromFile($file, $beginOffset, $untilOffset)
+```
+
+The range determines the line reported for the violation and, when the sniff
+is [fixable](#making-a-sniff-fixable), the exact source region a fixer may
+replace.
+
+### Entity expansion
+
+DocBook entities are expanded before sniffing, so the DOM can contain nodes
+that do not exist in the inspected source file. When walking the DOM, skip
+those with the `isSourceBacked()` helper so violations are only reported
+against content that is actually present in the file:
+
+```php
+foreach ($document->getElementsByTagName('ulink') as $node) {
+    if (!$this->isSourceBacked($node)) {
+        continue;
+    }
+    // ...
+}
+```
 
 ## Adding configurable properties
 
 Call `$this->getProperty()` to read values set via `<property>` in the config:
 
 ```php
-public function process(\DOMDocument $document, string $content, string $filePath): array
-{
-    $allowedTags = array_filter(
-        array_map('trim', explode(',', $this->getProperty('allowedTags')))
-    );
-
-    // ...
-}
+$allowedTags = array_filter(
+    array_map('trim', explode(',', $this->getProperty('allowedTags')))
+);
 ```
 
 In `docbookcs.xml`:
@@ -96,6 +130,55 @@ level for that sniff:
 ```
 
 Accepted values: `error`, `warning`.
+
+## Making a sniff fixable
+
+To support [`--fix`](/fixing), implement `DocbookCS\Sniff\Fixable` (which
+extends `SniffInterface`) and point it at a fixer class:
+
+```php
+use DocbookCS\Sniff\Fixable;
+
+final class DeprecatedUlinkSniff extends AbstractSniff implements Fixable
+{
+    public static function getFixerClassName(): string
+    {
+        return DeprecatedUlinkFixer::class;
+    }
+
+    // ...
+}
+```
+
+The fixer implements `DocbookCS\Fix\Fixer\Fixer` and turns a violation into
+a replacement for one of its source ranges — return a single `Fix`, or a
+`FixPlan` bundling several fixes that must be applied together:
+
+```php
+namespace Acme\Sniff;
+
+use DocbookCS\Fix\Fix;
+use DocbookCS\Fix\Fixer\Fixer;
+use DocbookCS\Violation\Violation;
+
+final class DeprecatedUlinkFixer implements Fixer
+{
+    public function process(Violation $violation): Fix
+    {
+        return Fix::fromViolationAndRange(
+            $violation,
+            $violation->rangeOne(),
+            '<link',
+        );
+    }
+}
+```
+
+Fixes that conflict with already-accepted fixes, or that would not change
+the content, are skipped automatically and their violations reported as
+remaining. Throw a `DocbookCS\Fix\FixerException` only when the violation's
+source content does not match what the fixer expects — this aborts the run
+with a runtime error.
 
 ## Registering the sniff
 

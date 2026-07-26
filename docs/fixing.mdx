@@ -1,0 +1,91 @@
+---
+sidebar_position: 4
+title: Auto-fixing
+description: Automatically fix violations with the --fix flag.
+---
+
+# Auto-fixing
+
+DocbookCS can automatically fix violations. Pass `--fix` and every violation
+whose sniff ships a fixer is corrected in place:
+
+```bash
+# Fix the whole tree
+docbook-cs . --fix
+
+# Fix only what you changed
+git diff HEAD | docbook-cs --fix
+
+# Fix changed files plus all XML they reference
+git diff HEAD | docbook-cs --wide --fix
+```
+
+:::caution Experimental
+Auto-fixing is experimental. Run it on a clean working tree so you can
+review the changes with `git diff` and revert if needed.
+:::
+
+All [built-in sniffs](/sniffs) ship a fixer. Fixing respects the same
+[scope rules](/installation#scope) as sniffing: only violations inside the
+given diff or paths are fixed.
+
+## How it works
+
+Fixes are applied in one or more *fixing passes*: after a pass, the files
+are re-sniffed, and if fixes enabled new fixes (or conflicting fixes were
+skipped), another pass runs. Fixes that cannot be applied safely are counted
+as *skipped* and the underlying violation is reported as remaining.
+
+## Reporting
+
+The console report summarises the outcome:
+
+```text
+OK -- 1 file(s) scanned, no violations remaining.
+Total runtime: 2.000s
+
+FIXING
+----------------------------------------
+ Files changed                            1
+ Fixes applied                            2
+ Fixes skipped                            0
+ Fixing passes                            1
+```
+
+Violations that remain after fixing are listed as usual and reported as
+`REMAINING`.
+
+The JSON report (`--report=json`) contains the same numbers in a `fixing`
+block:
+
+```json
+"fixing": {
+    "files_changed": 1,
+    "fixes_applied": 2,
+    "fixes_skipped": 0,
+    "fixing_passes": 1
+}
+```
+
+The Checkstyle report is unchanged: it only lists remaining violations.
+
+With `--perf`, the performance table breaks down runtime per sniff for both
+sniffing and fixing:
+
+```text
+PERFORMANCE
+-----------------------------------------------------------------------------
+                                       Sniffing           Fixing
+ DocbookCS.Simpara             1.000s ( 50.0%)  0.500s ( 25.0%)
+ DocbookCS.ExceptionName       0.250s ( 12.5%)
+```
+
+## Exit code
+
+With `--fix`, the exit code reflects the violations *remaining* after
+fixing: `0` when everything was fixed, `1` when violations remain.
+
+## Custom sniffs
+
+Your own sniffs can opt into fixing by implementing the `Fixable`
+interface — see [Writing a custom sniff](/sniffs/custom#making-a-sniff-fixable).

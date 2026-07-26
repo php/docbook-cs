@@ -1,0 +1,29 @@
+---
+title: TrailingWhitespaceSniff
+description: Detects trailing whitespace at the end of a line.
+---
+
+# TrailingWhitespaceSniff
+
+`DocbookCS.TrailingWhitespace`
+
+Detects trailing whitespace (spaces or tabs) at the end of a line. Each
+violation is reported per line.
+
+:::tip Auto-fixable
+This sniff ships a fixer — run with [`--fix`](/fixing) to remove trailing
+whitespace automatically.
+:::
+
+## Properties
+
+<PropertyTable
+  properties={[
+    {
+      name: 'severity',
+      type: 'string',
+      default: 'error',
+      description: 'Override the violation severity. Accepted values: error, warning.',
+    },
+  ]}
+/>

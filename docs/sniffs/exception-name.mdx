@@ -11,6 +11,13 @@ Flags class names wrapped in `<classname>` whose base name ends with `Exception`
 `Error`, or `Throwable`. DocBook provides `<exceptionname>` specifically for
 exception names; using `<classname>` for them is incorrect markup.
 
+A `<classname>` directly inside `<ooclass>` is skipped.
+
+:::tip Auto-fixable
+This sniff ships a fixer — run with [`--fix`](/fixing) to rewrite the
+element to `<exceptionname>` automatically.
+:::
+
 ## Properties
 
 <PropertyTable

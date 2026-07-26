@@ -9,9 +9,11 @@ import Link from '@docusaurus/Link';
 
 # Introduction
 
-**DocbookCS** scans DocBook 5 XML sources and reports style and convention
-violations, helping keep large documentation trees consistent across many
-contributors.
+**DocbookCS** scans DocBook 5 XML sources, reports style and convention
+violations, and can [fix them automatically](/fixing), helping keep large
+documentation trees consistent across many contributors. By default it
+checks only the current Git diff, making it fast for pull-request workflows;
+full files, directories, or piped diffs can be checked too.
 
 :::tip Built for the PHP manual
 DocbookCS was built for the [PHP manual](https://github.com/php/doc-en) and

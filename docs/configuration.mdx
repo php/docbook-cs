@@ -34,12 +34,9 @@ The config below reflects the setup used for the PHP manual:
         <sniff class="DocbookCS\Sniff\SimparaSniff" />
         <sniff class="DocbookCS\Sniff\ExceptionNameSniff" />
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
-        <sniff class="DocbookCS\Sniff\WhitespaceSniff" />
+        <sniff class="DocbookCS\Sniff\TrailingWhitespaceSniff" />
+        <sniff class="DocbookCS\Sniff\MixedIndentationSniff" />
     </sniffs>
-
-    <paths>
-        <path>.</path>
-    </paths>
 
     <entities>
         <file>contributors.ent</file>
@@ -83,8 +80,10 @@ optional `<property>` children:
 
 ### `<paths>`
 
-Directories or files to scan, relative to the config file or absolute. Used
-when no paths are passed on the command line.
+Still accepted by the schema, but no longer applied: the scan scope is
+determined entirely by the command-line input. Without arguments, DocbookCS
+checks the Git diff from the upstream branch point; pass paths or pipe a
+diff to select a different scope — see [Scope](/installation#scope).
 
 ### `<exclude>`
 
@@ -95,3 +94,19 @@ when no paths are passed on the command line.
 Entity file paths and directories to load before parsing, so the XML parser
 can resolve DocBook entities defined outside the scanned tree. Accepts
 interleaved `<file>` and `<directory>` children in any order.
+
+Entity files may declare entities in DTD syntax or in XML format:
+
+```xml
+<!-- DTD syntax -->
+<!ENTITY example.note "This is a note.">
+<!ENTITY example.chapter SYSTEM "chapters/example.xml">
+
+<!-- XML format -->
+<entity name="example.note">This is a note.</entity>
+```
+
+`SYSTEM` entities are resolved recursively, including entities declared in
+the referenced files. Content that enters a document through entity
+expansion is reported against its actual source file — not against every
+file that references the entity.

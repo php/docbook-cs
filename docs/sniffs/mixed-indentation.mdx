@@ -1,0 +1,29 @@
+---
+title: MixedIndentationSniff
+description: Detects mixed tabs and spaces in indentation.
+---
+
+# MixedIndentationSniff
+
+`DocbookCS.MixedIndentation`
+
+Detects mixed indentation: spaces followed by tabs, or tabs followed by
+spaces, at the start of a line. Each violation is reported per line.
+
+:::tip Auto-fixable
+This sniff ships a fixer — run with [`--fix`](/fixing) to replace the tabs
+in the affected indentation with spaces automatically.
+:::
+
+## Properties
+
+<PropertyTable
+  properties={[
+    {
+      name: 'severity',
+      type: 'string',
+      default: 'error',
+      description: 'Override the violation severity. Accepted values: error, warning.',
+    },
+  ]}
+/>

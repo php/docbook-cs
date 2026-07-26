@@ -11,6 +11,11 @@ Ensures that when an element carries both `xml:id` and an `xmlns` (or `xmlns:*`)
 attribute, `xml:id` appears first. This is the convention in the PHP manual:
 identity attributes precede namespace declarations.
 
+:::tip Auto-fixable
+This sniff ships a fixer — run with [`--fix`](/fixing) to reorder the
+attributes automatically.
+:::
+
 ## Properties
 
 <PropertyTable
