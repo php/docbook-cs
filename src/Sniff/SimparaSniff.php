@@ -144,7 +144,8 @@ final class SimparaSniff extends AbstractSniff implements Fixable
                 throw new \LogicException('Could not map simpara violation to source content.');
             }
 
-            if (null === $closingOffset = $match['closingOffset']) {
+            $closingOffset = $match['closingOffset'];
+            if (null === $closingOffset) {
                 continue;
             }
 
