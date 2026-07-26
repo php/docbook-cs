@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DocbookCS\Sniff;
 
-use DocbookCS\Runner\RunMode;
 use DocbookCS\Source\File;
 use DocbookCS\Violation\Violation;
 
@@ -15,10 +14,6 @@ use DocbookCS\Violation\Violation;
 /** @template TFixerData = mixed */
 interface SniffInterface
 {
-    public RunMode $mode { get; }
-
-    public function __construct(RunMode $mode);
-
     /**
      * Unique, human-readable code for this sniff (e.g. "DocbookCS.MySniff").
      */

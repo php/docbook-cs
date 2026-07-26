@@ -17,8 +17,8 @@ use DocbookCS\Source\File;
  */
 final class ExceptionNameSniff extends AbstractSniff implements Fixable
 {
-    private const string REPORTING_MESSAGE = '"%s" is wrapped in <classname> but should use <exceptionname>.';
     private const string ELEMENT_NAME = 'classname';
+    private const string REPORTING_MESSAGE = '"%s" is wrapped in <classname> but should use <exceptionname>.';
 
     /**
      * Default suffixes that indicate the class is an exception or error.
@@ -121,7 +121,7 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
     {
         preg_match_all(
             self::CLASSNAME_PATTERN,
-            $this->maskNonElementMarkup($file->content),
+            $file->contentWithNonElementMarkupMasked(),
             $matches,
             PREG_OFFSET_CAPTURE,
         );

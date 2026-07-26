@@ -43,7 +43,7 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
         // Match ONLY opening tags (skip closing, comments, xml decl)
         preg_match_all(
             self::OPENING_TAG_PATTERN,
-            $this->maskNonElementMarkup($file->content),
+            $file->contentWithNonElementMarkupMasked(),
             $matches,
             PREG_OFFSET_CAPTURE,
         );

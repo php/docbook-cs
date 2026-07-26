@@ -6,8 +6,16 @@ namespace DocbookCS\Source;
 
 final class File
 {
+    private const array NON_ELEMENT_DELIMITERS = [
+        '<!--' => '-->',
+        '<![CDATA[' => ']]>',
+        '<?' => '?>',
+    ];
+
     /** @var non-empty-list<int>|null */
     private ?array $lineBeginOffsets = null;
+
+    private ?string $maskedContent = null;
 
     public function __construct(
         public readonly string $path,
@@ -46,6 +54,33 @@ final class File
         return $content === $this->content
             ? $this
             : new self($this->path, $content);
+    }
+
+    public function contentWithNonElementMarkupMasked(): string
+    {
+        if ($this->maskedContent !== null) {
+            return $this->maskedContent;
+        }
+
+        $masked = $this->content;
+        $offset = 0;
+
+        while (false !== $start = strpos($this->content, '<', $offset)) {
+            $endOffset = $this->nonElementMarkupEndOffset($start);
+
+            if ($endOffset === null) {
+                $offset = $start + 1;
+                continue;
+            }
+
+            for ($i = $start; $i < $endOffset; $i++) {
+                $masked[$i] = ' ';
+            }
+
+            $offset = $endOffset;
+        }
+
+        return $this->maskedContent = $masked;
     }
 
     /** @return non-empty-list<int> */
@@ -106,6 +141,68 @@ final class File
         }
 
         return $low;
+    }
+
+    private function nonElementMarkupEndOffset(int $start): ?int
+    {
+        foreach (self::NON_ELEMENT_DELIMITERS as $opening => $closing) {
+            if (substr_compare($this->content, $opening, $start, strlen($opening)) === 0) {
+                return $this->offsetAfterDelimiter($closing, $start);
+            }
+        }
+
+        if (substr_compare($this->content, '<!', $start, 2) === 0) {
+            return $this->declarationEndOffset($start);
+        }
+
+        return null;
+    }
+
+    private function offsetAfterDelimiter(string $delimiter, int $offset): int
+    {
+        $end = strpos($this->content, $delimiter, $offset);
+
+        return $end === false ? strlen($this->content) : $end + strlen($delimiter);
+    }
+
+    private function declarationEndOffset(int $offset): int
+    {
+        $length = strlen($this->content);
+        $quote = null;
+        $bracketDepth = 0;
+
+        for ($i = $offset; $i < $length; $i++) {
+            $character = $this->content[$i];
+
+            if ($quote !== null) {
+                if ($character === $quote) {
+                    $quote = null;
+                }
+
+                continue;
+            }
+
+            if ($character === '"' || $character === "'") {
+                $quote = $character;
+                continue;
+            }
+
+            if ($character === '[') {
+                $bracketDepth++;
+                continue;
+            }
+
+            if ($character === ']') {
+                $bracketDepth--;
+                continue;
+            }
+
+            if ($character === '>' && $bracketDepth === 0) {
+                return $i + 1;
+            }
+        }
+
+        return $length;
     }
 
     private function createLineAtOffset(int $lineNumber, int $lineBeginOffset): Line

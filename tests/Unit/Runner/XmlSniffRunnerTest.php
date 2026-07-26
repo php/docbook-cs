@@ -8,13 +8,13 @@ use DocbookCS\Diff\FileChange;
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Fix\FixerException;
 use DocbookCS\Report\FileReport;
-use DocbookCS\Report\Report;
 use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlFixRunner;
 use DocbookCS\Runner\RunMode;
 use DocbookCS\Runner\RunScope;
 use DocbookCS\Runner\ViolationScopeFilter;
-use DocbookCS\Runner\XmlFileProcessor;
-use DocbookCS\Runner\XmlProcessingResult;
+use DocbookCS\Runner\XmlSniffRunner;
 use DocbookCS\Sniff\Fixable;
 use DocbookCS\Sniff\SniffInterface;
 use DocbookCS\Source\File;
@@ -22,6 +22,8 @@ use DocbookCS\Source\Line;
 use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
+use DocbookCS\Tests\Support\XmlHelper;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -30,10 +32,9 @@ use PHPUnit\Framework\TestCase;
 #[
     CoversClass(EntityPreprocessor::class),
     CoversClass(FileReport::class),
-    CoversClass(Report::class),
     CoversClass(Violation::class),
     CoversClass(ViolationScopeFilter::class),
-    CoversClass(XmlFileProcessor::class),
+    CoversClass(XmlSniffRunner::class),
     //
     UsesClass(AttributeOrderFixer::class),
     UsesClass(File::class),
@@ -43,14 +44,18 @@ use PHPUnit\Framework\TestCase;
     UsesClass(RunMode::class),
     UsesClass(RunScope::class),
     UsesClass(SourceRange::class),
-    UsesClass(XmlProcessingResult::class),
+    UsesClass(XmlFileProcessor::class),
+    UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
 ]
-final class XmlFileProcessorTest extends TestCase
+final class XmlSniffRunnerTest extends TestCase
 {
+    use XmlHelper;
+
     #[Test]
     public function itReportsParseErrors(): void
     {
-        $report = $this->process($this->processor(), '<broken><unclosed>', 'bad.xml');
+        $report = $this->process($this->runner(), '<broken><unclosed>', 'bad.xml');
 
         $this->assertInternalError($report, 'XML parse error');
     }
@@ -59,7 +64,7 @@ final class XmlFileProcessorTest extends TestCase
     public function itReportsParseErrorsOutsideChangedSourceRanges(): void
     {
         $report = $this->process(
-            $this->processor(),
+            $this->runner(),
             '<broken><unclosed>',
             'bad.xml',
             new FileChange('bad.xml', [99]),
@@ -72,7 +77,7 @@ final class XmlFileProcessorTest extends TestCase
     public function itStoresTheProvidedFilePathInFileReports(): void
     {
         $filePath = (getcwd() ?: '') . '/nonexistent/path/file.xml';
-        $report = $this->process($this->processor(), '<root/>', $filePath);
+        $report = $this->process($this->runner(), '<root/>', $filePath);
 
         self::assertSame($filePath, $report->filePath);
     }
@@ -82,9 +87,9 @@ final class XmlFileProcessorTest extends TestCase
     {
         $xml = $this->xml('<chapter><simpara>ok</simpara></chapter>');
 
-        $report = $this->process($this->processor(), $xml);
+        $report = $this->process($this->runner(), $xml);
 
-        self::assertFalse($report->hasViolations());
+        self::assertFalse($report->hasFinalViolations());
     }
 
     #[Test]
@@ -92,9 +97,9 @@ final class XmlFileProcessorTest extends TestCase
     {
         $xml = $this->xml('<chapter><para>Hello</para></chapter>');
 
-        $report = $this->process($this->processor(), $xml);
+        $report = $this->process($this->runner(), $xml);
 
-        self::assertSame(0, $report->getViolationCount());
+        self::assertSame(0, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -110,9 +115,9 @@ final class XmlFileProcessorTest extends TestCase
         </chapter>'
         );
 
-        $report = $this->process($this->processor([$sniff]), $xml);
+        $report = $this->process($this->runner([$sniff]), $xml);
 
-        self::assertSame(2, $report->getViolationCount());
+        self::assertSame(2, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -129,14 +134,14 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff], mode: RunMode::Fix),
             $xml,
             'f.xml',
             new FileChange('f.xml', [3]),
         );
 
-        self::assertSame(1, $report->getViolationCount());
-        self::assertSame(3, $report->violations[0]->rangeOne()->line);
+        self::assertSame(1, $report->getFinalViolationCount());
+        self::assertSame(3, $report->finalViolations[0]->rangeOne()->line);
     }
 
     #[Test]
@@ -155,13 +160,13 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'x.xml',
             new FileChange('x.xml', [6]),
         );
 
-        self::assertSame(1, $report->getViolationCount());
+        self::assertSame(1, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -176,13 +181,13 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'x.xml',
             new FileChange('x.xml', [3]),
         );
 
-        self::assertSame(0, $report->getViolationCount());
+        self::assertSame(0, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -199,13 +204,13 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'x.xml',
             new FileChange('x.xml', [4]),
         );
 
-        self::assertSame(1, $report->getViolationCount());
+        self::assertSame(1, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -223,13 +228,13 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'x.xml',
             new FileChange('x.xml', [4]),
         );
 
-        self::assertSame(1, $report->getViolationCount());
+        self::assertSame(1, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -250,13 +255,13 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'x.xml',
             new FileChange('x.xml', [6]),
         );
 
-        self::assertSame(0, $report->getViolationCount());
+        self::assertSame(0, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -272,13 +277,13 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'x.xml',
             new FileChange('x.xml', [7]),
         );
 
-        self::assertSame(0, $report->getViolationCount());
+        self::assertSame(0, $report->getFinalViolationCount());
     }
 
     #[Test]
@@ -295,23 +300,19 @@ final class XmlFileProcessorTest extends TestCase
         );
 
         $report = $this->process(
-            $this->processor([$sniff]),
+            $this->runner([$sniff]),
             $xml,
             'f.xml',
             new FileChange('f.xml', []),
         );
 
-        self::assertSame(0, $report->getViolationCount());
+        self::assertSame(0, $report->getFinalViolationCount());
     }
 
     #[Test]
     public function itDoesNotFixViolationsFromNonFixableSniffs(): void
     {
-        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
-            public function __construct(public RunMode $mode)
-            {
-            }
-
+        $sniff = new /** @implements SniffInterface<null> */ class implements SniffInterface {
             public static function getCode(): string
             {
                 return 'Test.NonFixable';
@@ -335,19 +336,18 @@ final class XmlFileProcessorTest extends TestCase
             }
         };
 
-        $report = $this->process($this->processor([$sniff]), $this->xml('<root/>'));
+        $report = $this->process(
+            $this->runner([$sniff]),
+            $this->xml('<root/>'),
+        );
 
-        self::assertSame(1, $report->getViolationCount());
+        self::assertSame(1, $report->getFinalViolationCount());
     }
 
     #[Test]
     public function itThrowsWhenFixableSniffReportsViolationWithoutContentInFixMode(): void
     {
-        $sniff = new /** @implements Fixable<null> */ class (RunMode::Fix) implements Fixable {
-            public function __construct(public RunMode $mode)
-            {
-            }
-
+        $sniff = new /** @implements Fixable<null> */ class implements Fixable {
             public static function getCode(): string
             {
                 return 'Test.BrokenFixable';
@@ -379,19 +379,22 @@ final class XmlFileProcessorTest extends TestCase
         $this->expectException(FixerException::class);
         $this->expectExceptionMessageIsOrContains('Fixers require affected source ranges with source content.');
 
-        $this->process($this->processor([$sniff]), $this->xml('<root xmlns="urn:test" xml:id="root"/>'));
+        $content = $this->xml('<root xmlns="urn:test" xml:id="root"/>');
+        $file = new File('input.xml', $content);
+        $fileReport = new FileReport($file->path);
+        new XmlFileProcessor($this->runner([$sniff], mode: RunMode::Fix))->process(
+            $file,
+            $fileReport,
+            RunScope::fromFileAndFileChange($file, null),
+        );
     }
 
     /** @param list<int> $lines */
     private function sniff(array $lines): SniffInterface
     {
-        $sniff = new /** @implements SniffInterface<null> */ class (RunMode::Sniff) implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class implements SniffInterface {
             /** @var list<int> */
             public array $lines = [];
-
-            public function __construct(public RunMode $mode)
-            {
-            }
 
             public static function getCode(): string
             {
@@ -423,35 +426,35 @@ final class XmlFileProcessorTest extends TestCase
     }
 
     private function process(
-        XmlFileProcessor $processor,
+        XmlSniffRunner $runner,
         string $content,
         string $path = 'input.xml',
         ?FileChange $fileChange = null,
     ): FileReport {
-        return $processor->process(new File($path, $content), $fileChange)->fileReport;
+        $file = new File($path, $content);
+        $fileReport = new FileReport($path);
+
+        new XmlFileProcessor($runner)->process(
+            $file,
+            $fileReport,
+            RunScope::fromFileAndFileChange($file, $fileChange),
+        );
+
+        return $fileReport;
     }
 
     /** @param list<SniffInterface> $sniffs */
-    private function processor(array $sniffs = [], ?EntityPreprocessor $pre = null): XmlFileProcessor
-    {
-        return new XmlFileProcessor(
-            $sniffs,
-            $pre ?? new EntityPreprocessor([]) // always pass array
-        );
-    }
-
-    private function xml(string $body): string
-    {
-        return <<<XML
-<?xml version="1.0" encoding="UTF-8"?>
-$body
-XML;
+    private function runner(
+        array $sniffs = [],
+        RunMode $mode = RunMode::Sniff,
+    ): XmlSniffRunner {
+        return new XmlSniffRunner($mode, $sniffs);
     }
 
     private function assertInternalError(FileReport $report, string $messagePart): void
     {
-        self::assertTrue($report->hasViolations());
-        self::assertSame('DocbookCS.Internal', $report->getViolations()[0]->sniffCode);
-        self::assertStringContainsString($messagePart, $report->getViolations()[0]->message);
+        self::assertTrue($report->hasFinalViolations());
+        self::assertSame('DocbookCS.Internal', $report->finalViolations[0]->sniffCode);
+        self::assertStringContainsString($messagePart, $report->finalViolations[0]->message);
     }
 }

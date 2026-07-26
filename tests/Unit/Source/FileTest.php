@@ -86,6 +86,38 @@ final class FileTest extends TestCase
     }
 
     #[Test]
+    public function itMasksNonElementMarkupWithoutChangingSourceOffsets(): void
+    {
+        $content = <<<'XML'
+            <!DOCTYPE root [<!ENTITY sample "<para>Declared</para>">]>
+            <root>
+                <!-- <para>Commented</para> -->
+                <![CDATA[<para>CDATA</para>]]>
+                <?sample <para>Instruction</para>?>
+                <para>Source</para>
+            </root>
+            XML;
+
+        $masked = new File('file.xml', $content)->contentWithNonElementMarkupMasked();
+
+        self::assertSame(strlen($content), strlen($masked));
+        self::assertSame(strpos($content, '<para>Source</para>'), strpos($masked, '<para>Source</para>'));
+        self::assertStringNotContainsString('<para>Declared</para>', $masked);
+        self::assertStringNotContainsString('<para>Commented</para>', $masked);
+        self::assertStringNotContainsString('<para>CDATA</para>', $masked);
+        self::assertStringNotContainsString('<para>Instruction</para>', $masked);
+    }
+
+    #[Test]
+    public function itMasksAnUnterminatedDeclarationThroughTheEndOfTheSource(): void
+    {
+        $source = '<!DOCTYPE root [';
+        $masked = new File('file.xml', $source)->contentWithNonElementMarkupMasked();
+
+        self::assertSame(str_repeat(' ', strlen($source)), $masked);
+    }
+
+    #[Test]
     public function itRejectsOffsetsOutsideTheSource(): void
     {
         $file = new File('file.xml', 'one');

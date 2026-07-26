@@ -9,7 +9,6 @@ use DocbookCS\Fix\FixApplier;
 use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Fix\FixResult;
-use DocbookCS\Runner\RunMode;
 use DocbookCS\Sniff\AttributeOrderSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
@@ -26,7 +25,6 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Fix::class),
     CoversClass(FixApplier::class),
     CoversClass(FixResult::class),
-    CoversClass(RunMode::class),
     CoversClass(Violation::class),
     //
     UsesClass(File::class),
@@ -43,7 +41,8 @@ final class AttributeOrderFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new AttributeOrderSniff(RunMode::Fix)->process($document, $source);
+        $sniffer = new AttributeOrderSniff();
+        $violations = $sniffer->process($document, $source);
 
         $beginOffset = (int)strpos($content, '<root');
         $sourceContent = '<root xmlns="urn:test" xml:id="root"/>';
@@ -54,7 +53,7 @@ final class AttributeOrderFixerTest extends TestCase
         self::assertSame($beginOffset + strlen($sourceContent), $violations[0]->rangeOne()->untilOffset);
         self::assertSame(1, $violations[0]->rangeOne()->line);
 
-        $fix = new AttributeOrderFixer()->process($violations[0]);
+        $fix = new ($sniffer::getFixerClassName())()->process($violations[0]);
 
         $result = new FixApplier()->apply($source, [ $fix ]);
 
@@ -70,7 +69,7 @@ final class AttributeOrderFixerTest extends TestCase
         $document = $this->createDocument($content);
         $source = new File('file.xml', $content);
 
-        $violations = new AttributeOrderSniff(RunMode::Fix)->process($document, $source);
+        $violations = new AttributeOrderSniff()->process($document, $source);
 
         self::assertCount(1, $violations);
 
