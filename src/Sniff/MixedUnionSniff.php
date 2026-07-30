@@ -30,7 +30,7 @@ final class MixedUnionSniff extends AbstractSniff implements Fixable
      */
     public function process(\DOMDocument $document, File $file): array
     {
-        $source = $this->maskNonElementMarkup($file->content);
+        $source = $file->contentWithNonElementMarkupMasked();
         $synopsisRanges = $this->synopsisRanges($source);
         $violations = [];
 

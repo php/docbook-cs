@@ -55,7 +55,7 @@ final class NativeTypeSniff extends AbstractSniff implements Fixable
      */
     public function process(\DOMDocument $document, File $file): array
     {
-        $source = $this->maskNonElementMarkup($file->content);
+        $source = $file->contentWithNonElementMarkupMasked();
         $synopsisRanges = $this->synopsisRanges($source);
         $redundantMixedUnions = array_values(array_filter(
             MixedUnionDetector::matches($source),
