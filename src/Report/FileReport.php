@@ -243,9 +243,9 @@ final class FileReport
     /** @param list<Violation> $violations */
     private function countViolationSeverity(array $violations, Severity $severity): int
     {
-        return array_filter(
+        return count(array_filter(
             $violations,
             static fn(Violation $violation): bool => $violation->severity === $severity,
-        ) |> count(...);
+        ));
     }
 }
