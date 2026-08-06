@@ -31,10 +31,48 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
     ];
 
     /** @var list<string> */
-    private const array UNCONVENTIONAL_EXCEPTION_NAMES = [
+    private const array UNCONVENTIONAL_BUILT_IN_EXCEPTION_NAMES = [
         'com_exception',
         'mysqli_sql_exception',
         'SoapFault',
+    ];
+
+    /** @var list<string> */
+    private const array UNCONVENTIONAL_EXTENSION_EXCEPTION_NAMES = [
+        'parallel\\Channel\\Error\\Closed',
+        'parallel\\Channel\\Error\\Existence',
+        'parallel\\Channel\\Error\\IllegalValue',
+        'parallel\\Events\\Error\\Existence',
+        'parallel\\Events\\Error\\Timeout',
+        'parallel\\Events\\Input\\Error\\Existence',
+        'parallel\\Events\\Input\\Error\\IllegalValue',
+        'parallel\\Future\\Error\\Cancelled',
+        'parallel\\Future\\Error\\Foreign',
+        'parallel\\Future\\Error\\Killed',
+        'parallel\\Runtime\\Error\\Bootstrap',
+        'parallel\\Runtime\\Error\\Closed',
+        'parallel\\Runtime\\Error\\IllegalFunction',
+        'parallel\\Runtime\\Error\\IllegalInstruction',
+        'parallel\\Runtime\\Error\\IllegalParameter',
+        'parallel\\Runtime\\Error\\IllegalReturn',
+        'parallel\\Runtime\\Error\\IllegalVariable',
+        'parallel\\Runtime\\Error\\Killed',
+        'parallel\\Sync\\Error\\IllegalValue',
+        'svmexception',
+        'Swoole\\Exception\\ArrayKeyNotExists',
+        'Yaf\\Exception\\DispatchFailed',
+        'Yaf\\Exception\\LoadFailed',
+        'Yaf\\Exception\\LoadFailed\\Action',
+        'Yaf\\Exception\\LoadFailed\\Controller',
+        'Yaf\\Exception\\LoadFailed\\Module',
+        'Yaf\\Exception\\LoadFailed\\View',
+        'Yaf\\Exception\\RouterFailed',
+    ];
+
+    /** @var list<string> */
+    private const array UNCONVENTIONAL_EXCEPTION_NAMES = [
+        ...self::UNCONVENTIONAL_BUILT_IN_EXCEPTION_NAMES,
+        ...self::UNCONVENTIONAL_EXTENSION_EXCEPTION_NAMES,
     ];
 
     private const string CLASSNAME_PATTERN = '/<classname\b[^>]*>([^<]*)<\/classname>/';

@@ -66,7 +66,7 @@ final class ExceptionNameSniffTest extends TestCase
     }
 
     #[Test, DataProvider('knownExceptionNameProvider')]
-    public function itRecognisesAllExceptionNames(string $name): void
+    public function itRecognisesAllKnownExceptionNames(string $name): void
     {
         self::assertTrue(ExceptionNameSniff::looksLikeException($name));
     }
@@ -288,6 +288,25 @@ final class ExceptionNameSniffTest extends TestCase
             'ParseError',
             'PDOException',
             'PharException',
+            'parallel\\Channel\\Error\\Closed',
+            'parallel\\Channel\\Error\\Existence',
+            'parallel\\Channel\\Error\\IllegalValue',
+            'parallel\\Events\\Error\\Existence',
+            'parallel\\Events\\Error\\Timeout',
+            'parallel\\Events\\Input\\Error\\Existence',
+            'parallel\\Events\\Input\\Error\\IllegalValue',
+            'parallel\\Future\\Error\\Cancelled',
+            'parallel\\Future\\Error\\Foreign',
+            'parallel\\Future\\Error\\Killed',
+            'parallel\\Runtime\\Error\\Bootstrap',
+            'parallel\\Runtime\\Error\\Closed',
+            'parallel\\Runtime\\Error\\IllegalFunction',
+            'parallel\\Runtime\\Error\\IllegalInstruction',
+            'parallel\\Runtime\\Error\\IllegalParameter',
+            'parallel\\Runtime\\Error\\IllegalReturn',
+            'parallel\\Runtime\\Error\\IllegalVariable',
+            'parallel\\Runtime\\Error\\Killed',
+            'parallel\\Sync\\Error\\IllegalValue',
             'Random\\BrokenRandomEngineError',
             'Random\\RandomError',
             'Random\\RandomException',
@@ -299,6 +318,8 @@ final class ExceptionNameSniffTest extends TestCase
             'SoapFault',
             'SodiumException',
             'SQLite3Exception',
+            'svmexception',
+            'Swoole\\Exception\\ArrayKeyNotExists',
             'TypeError',
             'UnderflowException',
             'UnexpectedValueException',
@@ -308,6 +329,13 @@ final class ExceptionNameSniffTest extends TestCase
             'Uri\\UriException',
             'Uri\\WhatWg\\InvalidUrlException',
             'ValueError',
+            'Yaf\\Exception\\DispatchFailed',
+            'Yaf\\Exception\\LoadFailed',
+            'Yaf\\Exception\\LoadFailed\\Action',
+            'Yaf\\Exception\\LoadFailed\\Controller',
+            'Yaf\\Exception\\LoadFailed\\Module',
+            'Yaf\\Exception\\LoadFailed\\View',
+            'Yaf\\Exception\\RouterFailed',
         ];
 
         foreach ($names as $name) {
