@@ -11,6 +11,7 @@ use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -62,6 +63,12 @@ final class ExceptionNameSniffTest extends TestCase
         $violations = new ExceptionNameSniff()->process($doc, new File('test.xml', $content));
 
         self::assertSame([], $violations);
+    }
+
+    #[Test, DataProvider('knownExceptionNameProvider')]
+    public function itRecognisesAllExceptionNames(string $name): void
+    {
+        self::assertTrue(ExceptionNameSniff::looksLikeException($name));
     }
 
     #[Test]
@@ -234,5 +241,77 @@ final class ExceptionNameSniffTest extends TestCase
             $document,
             new File('file.xml', '<root><classname>OtherException</classname></root>'),
         );
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function knownExceptionNameProvider(): iterable
+    {
+        $names = [
+            'ArgumentCountError',
+            'ArithmeticError',
+            'AssertionError',
+            'BadFunctionCallException',
+            'BadMethodCallException',
+            'ClosedGeneratorException',
+            'CompileError',
+            'com_exception',
+            'DateError',
+            'DateException',
+            'DateInvalidOperationException',
+            'DateInvalidTimeZoneException',
+            'DateMalformedIntervalStringException',
+            'DateMalformedPeriodStringException',
+            'DateMalformedStringException',
+            'DateObjectError',
+            'DateRangeError',
+            'DivisionByZeroError',
+            'DomainException',
+            'DOMException',
+            'Dom\\DOMException',
+            'Error',
+            'ErrorException',
+            'Exception',
+            'FFI\\Exception',
+            'FFI\\ParserException',
+            'FiberError',
+            'Filter\\FilterException',
+            'Filter\\FilterFailedException',
+            'IntlException',
+            'InvalidArgumentException',
+            'JsonException',
+            'LengthException',
+            'LogicException',
+            'mysqli_sql_exception',
+            'OutOfBoundsException',
+            'OutOfRangeException',
+            'OverflowException',
+            'ParseError',
+            'PDOException',
+            'PharException',
+            'Random\\BrokenRandomEngineError',
+            'Random\\RandomError',
+            'Random\\RandomException',
+            'RangeException',
+            'ReflectionException',
+            'RequestParseBodyException',
+            'RuntimeException',
+            'SNMPException',
+            'SoapFault',
+            'SodiumException',
+            'SQLite3Exception',
+            'TypeError',
+            'UnderflowException',
+            'UnexpectedValueException',
+            'UnhandledMatchError',
+            'Uri\\InvalidUriException',
+            'Uri\\UriError',
+            'Uri\\UriException',
+            'Uri\\WhatWg\\InvalidUrlException',
+            'ValueError',
+        ];
+
+        foreach ($names as $name) {
+            yield $name => [$name];
+        }
     }
 }

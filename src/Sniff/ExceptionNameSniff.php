@@ -30,6 +30,13 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
         'Throwable',
     ];
 
+    /** @var list<string> */
+    private const array UNCONVENTIONAL_EXCEPTION_NAMES = [
+        'com_exception',
+        'mysqli_sql_exception',
+        'SoapFault',
+    ];
+
     private const string CLASSNAME_PATTERN = '/<classname\b[^>]*>([^<]*)<\/classname>/';
 
     public static function getCode(): string
@@ -104,7 +111,13 @@ final class ExceptionNameSniff extends AbstractSniff implements Fixable
 
     public static function looksLikeException(string $text): bool
     {
-        $parts = explode('\\', $text);
+        $className = ltrim($text, '\\');
+
+        if (in_array($className, self::UNCONVENTIONAL_EXCEPTION_NAMES, true)) {
+            return true;
+        }
+
+        $parts = explode('\\', $className);
         $baseName = end($parts);
 
         return array_any(self::DEFAULT_SUFFIXES, static fn(string $suffix): bool => str_ends_with($baseName, $suffix));
