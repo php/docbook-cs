@@ -11,6 +11,7 @@ use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -62,6 +63,12 @@ final class ExceptionNameSniffTest extends TestCase
         $violations = new ExceptionNameSniff()->process($doc, new File('test.xml', $content));
 
         self::assertSame([], $violations);
+    }
+
+    #[Test, DataProvider('knownExceptionNameProvider')]
+    public function itRecognisesAllKnownExceptionNames(string $name): void
+    {
+        self::assertTrue(ExceptionNameSniff::looksLikeException($name));
     }
 
     #[Test]
@@ -234,5 +241,105 @@ final class ExceptionNameSniffTest extends TestCase
             $document,
             new File('file.xml', '<root><classname>OtherException</classname></root>'),
         );
+    }
+
+    /** @return iterable<string, array{string}> */
+    public static function knownExceptionNameProvider(): iterable
+    {
+        $names = [
+            'ArgumentCountError',
+            'ArithmeticError',
+            'AssertionError',
+            'BadFunctionCallException',
+            'BadMethodCallException',
+            'ClosedGeneratorException',
+            'CompileError',
+            'com_exception',
+            'DateError',
+            'DateException',
+            'DateInvalidOperationException',
+            'DateInvalidTimeZoneException',
+            'DateMalformedIntervalStringException',
+            'DateMalformedPeriodStringException',
+            'DateMalformedStringException',
+            'DateObjectError',
+            'DateRangeError',
+            'DivisionByZeroError',
+            'DomainException',
+            'DOMException',
+            'Dom\\DOMException',
+            'Error',
+            'ErrorException',
+            'Exception',
+            'FFI\\Exception',
+            'FFI\\ParserException',
+            'FiberError',
+            'Filter\\FilterException',
+            'Filter\\FilterFailedException',
+            'IntlException',
+            'InvalidArgumentException',
+            'JsonException',
+            'LengthException',
+            'LogicException',
+            'mysqli_sql_exception',
+            'OutOfBoundsException',
+            'OutOfRangeException',
+            'OverflowException',
+            'ParseError',
+            'PDOException',
+            'PharException',
+            'parallel\\Channel\\Error\\Closed',
+            'parallel\\Channel\\Error\\Existence',
+            'parallel\\Channel\\Error\\IllegalValue',
+            'parallel\\Events\\Error\\Existence',
+            'parallel\\Events\\Error\\Timeout',
+            'parallel\\Events\\Input\\Error\\Existence',
+            'parallel\\Events\\Input\\Error\\IllegalValue',
+            'parallel\\Future\\Error\\Cancelled',
+            'parallel\\Future\\Error\\Foreign',
+            'parallel\\Future\\Error\\Killed',
+            'parallel\\Runtime\\Error\\Bootstrap',
+            'parallel\\Runtime\\Error\\Closed',
+            'parallel\\Runtime\\Error\\IllegalFunction',
+            'parallel\\Runtime\\Error\\IllegalInstruction',
+            'parallel\\Runtime\\Error\\IllegalParameter',
+            'parallel\\Runtime\\Error\\IllegalReturn',
+            'parallel\\Runtime\\Error\\IllegalVariable',
+            'parallel\\Runtime\\Error\\Killed',
+            'parallel\\Sync\\Error\\IllegalValue',
+            'Random\\BrokenRandomEngineError',
+            'Random\\RandomError',
+            'Random\\RandomException',
+            'RangeException',
+            'ReflectionException',
+            'RequestParseBodyException',
+            'RuntimeException',
+            'SNMPException',
+            'SoapFault',
+            'SodiumException',
+            'SQLite3Exception',
+            'svmexception',
+            'Swoole\\Exception\\ArrayKeyNotExists',
+            'TypeError',
+            'UnderflowException',
+            'UnexpectedValueException',
+            'UnhandledMatchError',
+            'Uri\\InvalidUriException',
+            'Uri\\UriError',
+            'Uri\\UriException',
+            'Uri\\WhatWg\\InvalidUrlException',
+            'ValueError',
+            'Yaf\\Exception\\DispatchFailed',
+            'Yaf\\Exception\\LoadFailed',
+            'Yaf\\Exception\\LoadFailed\\Action',
+            'Yaf\\Exception\\LoadFailed\\Controller',
+            'Yaf\\Exception\\LoadFailed\\Module',
+            'Yaf\\Exception\\LoadFailed\\View',
+            'Yaf\\Exception\\RouterFailed',
+        ];
+
+        foreach ($names as $name) {
+            yield $name => [$name];
+        }
     }
 }
