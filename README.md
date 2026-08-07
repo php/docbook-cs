@@ -10,7 +10,7 @@ A static-analysis linter for DocBook XML files. It scans XML documentation sourc
 
 ### Requirements
 
-- PHP 8.5+
+- PHP 8.4+
 - Extensions: `dom`, `libxml`, `simplexml`
 
 ### Setup

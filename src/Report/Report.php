@@ -50,18 +50,18 @@ final class Report
 
     public function getViolatingFilesCount(): int
     {
-        return array_filter(
+        return count(array_filter(
             $this->fileReports,
             static fn(FileReport $fileReport): bool => $fileReport->hasFinalViolations(),
-        ) |> count(...);
+        ));
     }
 
     public function getChangedFilesCount(): int
     {
-        return array_filter(
+        return count(array_filter(
             $this->fileReports,
             static fn(FileReport $fileReport): bool => $fileReport->changed,
-        ) |> count(...);
+        ));
     }
 
     public function getFoundViolationsCount(): int

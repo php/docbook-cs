@@ -68,9 +68,7 @@ final readonly class DiffPathLoader
             }
         }
 
-        return array_map($this->normalize(...), $candidates)
-                |> array_unique(...)
-                |> array_values(...);
+        return array_values(array_unique(array_map($this->normalize(...), $candidates)));
     }
 
     private function isAbsolute(string $path): bool
