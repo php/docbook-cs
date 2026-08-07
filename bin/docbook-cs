@@ -5,24 +5,10 @@ declare(strict_types=1);
 
 use DocbookCS\Application;
 
-// Find the Composer autoloader.
-(static function (): void {
-    $candidates = [
-        __DIR__ . '/../vendor/autoload.php', // installed as project root
-        __DIR__ . '/../../../autoload.php',  // installed as a dependency
-    ];
-
-    foreach ($candidates as $file) {
-        if (!is_file($file)) {
-            continue;
-        }
-
-        require $file;
-        return;
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'DocbookCS\\')) {
+        require __DIR__ . '/../src/' . str_replace('\\', '/', substr($class, 10)) . '.php';
     }
-
-    fwrite(STDERR, 'Could not find Composer autoloader. Run "composer install" first.' . PHP_EOL);
-    exit(2);
-})();
+});
 
 exit(Application::withArguments($argv ?? [])->run());
