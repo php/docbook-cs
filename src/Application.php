@@ -43,9 +43,9 @@ final class Application
             return new self($argv, unifiedDiff: $stdin);
         }
 
-        $type = $stat['mode'] & 0170000;
+        $type = $stat['mode'] & 0o170000;
 
-        if ($type === 0010000 || $type === 0100000) {
+        if ($type === 0o010000 || $type === 0o100000) {
             $stdin = stream_get_contents(STDIN);
 
             if ($stdin === false) {
@@ -350,42 +350,42 @@ final class Application
     private function printHelp(): void
     {
         $help = <<<'HELP'
-DocbookCS - DocBook Code Sniffer
+            DocbookCS - DocBook Code Sniffer
 
-Usage:
-  docbook-cs [options] [<file-or-directory> ...]
+            Usage:
+              docbook-cs [options] [<file-or-directory> ...]
 
-Options:
-  -h, --help            Show this help message and exit.
-  -v, --version         Show version information and exit.
-  -q, --quiet           Suppress progress output.
-  --config=<file>       Path to configuration file (default: docbookcs.xml).
-  --report=<format>     Output format: console (default), checkstyle, json.
-  --colors              Force ANSI color output.
-  --no-colors           Disable ANSI color output.
-  --fix                 Automatically fix violations when fixers exist
-                        (experimental).
-  --wide                Check whole selected files and recursively include
-                        referenced XML files.
+            Options:
+              -h, --help            Show this help message and exit.
+              -v, --version         Show version information and exit.
+              -q, --quiet           Suppress progress output.
+              --config=<file>       Path to configuration file (default: docbookcs.xml).
+              --report=<format>     Output format: console (default), checkstyle, json.
+              --colors              Force ANSI color output.
+              --no-colors           Disable ANSI color output.
+              --fix                 Automatically fix violations when fixers exist
+                                    (experimental).
+              --wide                Check whole selected files and recursively include
+                                    referenced XML files.
 
-Arguments:
-  <file-or-directory>   One or more files or directories to scan.
-                        Paths cannot be combined with diff input.
+            Arguments:
+              <file-or-directory>   One or more files or directories to scan.
+                                    Paths cannot be combined with diff input.
 
-Examples:
-  docbook-cs
-  docbook-cs --config=myconfig.xml reference/
-  docbook-cs --report=checkstyle --no-colors > report.xml
-  docbook-cs . --fix
-  docbook-cs reference/
-  docbook-cs reference/strings/functions/strlen.xml
-  docbook-cs reference/strings/functions/strlen.xml  --wide
-  docbook-cs reference/strings/functions/strlen.xml  --wide --fix
-  git diff HEAD | docbook-cs
-  git diff HEAD | docbook-cs --wide
-  git diff HEAD | docbook-cs --wide --fix --report=checkstyle
+            Examples:
+              docbook-cs
+              docbook-cs --config=myconfig.xml reference/
+              docbook-cs --report=checkstyle --no-colors > report.xml
+              docbook-cs . --fix
+              docbook-cs reference/
+              docbook-cs reference/strings/functions/strlen.xml
+              docbook-cs reference/strings/functions/strlen.xml  --wide
+              docbook-cs reference/strings/functions/strlen.xml  --wide --fix
+              git diff HEAD | docbook-cs
+              git diff HEAD | docbook-cs --wide
+              git diff HEAD | docbook-cs --wide --fix --report=checkstyle
 
-HELP;
+            HELP;
 
         $this->write($help);
     }

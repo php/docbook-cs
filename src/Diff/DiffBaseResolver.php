@@ -18,8 +18,7 @@ final readonly class DiffBaseResolver
     public function __construct(
         private GitClient $git,
         private UpstreamResolver $officialUpstream,
-    ) {
-    }
+    ) {}
 
     /** @throws GitException */
     public function resolve(string $repoRoot): string

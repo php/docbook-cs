@@ -98,7 +98,7 @@ final readonly class UpstreamResolver
     private function prepareCacheDirectory(): bool
     {
         return is_dir($this->cacheDirectory)
-            || @mkdir($this->cacheDirectory, 0777, recursive: true)
+            || @mkdir($this->cacheDirectory, 0o777, recursive: true)
             || is_dir($this->cacheDirectory);
     }
 

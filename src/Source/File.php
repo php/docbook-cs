@@ -20,8 +20,7 @@ final class File
     public function __construct(
         public readonly string $path,
         public readonly string $content,
-    ) {
-    }
+    ) {}
 
     /** @return \Generator<int, Line> */
     public function lines(): \Generator

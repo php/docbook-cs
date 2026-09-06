@@ -73,8 +73,8 @@ final class ConsoleProgress implements ProgressInterface
         }
 
         $ratio = $current / $this->totalFiles;
-        $percent = (int)floor($ratio * 100);
-        $filled = (int)floor($ratio * self::BAR_WIDTH);
+        $percent = (int) floor($ratio * 100);
+        $filled = (int) floor($ratio * self::BAR_WIDTH);
 
         $empty = self::BAR_WIDTH - $filled;
 

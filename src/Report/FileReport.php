@@ -32,8 +32,7 @@ final class FileReport
     public function __construct(
         public readonly string $filePath,
         private readonly bool $collectPerformance = false,
-    ) {
-    }
+    ) {}
 
     public function markChanged(): void
     {

@@ -12,8 +12,7 @@ final readonly class PathMatcher
     public function __construct(
         private string $basePath,
         private array $excludePatterns
-    ) {
-    }
+    ) {}
 
     public function isExcluded(string $filePath): bool
     {

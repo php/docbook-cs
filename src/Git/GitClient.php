@@ -12,9 +12,7 @@ final readonly class GitClient
 {
     private const string FORCED_BRANCH_REF_SPEC = '+refs/heads/%s:%s';
 
-    public function __construct(private ProcessRunnerInterface $processRunner)
-    {
-    }
+    public function __construct(private ProcessRunnerInterface $processRunner) {}
 
     /** @throws GitException */
     public function repoRoot(string $workingDirectory): string

@@ -7,9 +7,7 @@ namespace DocbookCS\Diff;
 final readonly class DiffChangeset
 {
     /** @param list<FileChange> $fileChanges */
-    public function __construct(public array $fileChanges)
-    {
-    }
+    public function __construct(public array $fileChanges) {}
 
     public function changeFor(string $filePath): ?FileChange
     {

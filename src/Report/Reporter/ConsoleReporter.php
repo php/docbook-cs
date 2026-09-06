@@ -142,8 +142,8 @@ final class ConsoleReporter implements ReporterInterface
         // Sort slowest first.
         uasort(
             $rows,
-            static fn(array $left, array $right): int =>
-                (($right['sniffing'] ?? 0.0) + ($right['fixing'] ?? 0.0))
+            static fn(array $left, array $right): int
+                => (($right['sniffing'] ?? 0.0) + ($right['fixing'] ?? 0.0))
                 <=> (($left['sniffing'] ?? 0.0) + ($left['fixing'] ?? 0.0)),
         );
 

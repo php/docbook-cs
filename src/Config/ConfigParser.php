@@ -10,9 +10,7 @@ final class ConfigParser
 {
     private const string NAMESPACE_URI = 'https://php.github.io/docbook-cs/config';
 
-    public function __construct(private readonly XmlParser $xmlParser = new XmlParser())
-    {
-    }
+    public function __construct(private readonly XmlParser $xmlParser = new XmlParser()) {}
 
     /**
      * @throws ConfigParserException if the file cannot be read or contains invalid XML.
@@ -115,7 +113,7 @@ final class ConfigParser
         $entries = [];
 
         foreach ($sniffsNode->sniff as $sniffNode) {
-            $class = (string)($sniffNode['class'] ?? '');
+            $class = (string) ($sniffNode['class'] ?? '');
 
             if ($class === '') {
                 throw ConfigParserException::missingAttribute('sniff', 'class');
@@ -123,8 +121,8 @@ final class ConfigParser
 
             $properties = [];
             foreach ($sniffNode->property as $prop) {
-                $name = (string)($prop['name'] ?? '');
-                $value = (string)($prop['value'] ?? '');
+                $name = (string) ($prop['name'] ?? '');
+                $value = (string) ($prop['value'] ?? '');
 
                 if ($name === '') {
                     throw ConfigParserException::missingAttribute('property', 'name');
@@ -149,7 +147,7 @@ final class ConfigParser
         }
 
         foreach ($root->paths->path as $pathNode) {
-            $raw = trim((string)$pathNode);
+            $raw = trim((string) $pathNode);
 
             if ($raw === '') {
                 continue;
@@ -171,7 +169,7 @@ final class ConfigParser
         }
 
         foreach ($root->exclude->pattern as $patternNode) {
-            $raw = trim((string)$patternNode);
+            $raw = trim((string) $patternNode);
 
             if ($raw !== '') {
                 $patterns[] = $raw;
@@ -191,7 +189,7 @@ final class ConfigParser
         }
 
         foreach ($root->entities->children() as $node) {
-            $raw = trim((string)$node);
+            $raw = trim((string) $node);
             if ($raw === '') {
                 continue;
             }

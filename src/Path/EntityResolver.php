@@ -26,7 +26,7 @@ final class EntityResolver
         array $extensions = ['ent', 'dtd']
     ) {
         $this->extensions = array_values(
-            array_map(static fn (string $extension): string => ltrim($extension, '.'), $extensions)
+            array_map(static fn(string $extension): string => ltrim($extension, '.'), $extensions)
         );
     }
 

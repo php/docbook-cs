@@ -19,17 +19,23 @@ A static-analysis linter for DocBook XML files. It scans XML documentation sourc
 composer install
 ```
 
-### Running checks
+### Tooling
 
 ```bash
-# Tests
-vendor/bin/phpunit
+# run tests
+composer test
 
-# Static analysis
-vendor/bin/phpstan
+# run static analysis
+composer phpstan
 
-# Code style
-vendor/bin/phpcs
+# format all files
+composer fixer -- fix
+
+# format all dirty files
+composer fixer-fresh
+
+# check all files; do not apply
+composer fixer -- check
 ```
 
 ### Writing a sniff

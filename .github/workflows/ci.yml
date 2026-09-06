@@ -34,10 +34,10 @@ jobs:
       - name: "Install dependencies"
         run: "composer install --no-interaction --prefer-dist"
 
-      - name: "Run PHP_CodeSniffer"
+      - name: "Run PHP-CS-Fixer"
         run: |
           set -o pipefail
-          vendor/bin/phpcs -q --report=checkstyle | cs2pr
+          vendor/bin/php-cs-fixer check --diff --format=checkstyle | cs2pr
 
   stan:
     name: "Static Analysis"

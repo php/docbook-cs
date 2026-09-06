@@ -14,6 +14,5 @@ final readonly class FixResult
         public int $applied = 0,
         public int $skipped = 0,
         public array $appliedFixes = [],
-    ) {
-    }
+    ) {}
 }

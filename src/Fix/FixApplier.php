@@ -18,11 +18,11 @@ final class FixApplier
         }
 
         $plans = array_map(
-            static fn ($fix): FixPlan => $fix instanceof FixPlan ? $fix : new FixPlan($fix),
+            static fn($fix): FixPlan => $fix instanceof FixPlan ? $fix : new FixPlan($fix),
             $fixes,
         );
 
-        usort($plans, static fn (FixPlan $a, FixPlan $b): int => $a->firstOffset() <=> $b->firstOffset());
+        usort($plans, static fn(FixPlan $a, FixPlan $b): int => $a->firstOffset() <=> $b->firstOffset());
 
         /** @var list<Fix> $acceptedFixes */
         $acceptedFixes = [];
