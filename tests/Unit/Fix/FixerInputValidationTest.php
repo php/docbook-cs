@@ -7,7 +7,7 @@ namespace DocbookCS\Tests\Unit\Fix;
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Fix\Fixer\ExceptionNameFixer;
 use DocbookCS\Fix\Fixer\Fixer;
-use DocbookCS\Fix\Fixer\MixedIndentationFixer;
+use DocbookCS\Fix\Fixer\IndentationFixer;
 use DocbookCS\Fix\Fixer\SimparaFixer;
 use DocbookCS\Fix\Fixer\TrailingWhitespaceFixer;
 use DocbookCS\Fix\FixerException;
@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(AttributeOrderFixer::class),
     CoversClass(ExceptionNameFixer::class),
     CoversClass(FixerException::class),
-    CoversClass(MixedIndentationFixer::class),
+    CoversClass(IndentationFixer::class),
     CoversClass(SimparaFixer::class),
     CoversClass(TrailingWhitespaceFixer::class),
     //
@@ -50,7 +50,7 @@ final class FixerInputValidationTest extends TestCase
             new SourceRange(1, 0, 9),
             new SourceRange(1, 10, 19),
         ]];
-        yield 'mixed indentation' => [new MixedIndentationFixer(), [new SourceRange(1, 0, 2)]];
+        yield 'indentation' => [new IndentationFixer(), [new SourceRange(1, 0, 2)]];
         yield 'simpara' => [new SimparaFixer(), [
             new SourceRange(1, 0, 4),
             new SourceRange(1, 5, 9),
@@ -77,7 +77,7 @@ final class FixerInputValidationTest extends TestCase
             new SourceRange(1, 0, 5, 'class'),
             new SourceRange(1, 6, 11, 'class'),
         ]];
-        yield 'mixed indentation' => [new MixedIndentationFixer(), [new SourceRange(1, 0, 2, '  ')]];
+        yield 'indentation' => [new IndentationFixer(), [new SourceRange(1, 0, 4, 'text')]];
         yield 'simpara' => [new SimparaFixer(), [
             new SourceRange(1, 0, 4, 'span'),
             new SourceRange(1, 5, 9, 'span'),

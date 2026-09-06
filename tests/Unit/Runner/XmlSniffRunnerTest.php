@@ -312,7 +312,7 @@ final class XmlSniffRunnerTest extends TestCase
     #[Test]
     public function itDoesNotFixViolationsFromNonFixableSniffs(): void
     {
-        $sniff = new class implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class implements SniffInterface {
             public static function getCode(): string
             {
                 return 'Test.NonFixable';
@@ -347,7 +347,7 @@ final class XmlSniffRunnerTest extends TestCase
     #[Test]
     public function itThrowsWhenFixableSniffReportsViolationWithoutContentInFixMode(): void
     {
-        $sniff = new class implements Fixable {
+        $sniff = new /** @implements Fixable<null> */ class implements Fixable {
             public static function getCode(): string
             {
                 return 'Test.BrokenFixable';
@@ -392,7 +392,7 @@ final class XmlSniffRunnerTest extends TestCase
     /** @param list<int> $lines */
     private function sniff(array $lines): SniffInterface
     {
-        $sniff = new class implements SniffInterface {
+        $sniff = new /** @implements SniffInterface<null> */ class implements SniffInterface {
             /** @var list<int> */
             public array $lines = [];
 

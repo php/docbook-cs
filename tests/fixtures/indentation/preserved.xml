@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE root [
+      <!ELEMENT root ANY>
+]>
+<root
+      role="1 > 0">
+      <!-- <fake/> comment alignment is left alone. -->
+ <address>
+       address whitespace
+ </address>
+ <classsynopsisinfo>
+       class synopsis whitespace
+ </classsynopsisinfo>
+ <funcsynopsisinfo>
+       function synopsis whitespace
+ </funcsynopsisinfo>
+ <literallayout>
+       literal layout whitespace
+ </literallayout>
+ <programlisting>
+       program listing whitespace
+ </programlisting>
+ <screen><![CDATA[
+       <fake/> screen whitespace
+]]></screen>
+ <synopsis>
+       synopsis whitespace
+ </synopsis>
+ <synopsisinfo>
+       synopsis information whitespace
+ </synopsisinfo>
+ <section xml:space="preserve">
+        <para>
+unstructured preserved whitespace
+     </para>
+ </section>
+ <modifier xml:space="preserve">
+       modifier whitespace
+ </modifier>
+ <line-break />
+</root>

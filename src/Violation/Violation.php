@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace DocbookCS\Violation;
 
+/** @template TFixerData = mixed */
 final readonly class Violation
 {
     /**
      * @param non-empty-list<SourceRange> $affectedRanges
+     * @param TFixerData $fixerData
      * @throws \InvalidArgumentException if the affected ranges are inconsistent
      */
     public function __construct(
@@ -15,6 +17,7 @@ final readonly class Violation
         public string $filePath,
         public string $message,
         public array $affectedRanges,
+        public mixed $fixerData = null,
         public Severity $severity = Severity::WARNING,
     ) {
         if ($affectedRanges === []) {
@@ -50,7 +53,7 @@ final readonly class Violation
             filePath: $filePath,
             message: 'Could not read file.',
             affectedRanges: [
-                new SourceRange(0, 0, 0)
+                new SourceRange(0, 0, 0),
             ],
             severity: Severity::ERROR,
         );

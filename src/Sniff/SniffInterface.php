@@ -11,6 +11,7 @@ use DocbookCS\Violation\Violation;
  * A sniff receives a DOMDocument (already loaded) and its source file,
  * then returns zero or more findings for reports and optional fixes.
  */
+/** @template TFixerData = mixed */
 interface SniffInterface
 {
     /**
@@ -21,7 +22,7 @@ interface SniffInterface
     /**
      * Apply the sniff to the given document.
      *
-     * @return list<Violation>
+     * @return list<Violation<TFixerData>>
      */
     public function process(\DOMDocument $document, File $file): array;
 
