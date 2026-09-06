@@ -13,6 +13,6 @@
 
 	<file>.</file>
 
-	<exclude-pattern>/\.*</exclude-pattern>
+	<exclude-pattern type="relative">(^|/)\.*</exclude-pattern>
 	<exclude-pattern>/vendor/*</exclude-pattern>
 </ruleset>
