@@ -66,6 +66,24 @@ final class ExceptionNameFixerTest extends TestCase
     }
 
     #[Test]
+    public function itReplacesUnconventionalExceptionNameElements(): void
+    {
+        $content = '<root><classname>SoapFault</classname></root>';
+        $document = $this->createDocument($content);
+        $source = new File('file.xml', $content);
+
+        $violations = new ExceptionNameSniff()->process($document, $source);
+
+        self::assertCount(1, $violations);
+
+        $fix = new ExceptionNameFixer()->process($violations[0]);
+        $result = new FixApplier()->apply($source, [$fix]);
+
+        self::assertSame('<root><exceptionname>SoapFault</exceptionname></root>', $result->file->content);
+        self::assertSame(1, $result->applied);
+    }
+
+    #[Test]
     public function itPreservesClassnameAttributes(): void
     {
         $content = '<root><classname linkend="runtime-exception">RuntimeException</classname></root>';
