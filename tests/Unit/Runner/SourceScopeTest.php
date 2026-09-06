@@ -7,6 +7,7 @@ namespace DocbookCS\Tests\Unit\Runner;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Fix\Fix;
 use DocbookCS\Runner\RunScope;
+use DocbookCS\Sniff\FileEmptyLastLineSniffer;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
@@ -23,6 +24,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(RunScope::class),
     //
     UsesClass(FileChange::class),
+    UsesClass(FileEmptyLastLineSniffer::class),
     UsesClass(SourceRange::class),
     UsesClass(Violation::class),
 ]
@@ -170,6 +172,22 @@ final class SourceScopeTest extends TestCase
 
         self::assertTrue($scope->includes($this->violation(0, $untilOffset + 1, 1)));
         self::assertTrue($scope->includes($this->violation($untilOffset, $untilOffset, 2)));
+    }
+
+    #[Test]
+    public function itScopesAnUnterminatedFileEndingToItsLastLine(): void
+    {
+        $file = new File('file.xml', "<root>\n</root>");
+        $document = new \DOMDocument();
+        $document->loadXML($file->content);
+        $violation = new FileEmptyLastLineSniffer()->process($document, $file)[0];
+
+        self::assertTrue(
+            RunScope::fromFileAndFileChange($file, new FileChange($file->path, [2]))->includes($violation),
+        );
+        self::assertFalse(
+            RunScope::fromFileAndFileChange($file, new FileChange($file->path, [1]))->includes($violation),
+        );
     }
 
     private function violation(int $beginOffset, int $untilOffset, int $line): Violation

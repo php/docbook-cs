@@ -16,6 +16,7 @@
         </sniff>
 
         <sniff class="DocbookCS\Sniff\AttributeOrderSniff" />
+        <sniff class="DocbookCS\Sniff\FileEmptyLastLineSniffer" />
     </sniffs>
 
     <paths>

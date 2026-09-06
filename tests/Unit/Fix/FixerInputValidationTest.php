@@ -6,6 +6,7 @@ namespace DocbookCS\Tests\Unit\Fix;
 
 use DocbookCS\Fix\Fixer\AttributeOrderFixer;
 use DocbookCS\Fix\Fixer\ExceptionNameFixer;
+use DocbookCS\Fix\Fixer\FileEmptyLastLineFixer;
 use DocbookCS\Fix\Fixer\Fixer;
 use DocbookCS\Fix\Fixer\MixedIndentationFixer;
 use DocbookCS\Fix\Fixer\SimparaFixer;
@@ -22,6 +23,7 @@ use PHPUnit\Framework\TestCase;
 #[
     CoversClass(AttributeOrderFixer::class),
     CoversClass(ExceptionNameFixer::class),
+    CoversClass(FileEmptyLastLineFixer::class),
     CoversClass(FixerException::class),
     CoversClass(MixedIndentationFixer::class),
     CoversClass(SimparaFixer::class),
@@ -50,6 +52,7 @@ final class FixerInputValidationTest extends TestCase
             new SourceRange(1, 0, 9),
             new SourceRange(1, 10, 19),
         ]];
+        yield 'file empty last line' => [new FileEmptyLastLineFixer(), [new SourceRange(1, 0, 4)]];
         yield 'mixed indentation' => [new MixedIndentationFixer(), [new SourceRange(1, 0, 2)]];
         yield 'simpara' => [new SimparaFixer(), [
             new SourceRange(1, 0, 4),
@@ -77,6 +80,14 @@ final class FixerInputValidationTest extends TestCase
             new SourceRange(1, 0, 5, 'class'),
             new SourceRange(1, 6, 11, 'class'),
         ]];
+        yield 'file empty last line with mixed content' => [
+            new FileEmptyLastLineFixer(),
+            [new SourceRange(1, 0, 9, "text\ntext")],
+        ];
+        yield 'file empty last line with empty range' => [
+            new FileEmptyLastLineFixer(),
+            [new SourceRange(1, 0, 0, '')],
+        ];
         yield 'mixed indentation' => [new MixedIndentationFixer(), [new SourceRange(1, 0, 2, '  ')]];
         yield 'simpara' => [new SimparaFixer(), [
             new SourceRange(1, 0, 4, 'span'),
