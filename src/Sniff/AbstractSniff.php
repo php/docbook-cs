@@ -10,6 +10,10 @@ use DocbookCS\Violation\Severity;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
 
+/**
+ * @template TFixerData = mixed
+ * @implements SniffInterface<TFixerData>
+ */
 abstract class AbstractSniff implements SniffInterface
 {
     protected Severity $severity = Severity::ERROR;
@@ -72,17 +76,24 @@ abstract class AbstractSniff implements SniffInterface
 
     /**
      * @param non-empty-list<SourceRange> $affectedRanges
+     * @param TFixerData $fixerData
      *
+     * @return Violation<TFixerData>
      * @throws \InvalidArgumentException if the affected ranges are inconsistent
      */
-    protected function createViolation(string $filePath, string $message, array $affectedRanges): Violation
-    {
+    protected function createViolation(
+        string $filePath,
+        string $message,
+        array $affectedRanges,
+        mixed $fixerData = null,
+    ): Violation {
         return new Violation(
             sniffCode: static::getCode(),
             filePath: $filePath,
             message: $message,
             affectedRanges: $affectedRanges,
             severity: $this->severity,
+            fixerData: $fixerData,
         );
     }
 }

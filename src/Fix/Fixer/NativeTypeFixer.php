@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DocbookCS\Fix\Fixer;
+
+use DocbookCS\Fix\Fix;
+use DocbookCS\Fix\FixerException;
+use DocbookCS\Violation\Violation;
+
+/** @implements Fixer<string> */
+final class NativeTypeFixer implements Fixer
+{
+    /**
+     * @param Violation<string> $violation
+     * @throws FixerException
+     */
+    public function process(Violation $violation): Fix
+    {
+        $range = $violation->rangeOne();
+        if ($range->content === null) {
+            throw FixerException::cannotFixMissingContent();
+        }
+
+        if (!is_string($violation->fixerData) || preg_match('/^[a-z]+$/', $violation->fixerData) !== 1) {
+            throw FixerException::cannotFixInvalidContent($violation);
+        }
+
+        return Fix::fromViolationAndRange($violation, $range, $violation->fixerData);
+    }
+}
