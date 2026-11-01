@@ -43,6 +43,19 @@ final class ConsoleReporterTest extends TestCase
         return new Violation($sniffCode, 'filepath.xml', $message, [new SourceRange($line, 0, 0)], severity: $severity);
     }
 
+    /**
+     * Spins instead of sleeping: usleep() on Windows rounds up to the ~15.6ms timer
+     * tick, which makes short sleeps of different lengths indistinguishable.
+     */
+    private static function busyWait(float $seconds): void
+    {
+        $end = microtime(true) + $seconds;
+
+        while (microtime(true) < $end) {
+            // Spin.
+        }
+    }
+
     #[Test]
     public function itReturnsNonEmptyStringForEmptyReport(): void
     {
@@ -547,9 +560,9 @@ final class ConsoleReporterTest extends TestCase
         $report = new Report();
         $report->measureWallTime(function () use ($report): void {
             $fileReport = new FileReport('file.xml', collectPerformance: true);
-            $fileReport->measureSniffer('FastSniff', static fn() => usleep(1_000));
-            $fileReport->measureSniffer('SlowSniff', static fn() => usleep(30_000));
-            $fileReport->measureSniffer('MediumSniff', static fn() => usleep(10_000));
+            $fileReport->measureSniffer('FastSniff', static fn() => self::busyWait(0.001));
+            $fileReport->measureSniffer('SlowSniff', static fn() => self::busyWait(0.030));
+            $fileReport->measureSniffer('MediumSniff', static fn() => self::busyWait(0.010));
             $report->addFileReport($fileReport);
         });
 
