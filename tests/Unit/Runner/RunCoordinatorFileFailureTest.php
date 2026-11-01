@@ -179,10 +179,6 @@ final class RunCoordinatorFileFailureTest extends TestCase
     #[Test]
     public function itFailsClearlyWhenFixedContentCannotBePersisted(): void
     {
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('Unix file permissions are required.');
-        }
-
         $filePath = tempnam(sys_get_temp_dir(), 'docbook-cs-');
         self::assertIsString($filePath);
         file_put_contents($filePath, '<root><para>Text</para></root>');
