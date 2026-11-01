@@ -24,6 +24,7 @@ use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Progress\NullProgress;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
@@ -79,6 +80,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(NullProgress::class),
     UsesClass(PathLoader::class),
     UsesClass(PathMatcher::class),
+    UsesClass(PathNormalizer::class),
     UsesClass(Report::class),
     UsesClass(RunCoordinator::class),
     UsesClass(RunMode::class),

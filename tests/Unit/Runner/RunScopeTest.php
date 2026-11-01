@@ -21,6 +21,7 @@ use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Progress\NullProgress;
 use DocbookCS\Report\FileReport;
 use DocbookCS\Report\Report;
@@ -74,6 +75,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(GitDiffProvider::class),
     UsesClass(Line::class),
     UsesClass(NullProgress::class),
+    UsesClass(PathNormalizer::class),
     UsesClass(Report::class),
     UsesClass(RunMode::class),
     UsesClass(RunPlan::class),

@@ -10,6 +10,7 @@ use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 
 final readonly class RunScopeResolver
 {
@@ -91,11 +92,11 @@ final readonly class RunScopeResolver
         $absolutePaths = [];
 
         foreach ($paths as $path) {
-            $absolutePath = str_starts_with($path, '/') || preg_match('#^[a-zA-Z]:[/\\\\]#', $path)
+            $absolutePath = PathNormalizer::isAbsolute($path)
                 ? $path
                 : $workingDirectory . '/' . $path;
 
-            $absolutePaths[] = $this->normalizePath($absolutePath);
+            $absolutePaths[] = PathNormalizer::normalize($absolutePath);
         }
 
         return $absolutePaths;
@@ -157,7 +158,7 @@ final readonly class RunScopeResolver
      */
     private function expandEntityPath(string $path, array &$visited): array
     {
-        $path = $this->normalizePath($path);
+        $path = PathNormalizer::normalize($path);
 
         if (isset($visited[$path]) || !is_file($path)) {
             return [];
@@ -174,32 +175,5 @@ final readonly class RunScopeResolver
         return $content !== false
             ? $this->targetFilesFromContent($content, $visited)
             : [];
-    }
-
-    private function normalizePath(string $path): string
-    {
-        $path = str_replace('\\', '/', $path);
-        $prefix = '';
-
-        if (preg_match('#^([a-zA-Z]:/|/)#', $path, $matches)) {
-            $prefix = $matches[1];
-            $path = substr($path, strlen($prefix));
-        }
-
-        $segments = [];
-        foreach (explode('/', $path) as $segment) {
-            if ($segment === '' || $segment === '.') {
-                continue;
-            }
-
-            if ($segment === '..' && $segments !== [] && end($segments) !== '..') {
-                array_pop($segments);
-                continue;
-            }
-
-            $segments[] = $segment;
-        }
-
-        return $prefix . implode('/', $segments);
     }
 }

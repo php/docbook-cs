@@ -249,7 +249,7 @@ final class EntityResolver
 
     private function resolvePath(string $path, string $reference): string
     {
-        if ($this->isAbsolutePath($reference) && is_file($reference)) {
+        if (PathNormalizer::isAbsolute($reference) && is_file($reference)) {
             return $reference;
         }
 
@@ -262,18 +262,10 @@ final class EntityResolver
             $reference = str_replace($prefix . '/' . $directory, $root, $reference);
         }
 
-        if ($this->isAbsolutePath($reference)) {
+        if (PathNormalizer::isAbsolute($reference)) {
             return $reference;
         }
 
-        return dirname($path) . DIRECTORY_SEPARATOR . $reference;
-    }
-
-    /** Unix paths, Windows drive paths (C:/ or C:\) and UNC paths (\\server). */
-    private function isAbsolutePath(string $path): bool
-    {
-        return str_starts_with($path, '/')
-            || str_starts_with($path, '\\\\')
-            || preg_match('~^[A-Za-z]:[/\\\\]~', $path) === 1;
+        return dirname($path) . '/' . $reference;
     }
 }

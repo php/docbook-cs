@@ -16,6 +16,7 @@ use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Progress\NullProgress;
 use DocbookCS\Progress\ProgressInterface;
 use DocbookCS\Report\FileReport;
@@ -69,6 +70,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(GitClient::class),
     UsesClass(GitDiffProvider::class),
     UsesClass(Line::class),
+    UsesClass(PathNormalizer::class),
     UsesClass(RunScope::class),
     UsesClass(RunScopeResolver::class),
     UsesClass(SourceRange::class),
@@ -212,7 +214,7 @@ final class SniffRunnerTest extends TestCase
 
         foreach ($report->fileReports as $fileReport) {
             self::assertTrue(
-                str_starts_with($fileReport->filePath, '/'),
+                PathNormalizer::isAbsolute($fileReport->filePath),
                 'Expected absolute path, got: ' . $fileReport->filePath,
             );
         }

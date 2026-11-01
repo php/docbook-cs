@@ -50,7 +50,7 @@ final readonly class DiffPathLoader
     {
         $path = str_replace('\\', '/', $path);
 
-        if ($this->isAbsolute($path)) {
+        if (PathNormalizer::isAbsolute($path)) {
             return [$path];
         }
 
@@ -68,32 +68,6 @@ final readonly class DiffPathLoader
             }
         }
 
-        return array_values(array_unique(array_map($this->normalize(...), $candidates)));
-    }
-
-    private function isAbsolute(string $path): bool
-    {
-        return str_starts_with($path, '/') || preg_match('#^[a-zA-Z]:/#', $path) === 1;
-    }
-
-    private function normalize(string $path): string
-    {
-        $prefix = str_starts_with($path, '/') ? '/' : '';
-        $segments = [];
-
-        foreach (explode('/', str_replace('\\', '/', $path)) as $segment) {
-            if ($segment === '' || $segment === '.') {
-                continue;
-            }
-
-            if ($segment === '..' && $segments !== [] && end($segments) !== '..') {
-                array_pop($segments);
-                continue;
-            }
-
-            $segments[] = $segment;
-        }
-
-        return $prefix . implode('/', $segments);
+        return array_values(array_unique(array_map(PathNormalizer::normalize(...), $candidates)));
     }
 }

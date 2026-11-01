@@ -8,6 +8,7 @@ use DocbookCS\Diff\DiffChangeset;
 use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -19,6 +20,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(PathMatcher::class),
     //
     UsesClass(FileChange::class),
+    UsesClass(PathNormalizer::class),
 ]
 final class DiffPathLoaderTest extends TestCase
 {

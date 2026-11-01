@@ -12,6 +12,7 @@ use DocbookCS\Diff\DiffProviderInterface;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Runner\RunPlan;
 use DocbookCS\Runner\RunPlanner;
 use DocbookCS\Runner\RunScopeResolver;
@@ -31,6 +32,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(EntityResolver::class),
     UsesClass(FileChange::class),
     UsesClass(PathMatcher::class),
+    UsesClass(PathNormalizer::class),
     UsesClass(RunScopeResolver::class),
 ]
 final class RunPlannerTest extends TestCase

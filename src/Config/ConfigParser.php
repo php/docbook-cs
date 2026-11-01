@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DocbookCS\Config;
 
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Xml\XmlParser;
 
 final class ConfigParser
@@ -204,53 +205,10 @@ final class ConfigParser
 
     private function resolvePath(string $raw, string $basePath): string
     {
-        if ($this->isAbsolute($raw)) {
-            return $this->normalizePath($raw);
+        if (PathNormalizer::isAbsolute($raw)) {
+            return PathNormalizer::normalize($raw);
         }
 
-        return $this->normalizePath($basePath . DIRECTORY_SEPARATOR . $raw);
-    }
-
-    private function isAbsolute(string $path): bool
-    {
-        // Unix absolute
-        if (str_starts_with($path, '/')) {
-            return true;
-        }
-
-        // Windows absolute (e.g. C:\)
-        if (preg_match('#^[a-zA-Z]:[/\\\\]#', $path) === 1) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private function normalizePath(string $path): string
-    {
-        $path = str_replace('\\', '/', $path);
-
-        $prefix = '';
-        if (preg_match('#^([a-zA-Z]:/|/)#', $path, $m)) {
-            $prefix = $m[1];
-            $path = substr($path, strlen($prefix));
-        }
-
-        $segments = explode('/', $path);
-        $stack = [];
-
-        foreach ($segments as $segment) {
-            if ($segment === '' || $segment === '.') {
-                continue;
-            }
-
-            if ($segment === '..' && $stack !== [] && end($stack) !== '..') {
-                array_pop($stack);
-            } else {
-                $stack[] = $segment;
-            }
-        }
-
-        return $prefix . implode('/', $stack);
+        return PathNormalizer::normalize($basePath . '/' . $raw);
     }
 }

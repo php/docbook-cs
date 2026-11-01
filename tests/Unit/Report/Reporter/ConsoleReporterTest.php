@@ -579,7 +579,7 @@ final class ConsoleReporterTest extends TestCase
         $output = $reporter->generate($report);
 
         self::assertMatchesRegularExpression(
-            '/^ SniffA +\d+\.\d{3}s \( *\d+\.\d%\) *$/m',
+            '/^ SniffA +\d+\.\d{3}s \( *\d+\.\d%\) *\r?$/m',
             $output,
         );
     }
@@ -602,7 +602,7 @@ final class ConsoleReporterTest extends TestCase
         $output = $reporter->generate($report);
 
         self::assertMatchesRegularExpression(
-            '/^ SniffA +\d+\.\d{3}s \( *\d+\.\d%\) +\d+\.\d{3}s \( *\d+\.\d%\) *$/m',
+            '/^ SniffA +\d+\.\d{3}s \( *\d+\.\d%\) +\d+\.\d{3}s \( *\d+\.\d%\) *\r?$/m',
             $output,
         );
     }

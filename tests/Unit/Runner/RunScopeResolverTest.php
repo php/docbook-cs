@@ -10,6 +10,7 @@ use DocbookCS\Diff\FileChange;
 use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Runner\RunScopeResolver;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -18,6 +19,7 @@ use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(PathMatcher::class),
+    CoversClass(PathNormalizer::class),
     CoversClass(RunScopeResolver::class),
     //
     UsesClass(ConfigData::class),
@@ -35,7 +37,9 @@ final class RunScopeResolverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->directory = sys_get_temp_dir() . '/docbook-cs-scope-' . bin2hex(random_bytes(6));
+        $this->directory = PathNormalizer::normalize(
+            sys_get_temp_dir() . '/docbook-cs-scope-' . bin2hex(random_bytes(6)),
+        );
         mkdir($this->directory);
 
         $this->sourceFile = $this->directory . '/source.xml';
@@ -103,7 +107,7 @@ final class RunScopeResolverTest extends TestCase
     public function pathScopeResolvesRelativePathsAgainstTheWorkingDirectory(): void
     {
         $path = 'tests/fixtures/sniff_runner/default/file_a.xml';
-        $absolutePath = (getcwd() ?: '.') . '/' . $path;
+        $absolutePath = PathNormalizer::normalize((getcwd() ?: '.') . '/' . $path);
 
         $targets = $this->resolver()->resolvePaths([$path]);
 

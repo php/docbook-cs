@@ -8,6 +8,7 @@ use DocbookCS\Config\ConfigData;
 use DocbookCS\Config\ConfigParser;
 use DocbookCS\Config\ConfigParserException;
 use DocbookCS\Config\SniffEntry;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
     CoversClass(ConfigParserException::class),
     CoversClass(SniffEntry::class),
     //
+    UsesClass(PathNormalizer::class),
     UsesClass(XmlParser::class),
 ]
 final class ConfigParserTest extends TestCase

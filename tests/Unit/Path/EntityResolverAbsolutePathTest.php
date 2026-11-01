@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Path;
 
 use DocbookCS\Path\EntityResolver;
+use DocbookCS\Path\PathNormalizer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -15,6 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[
     CoversClass(EntityResolver::class),
+    CoversClass(PathNormalizer::class),
 ]
 final class EntityResolverAbsolutePathTest extends TestCase
 {
@@ -39,7 +41,7 @@ final class EntityResolverAbsolutePathTest extends TestCase
     #[Test]
     public function itResolvesAbsoluteSystemReferences(): void
     {
-        $included = str_replace('\\', '/', $this->directory) . '/doc-base/included.ent';
+        $included = PathNormalizer::normalize($this->directory . '/doc-base/included.ent');
         $main = $this->writeMain($included);
 
         $resolver = new EntityResolver([], [$main]);

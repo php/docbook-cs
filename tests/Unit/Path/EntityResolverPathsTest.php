@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace DocbookCS\Tests\Unit\Path;
 
 use DocbookCS\Path\EntityResolver;
+use DocbookCS\Path\PathNormalizer;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[
     CoversClass(EntityResolver::class),
+    //
+    UsesClass(PathNormalizer::class),
 ]
 final class EntityResolverPathsTest extends TestCase
 {

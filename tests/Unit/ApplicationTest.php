@@ -21,6 +21,7 @@ use DocbookCS\Path\DiffPathLoader;
 use DocbookCS\Path\EntityResolver;
 use DocbookCS\Path\PathLoader;
 use DocbookCS\Path\PathMatcher;
+use DocbookCS\Path\PathNormalizer;
 use DocbookCS\Process\NativeProcessRunner;
 use DocbookCS\Process\ProcessResult;
 use DocbookCS\Progress\NullProgress;
@@ -80,6 +81,7 @@ use PHPUnit\Framework\TestCase;
     UsesClass(GitDiffProvider::class),
     UsesClass(GitException::class),
     UsesClass(NativeProcessRunner::class),
+    UsesClass(PathNormalizer::class),
     UsesClass(ProcessResult::class),
     UsesClass(RunScope::class),
     UsesClass(RunScopeResolver::class),
