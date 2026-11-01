@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace DocbookCS\Tests\Unit\Sniff;
 
-use DocbookCS\Sniff\MixedIndentationSniff;
+use DocbookCS\IndentationAnalyzer;
+use DocbookCS\Sniff\IndentationSniff;
 use DocbookCS\Sniff\TrailingWhitespaceSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
@@ -18,10 +19,11 @@ use PHPUnit\Framework\TestCase;
 #[
     CoversClass(File::class),
     CoversClass(Line::class),
-    CoversClass(MixedIndentationSniff::class),
+    CoversClass(IndentationSniff::class),
     CoversClass(TrailingWhitespaceSniff::class),
     CoversClass(Violation::class),
     //
+    UsesClass(IndentationAnalyzer::class),
     UsesClass(SourceRange::class),
 ]
 final class WhitespaceConcernSniffsTest extends TestCase
@@ -45,18 +47,18 @@ final class WhitespaceConcernSniffsTest extends TestCase
     }
 
     #[Test]
-    public function itReportsOnlyMixedLeadingIndentationAsAffected(): void
+    public function itReportsOnlyLeadingIndentationAsAffected(): void
     {
         $content = "<root>\n \t<tag/>\n</root>";
         $lineOffset = strlen("<root>\n");
-        $violations = new MixedIndentationSniff()->process(
+        $violations = new IndentationSniff()->process(
             $this->createDocument($content),
             new File('file.xml', $content),
         );
 
         self::assertCount(1, $violations);
-        self::assertSame('DocbookCS.MixedIndentation', $violations[0]->sniffCode);
-        self::assertSame('Mixed tabs and spaces in indentation.', $violations[0]->message);
+        self::assertSame('DocbookCS.Indentation', $violations[0]->sniffCode);
+        self::assertSame('Expected indentation of 1 space.', $violations[0]->message);
         self::assertSame(" \t", $violations[0]->rangeOne()->content);
         self::assertSame($lineOffset, $violations[0]->rangeOne()->beginOffset);
         self::assertSame($lineOffset + 2, $violations[0]->rangeOne()->untilOffset);
@@ -70,7 +72,7 @@ final class WhitespaceConcernSniffsTest extends TestCase
         $document = $this->createDocument($content);
 
         $source = new File('file.xml', $content);
-        $indentation = new MixedIndentationSniff()->process($document, $source)[0];
+        $indentation = new IndentationSniff()->process($document, $source)[0];
         $trailing = new TrailingWhitespaceSniff()->process($document, $source)[0];
 
         self::assertSame(2, $indentation->rangeOne()->line);
@@ -79,22 +81,6 @@ final class WhitespaceConcernSniffsTest extends TestCase
             $trailing->rangeOne()->beginOffset,
             $indentation->rangeOne()->untilOffset,
         );
-    }
-
-    #[Test]
-    public function itAllowsIndentationUsingOnlySpacesOrOnlyTabs(): void
-    {
-        foreach (["  <tag/>", "\t\t<tag/>"] as $line) {
-            $content = "<root>\n{$line}\n</root>";
-
-            self::assertSame(
-                [],
-                new MixedIndentationSniff()->process(
-                    $this->createDocument($content),
-                    new File('file.xml', $content),
-                ),
-            );
-        }
     }
 
     private function createDocument(string $xml): \DOMDocument

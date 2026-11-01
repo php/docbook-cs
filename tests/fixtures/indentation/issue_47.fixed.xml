@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+ <refsect1 role="examples">
+  <para>
+   <example>
+    <title>ImagickPixel <function>getColorCount</function></title>
+    <programlisting role="php">
+<![CDATA[
+<?php
+    echo "code indentation is preserved";
+?>
+]]>
+    </programlisting>
+    <simpara>
+     The output for this will be similar to:
+    </simpara>
+    <screen role="php">
+<![CDATA[
+Last pixel color count is: 256244
+]]>
+    </screen>
+   </example>
+  </para>
+ </refsect1>
+ <informaltable>
+  <tgroup cols="2">
+   <tbody>
+    <row>
+     <entry><literal>compression_alg</literal></entry>
+     <entry>
+      Compression algorithm. Both
+      <literal>compression_alg</literal> and <literal>compression_level</literal>
+      must be set in order to enable data compression.
+     </entry>
+    </row>
+   </tbody>
+  </tgroup>
+ </informaltable>
+</root>

@@ -6,16 +6,26 @@ namespace DocbookCS\Tests\Unit\Fix;
 
 use DocbookCS\Fix\Fix;
 use DocbookCS\Fix\FixApplier;
-use DocbookCS\Fix\FixPlan;
-use DocbookCS\Fix\Fixer\MixedIndentationFixer;
+use DocbookCS\Fix\Fixer\IndentationFixer;
 use DocbookCS\Fix\Fixer\TrailingWhitespaceFixer;
+use DocbookCS\Fix\FixPlan;
 use DocbookCS\Fix\FixResult;
-use DocbookCS\Sniff\MixedIndentationSniff;
+use DocbookCS\IndentationAnalyzer;
+use DocbookCS\Report\FileReport;
+use DocbookCS\Runner\EntityPreprocessor;
+use DocbookCS\Runner\RunMode;
+use DocbookCS\Runner\RunScope;
+use DocbookCS\Runner\ViolationScopeFilter;
+use DocbookCS\Runner\XmlFileProcessor;
+use DocbookCS\Runner\XmlFixRunner;
+use DocbookCS\Runner\XmlSniffRunner;
+use DocbookCS\Sniff\IndentationSniff;
 use DocbookCS\Sniff\TrailingWhitespaceSniff;
 use DocbookCS\Source\File;
 use DocbookCS\Source\Line;
 use DocbookCS\Violation\SourceRange;
 use DocbookCS\Violation\Violation;
+use DocbookCS\Xml\XmlParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -25,16 +35,26 @@ use PHPUnit\Framework\TestCase;
     CoversClass(Fix::class),
     CoversClass(FixApplier::class),
     CoversClass(FixResult::class),
-    CoversClass(MixedIndentationFixer::class),
-    CoversClass(MixedIndentationSniff::class),
+    CoversClass(IndentationFixer::class),
+    CoversClass(IndentationSniff::class),
     CoversClass(TrailingWhitespaceFixer::class),
     CoversClass(TrailingWhitespaceSniff::class),
     //
+    UsesClass(EntityPreprocessor::class),
     UsesClass(File::class),
+    UsesClass(FileReport::class),
     UsesClass(FixPlan::class),
+    UsesClass(IndentationAnalyzer::class),
     UsesClass(Line::class),
+    UsesClass(RunMode::class),
+    UsesClass(RunScope::class),
     UsesClass(SourceRange::class),
+    UsesClass(ViolationScopeFilter::class),
     UsesClass(Violation::class),
+    UsesClass(XmlFileProcessor::class),
+    UsesClass(XmlFixRunner::class),
+    UsesClass(XmlParser::class),
+    UsesClass(XmlSniffRunner::class),
 ]
 final class WhitespaceConcernFixersTest extends TestCase
 {
@@ -42,34 +62,23 @@ final class WhitespaceConcernFixersTest extends TestCase
     public function itFixesIndependentWhitespaceConcernsTogether(): void
     {
         $content = "<root> \n \t<tag/>  \n</root>";
-        $document = new \DOMDocument();
-        $document->loadXML($content);
         $source = new File('file.xml', $content);
+        $fileReport = new FileReport($source->path);
 
-        $trailingSniffer = new TrailingWhitespaceSniff();
-        $indentationSniffer = new MixedIndentationSniff();
+        $fixedFile = new XmlFileProcessor(new XmlSniffRunner(
+            RunMode::Fix,
+            [new TrailingWhitespaceSniff(), new IndentationSniff()],
+        ))->process(
+            $source,
+            $fileReport,
+            RunScope::fromFileAndFileChange($source, null),
+        );
 
-        $trailingViolations = $trailingSniffer->process($document, $source);
-        $indentationViolations = $indentationSniffer->process($document, $source);
-
-        self::assertCount(2, $trailingViolations);
-        self::assertCount(1, $indentationViolations);
-
-        $fixes = [];
-        $trailingFixer = new ($trailingSniffer::getFixerClassName())();
-        foreach ($trailingViolations as $violation) {
-            $fixes[] = $trailingFixer->process($violation);
-        }
-
-        $indentationFixer = new ($indentationSniffer::getFixerClassName())();
-        foreach ($indentationViolations as $violation) {
-            $fixes[] = $indentationFixer->process($violation);
-        }
-
-        $result = new FixApplier()->apply($source, $fixes);
-
-        self::assertSame("<root>\n  <tag/>\n</root>", $result->file->content);
-        self::assertSame(3, $result->applied);
-        self::assertSame(0, $result->skipped);
+        self::assertNotNull($fixedFile);
+        self::assertSame("<root>\n <tag/>\n</root>", $fixedFile->content);
+        self::assertSame(3, $fileReport->getFoundViolationCount());
+        self::assertSame(3, $fileReport->getAppliedFixesCount());
+        self::assertSame(1, $fileReport->fixingPasses);
+        self::assertFalse($fileReport->hasFinalViolations());
     }
 }
