@@ -28,6 +28,5 @@ final readonly class Fix
         public string $replacement,
         public string $sniffCode,
         public ?string $expectedContent = null,
-    ) {
-    }
+    ) {}
 }

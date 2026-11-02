@@ -16,8 +16,7 @@ final readonly class DiffPathLoader
         private string $basePath,
         private array $projectRoots,
         private PathMatcher $matcher,
-    ) {
-    }
+    ) {}
 
     public function load(): DiffChangeset
     {

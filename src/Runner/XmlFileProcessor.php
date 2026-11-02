@@ -17,8 +17,7 @@ final readonly class XmlFileProcessor
     public function __construct(
         private XmlSniffRunner $xmlSniffRunner,
         private XmlFixRunner $xmlFixRunner = new XmlFixRunner(),
-    ) {
-    }
+    ) {}
 
     /**
      * @throws FixerException

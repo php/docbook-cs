@@ -13,9 +13,7 @@ final class Report
     /** @var array<string, FileReport> */
     public private(set) array $fileReports = [];
 
-    public function __construct(private readonly bool $collectPerformance = false)
-    {
-    }
+    public function __construct(private readonly bool $collectPerformance = false) {}
 
     /**
      * @template T

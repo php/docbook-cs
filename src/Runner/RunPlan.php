@@ -19,6 +19,5 @@ final readonly class RunPlan
         public array $sniffs,
         public array $targets,
         public array $entities,
-    ) {
-    }
+    ) {}
 }

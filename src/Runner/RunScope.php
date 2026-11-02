@@ -17,9 +17,7 @@ final readonly class RunScope
      *
      * @param list<array{int, int}>|null $ranges
      */
-    private function __construct(private ?array $ranges)
-    {
-    }
+    private function __construct(private ?array $ranges) {}
 
     public static function fromFileAndFileChange(File $file, ?FileChange $fileChange): self
     {

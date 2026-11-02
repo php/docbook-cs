@@ -54,8 +54,8 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
 
             // Skip if no relevant attributes at all (fast path)
             if (
-                !str_contains($attrString, 'xml:id') ||
-                !str_contains($attrString, 'xmlns')
+                !str_contains($attrString, 'xml:id')
+                || !str_contains($attrString, 'xmlns')
             ) {
                 continue;
             }
@@ -101,8 +101,8 @@ final class AttributeOrderSniff extends AbstractSniff implements Fixable
             }
 
             if (
-                $name === 'xmlns' ||
-                str_starts_with($name, 'xmlns:')
+                $name === 'xmlns'
+                || str_starts_with($name, 'xmlns:')
             ) {
                 $xmlnsPos = min($xmlnsPos, $i);
             }

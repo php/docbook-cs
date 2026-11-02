@@ -15,8 +15,7 @@ final readonly class EntityPreprocessor
      */
     public function __construct(
         private array $entities = [],
-    ) {
-    }
+    ) {}
 
     public function process(string $xml): string
     {

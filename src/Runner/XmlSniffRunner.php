@@ -21,8 +21,7 @@ final readonly class XmlSniffRunner
         private EntityPreprocessor $preprocessor = new EntityPreprocessor(),
         private XmlParser $xmlParser = new XmlParser(),
         private ViolationScopeFilter $violationFilter = new ViolationScopeFilter(),
-    ) {
-    }
+    ) {}
 
     /**
      * @return array{

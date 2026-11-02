@@ -11,8 +11,7 @@ final readonly class Line
         public string $content,
         public string $lineEnding,
         public int $beginOffset,
-    ) {
-    }
+    ) {}
 
     public function offsetAfterContent(): int
     {

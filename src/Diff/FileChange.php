@@ -14,6 +14,5 @@ final readonly class FileChange
         public string $filePath,
         public array $addedLineNumbers,
         public array $deletionAnchors = [],
-    ) {
-    }
+    ) {}
 }

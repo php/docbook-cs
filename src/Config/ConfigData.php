@@ -21,8 +21,7 @@ final readonly class ConfigData
         private array $excludePatterns,
         private array $entityPaths,
         private string $basePath,
-    ) {
-    }
+    ) {}
 
     /** @return array<string, string> */
     public function getProjectRoots(): array
