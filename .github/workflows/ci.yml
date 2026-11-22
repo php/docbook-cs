@@ -23,10 +23,10 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v7"
+      - uses: "actions/checkout@v7.0.1"
 
       - name: "Setup PHP"
-        uses: "shivammathur/setup-php@v2"
+        uses: "shivammathur/setup-php@2.40.0"
         with:
           php-version: "8.5"
           tools: "composer, cs2pr"
@@ -44,10 +44,10 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v7"
+      - uses: "actions/checkout@v7.0.1"
 
       - name: "Setup PHP"
-        uses: "shivammathur/setup-php@v2"
+        uses: "shivammathur/setup-php@2.40.0"
         with:
           php-version: "8.5"
           tools: "composer"
@@ -77,10 +77,10 @@ jobs:
         shell: "bash"
 
     steps:
-      - uses: "actions/checkout@v7"
+      - uses: "actions/checkout@v7.0.1"
 
       - name: "Setup PHP"
-        uses: "shivammathur/setup-php@v2"
+        uses: "shivammathur/setup-php@2.40.0"
         with:
           php-version: "${{ matrix.php-version }}"
           tools: "composer"
@@ -105,7 +105,7 @@ jobs:
           echo '```' >> var/.phpunit.cache/coverage.txt
 
       - name: "Report test results"
-        uses: "mikepenz/action-junit-report@v6"
+        uses: "mikepenz/action-junit-report@v6.7.1"
         if: ${{ ! cancelled() && matrix.os == 'ubuntu-latest' && matrix.php-version == '8.5' }}
         with:
           report_paths: "var/.phpunit.cache/junit.xml"
@@ -116,7 +116,7 @@ jobs:
         run: 'cat var/.phpunit.cache/coverage.txt >> "$GITHUB_STEP_SUMMARY"'
 
       - name: "Upload coverage report"
-        uses: "actions/upload-artifact@v7"
+        uses: "actions/upload-artifact@v7.0.2"
         if: ${{ ! cancelled() && matrix.os == 'ubuntu-latest' && matrix.php-version == '8.5' }}
         with:
           name: "coverage-report"
